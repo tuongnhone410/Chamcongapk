@@ -247,7 +247,7 @@ export default function SettingsPage() {
           
           <div className="pt-2 border-t mt-4">
             <div className="space-y-2 max-w-[50%]">
-              <Label className="text-destructive font-bold">Tỷ lệ Thuế TNCN (%)</Label>
+              <Label className="text-green-600 font-bold">Tỷ lệ Thuế TNCN (%)</Label>
               <div className="relative">
                 <Input 
                   type="text" 
@@ -255,7 +255,7 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatPercentDisplay(settings.incomeTaxRate)} 
                   onChange={(e) => handlePercentInput('incomeTaxRate', e.target.value)} 
-                  className="pr-8 font-medium border-destructive/30"
+                  className="pr-8 font-medium border-green-200 focus-visible:ring-green-500"
                 />
                 <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">%</span>
               </div>
