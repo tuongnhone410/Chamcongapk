@@ -99,32 +99,22 @@ export default function SettingsPage() {
 
   const getNumberValue = (val: number) => val === 0 ? "" : val.toString();
 
-  const calculatedInsuranceMoney = Math.round(((localSettings.insuranceSalary || 0) * (localSettings.insuranceRate || 0)) / 100);
-
-  const getAbsenceColorClasses = (count: number) => {
-    if (count === 0) return { text: "text-green-600", border: "border-l-green-500", input: "border-green-200 focus-visible:ring-green-500", bg: "bg-green-50" };
-    if (count === 1) return { text: "text-orange-600", border: "border-l-orange-500", input: "border-orange-200 focus-visible:ring-orange-500", bg: "bg-orange-50" };
-    return { text: "text-red-600", border: "border-l-red-600", input: "border-red-200 focus-visible:ring-red-500", bg: "bg-red-50" };
-  };
-
-  const absenceColors = getAbsenceColorClasses(localSettings.unexcusedAbsences);
-
   const labelClass = "flex items-center gap-1.5 h-6 font-bold text-xs uppercase tracking-wider mb-1.5";
   const inputClass = "h-11 font-bold";
 
   return (
-    <div className="space-y-6 pb-32">
-      <header className="flex items-center justify-between">
+    <div className="space-y-6 pb-24">
+      <header className="flex items-center justify-between sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-md py-2">
         <div>
           <h1 className="text-2xl font-black font-headline tracking-tighter">CÀI ĐẶT LƯƠNG</h1>
-          <p className="text-zinc-500 text-sm font-medium">Thiết lập chi tiết dựa trên hợp đồng</p>
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Hợp đồng & Phụ cấp</p>
         </div>
         <Button 
           onClick={handleSave} 
-          className="bg-primary hover:bg-primary/90 rounded-xl px-4 py-2 font-black gap-2 shadow-lg h-12"
+          className="bg-primary hover:bg-primary/90 rounded-xl px-6 font-black gap-2 shadow-xl h-12 transition-all active:scale-95"
         >
-          <Save className="w-4 h-4" />
-          LƯU
+          <Save className="w-5 h-5" />
+          LƯU CÀI ĐẶT
         </Button>
       </header>
 
@@ -215,7 +205,7 @@ export default function SettingsPage() {
                 <Input 
                   type="number" 
                   step="0.1"
-                  placeholder="1.5"
+                  placeholder="0"
                   className={cn(inputClass, "border-orange-500/20 pr-12")}
                   value={getNumberValue(localSettings.breakTimeDeduction)}
                   onChange={(e) => handleNumberInput('breakTimeDeduction', e.target.value)}
@@ -223,6 +213,7 @@ export default function SettingsPage() {
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-xs uppercase">Giờ</span>
               </div>
+              <p className="text-[9px] text-zinc-500 italic uppercase font-medium">Bỏ trống nếu không khấu trừ giờ nghỉ</p>
             </div>
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-6 pt-2">
@@ -351,58 +342,6 @@ export default function SettingsPage() {
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">%</span>
               </div>
             </div>
-            <div className="space-y-1">
-              <Label className={labelClass}>Đoàn phí</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  value={formatMoneyDisplay(localSettings.unionFee)} 
-                  onChange={(e) => handleMoneyInput('unionFee', e.target.value)} 
-                  onKeyDown={handleKeyDown}
-                  className={inputClass}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Chuyên Cần & Nghỉ Không Phép */}
-      <Card className={cn("border-none shadow-sm border-l-4 bg-zinc-900 border-zinc-800", absenceColors.border)}>
-        <CardHeader>
-          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center space-x-2 text-zinc-400">
-            <AlertTriangle className={cn("w-5 h-5", absenceColors.text)} />
-            <span>Chuyên Cần & Nghỉ Không Phép</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label className={labelClass}>Tiền chuyên cần gốc</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  value={formatMoneyDisplay(localSettings.allowanceAttendanceBase)} 
-                  onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} 
-                  onKeyDown={handleKeyDown}
-                  className={inputClass}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label className={cn(labelClass, absenceColors.text)}>Số ngày nghỉ K.Phép</Label>
-              <Input 
-                type="number" 
-                className={cn(inputClass, "border-2", absenceColors.input)}
-                value={getNumberValue(localSettings.unexcusedAbsences)} 
-                onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} 
-                onKeyDown={handleKeyDown}
-              />
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -445,32 +384,11 @@ export default function SettingsPage() {
               </div>
             </div>
           ))}
-          <div className="space-y-1">
-            <Label className={labelClass}>Xăng xe</Label>
-            <div className="relative">
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                value={formatMoneyDisplay(localSettings.allowanceFuel)} 
-                onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} 
-                onKeyDown={handleKeyDown}
-                className={inputClass}
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
-      {/* Floating Save Button on Mobile */}
-      <div className="fixed bottom-20 left-0 right-0 px-4 py-3 flex justify-center pointer-events-none sm:hidden">
-        <Button 
-          onClick={handleSave} 
-          className="pointer-events-auto bg-primary hover:bg-primary/90 w-full max-w-sm h-14 rounded-2xl font-black text-lg gap-3 shadow-2xl border-b-4 border-black/20"
-        >
-          <Save className="w-6 h-6" />
-          LƯU TẤT CẢ THAY ĐỔI
-        </Button>
+      <div className="pt-8 text-center">
+        <p className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Thiết kế bởi TimeSnap Pro</p>
       </div>
     </div>
   );

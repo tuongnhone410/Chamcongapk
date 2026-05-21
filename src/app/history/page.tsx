@@ -349,7 +349,10 @@ export default function HistoryPage() {
               </div>
               <DialogFooter className="gap-2">
                 <Button variant="outline" onClick={() => setShowMultiDialog(false)} className="border-zinc-800 rounded-xl h-12 font-bold">Hủy</Button>
-                <Button onClick={handleMultiAdd} className="bg-primary hover:bg-primary/90 rounded-xl h-12 font-black shadow-xl">XÁC NHẬN THÊM</Button>
+                <Button onClick={handleMultiAdd} className="bg-primary hover:bg-primary/90 rounded-xl h-12 font-black shadow-xl gap-2">
+                  <Save className="w-4 h-4" />
+                  LƯU & THÊM
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -433,7 +436,10 @@ export default function HistoryPage() {
               </div>
               <DialogFooter className="gap-2">
                 <Button variant="outline" onClick={() => setShowBatchDialog(false)} className="border-zinc-800 rounded-xl h-12 font-bold">Hủy</Button>
-                <Button onClick={handleBatchAdd} className="bg-primary hover:bg-primary/90 rounded-xl h-12 font-black">Xác nhận</Button>
+                <Button onClick={handleBatchAdd} className="bg-primary hover:bg-primary/90 rounded-xl h-12 font-black shadow-xl gap-2">
+                  <Save className="w-4 h-4" />
+                  LƯU & ĐỒNG BỘ
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -594,7 +600,7 @@ export default function HistoryPage() {
                           )}
                           <DialogFooter className="gap-2">
                             <Button variant="outline" onClick={() => setEditingSession(null)} className="border-zinc-800 rounded-xl h-12 font-bold flex-1">Hủy</Button>
-                            <Button onClick={handleUpdate} className="bg-primary rounded-xl h-12 font-black shadow-xl flex-1 gap-2">
+                            <Button onClick={handleUpdate} className="bg-primary rounded-xl h-12 font-black shadow-xl flex-1 gap-2 transition-all active:scale-95">
                               <Save className="w-4 h-4" />
                               LƯU THAY ĐỔI
                             </Button>
