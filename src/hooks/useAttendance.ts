@@ -8,11 +8,22 @@ const STORAGE_KEY_SESSIONS = 'timesnap_sessions';
 const STORAGE_KEY_SETTINGS = 'timesnap_settings';
 
 const defaultSettings: AppSettings = {
-  hourlyRate: 50000,
+  hourlyRate: 30000,
   currency: '₫',
   darkMode: false,
   payday: 1,
-  monthlyTarget: 10000000, // Mặc định 10 triệu
+  monthlyTarget: 10000000,
+  allowanceHousing: 0,
+  allowanceFuel: 0,
+  allowanceLunch: 0,
+  allowancePhone: 0,
+  allowanceAttendance: 0,
+  insuranceRate: 10.5,
+  unionFee: 40000,
+  incomeTax: 0,
+  defaultMultiplier: 1.0,
+  sundayMultiplier: 2.0,
+  holidayMultiplier: 3.0,
 };
 
 export function useAttendance() {
@@ -35,10 +46,7 @@ export function useAttendance() {
     if (storedSettings) {
       try {
         const parsed = JSON.parse(storedSettings);
-        setSettings({
-          ...defaultSettings,
-          ...parsed
-        });
+        setSettings({ ...defaultSettings, ...parsed });
       } catch (e) {
         console.error("Failed to parse settings", e);
       }
@@ -67,9 +75,8 @@ export function useAttendance() {
 
   const activeSession = sessions.find(s => !s.checkOut);
 
-  const punchIn = () => {
+  const punchIn = (multiplier: number = 1.0) => {
     if (activeSession) return;
-
     const now = new Date().toISOString();
     const newSession: WorkSession = {
       id: Math.random().toString(36).substr(2, 9),
@@ -77,29 +84,25 @@ export function useAttendance() {
       checkOut: null,
       totalMinutes: 0,
       salary: 0,
+      multiplier,
       note: '',
       createdAt: now,
     };
-
     saveSessions([newSession, ...sessions]);
   };
 
   const punchOut = () => {
     if (!activeSession) return;
-
     const checkOut = new Date();
     const checkIn = new Date(activeSession.checkIn);
-    const diffMs = checkOut.getTime() - checkIn.getTime();
-    const diffMinutes = Math.floor(diffMs / 1000 / 60);
-    const hours = diffMinutes / 60;
-    const salary = hours * settings.hourlyRate;
+    const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+    const salary = (diffMinutes / 60) * settings.hourlyRate * activeSession.multiplier;
 
     const updatedSessions = sessions.map(s => 
       s.id === activeSession.id 
         ? { ...s, checkOut: checkOut.toISOString(), totalMinutes: diffMinutes, salary } 
         : s
     );
-
     saveSessions(updatedSessions);
   };
 
@@ -111,22 +114,37 @@ export function useAttendance() {
     saveSessions(sessions.map(s => s.id === updated.id ? updated : s));
   };
 
+  const calculateFullSalary = (periodSessions: WorkSession[]) => {
+    const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
+    const totalAllowances = settings.allowanceHousing + settings.allowanceFuel + 
+                           settings.allowanceLunch + settings.allowancePhone + 
+                           settings.allowanceAttendance;
+    
+    const grossIncome = sessionSalary + totalAllowances;
+    const insuranceAmount = (grossIncome * settings.insuranceRate) / 100;
+    const netSalary = grossIncome - insuranceAmount - settings.unionFee - settings.incomeTax;
+
+    return {
+      sessionSalary,
+      totalAllowances,
+      grossIncome,
+      insuranceAmount,
+      netSalary
+    };
+  };
+
   const exportToCSV = () => {
-    const headers = ["ID", "Vào làm", "Ra làm", "Phút", "Lương", "Ghi chú"];
+    const headers = ["ID", "Vào làm", "Ra làm", "Hệ số", "Phút", "Lương", "Ghi chú"];
     const rows = sessions.map(s => [
       s.id,
       new Date(s.checkIn).toLocaleString('vi-VN'),
       s.checkOut ? new Date(s.checkOut).toLocaleString('vi-VN') : '',
+      s.multiplier,
       s.totalMinutes,
       s.salary,
       s.note
     ]);
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map(r => r.join(","))
-    ].join("\n");
-
+    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -149,5 +167,6 @@ export function useAttendance() {
     deleteSession,
     updateSession,
     exportToCSV,
+    calculateFullSalary
   };
 }

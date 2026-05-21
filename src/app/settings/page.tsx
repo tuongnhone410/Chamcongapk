@@ -5,10 +5,8 @@ import { useAttendance } from '@/hooks/useAttendance';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Moon, Sun, Info, CalendarClock, Target } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DollarSign, ShieldCheck, Gift, Clock, Target, CreditCard } from 'lucide-react';
 
 export default function SettingsPage() {
   const { settings, updateSettings, isLoaded } = useAttendance();
@@ -20,139 +18,114 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 pb-24">
       <header>
-        <h1 className="text-2xl font-bold font-headline">Cài Đặt</h1>
-        <p className="text-muted-foreground text-sm">Cá nhân hóa trải nghiệm theo dõi</p>
+        <h1 className="text-2xl font-bold font-headline">Cấu Hình Lương</h1>
+        <p className="text-muted-foreground text-sm">Thiết lập chi tiết dựa trên phiếu lương của bạn</p>
       </header>
 
+      {/* Lương cơ bản & Hệ số */}
       <Card className="border-none shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
-            <DollarSign className="w-5 h-5 text-primary" />
-            <span>Thù Lao & Chu Kỳ</span>
+            <Clock className="w-5 h-5 text-primary" />
+            <span>Lương Giờ & Hệ Số</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="hourlyRate">Lương Theo Giờ</Label>
-            <div className="relative">
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Lương cơ bản / Giờ</Label>
               <Input 
-                id="hourlyRate" 
                 type="number" 
-                className="pr-8"
                 value={settings.hourlyRate}
                 onChange={(e) => updateSettings({...settings, hourlyRate: parseFloat(e.target.value) || 0})}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">
-                {settings.currency}
-              </span>
+            </div>
+            <div className="space-y-2">
+              <Label>Ngày chốt lương</Label>
+              <Select value={settings.payday.toString()} onValueChange={(val) => updateSettings({...settings, payday: parseInt(val)})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {daysInMonth.map(day => <SelectItem key={day} value={day.toString()}>Ngày {day}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Label>Đơn Vị Tiền Tệ</Label>
-            <Select 
-              value={settings.currency} 
-              onValueChange={(val) => updateSettings({...settings, currency: val})}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn loại tiền" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="₫">VND (₫)</SelectItem>
-                <SelectItem value="$">USD ($)</SelectItem>
-                <SelectItem value="€">EUR (€)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="flex items-center space-x-2">
-              <CalendarClock className="w-4 h-4" />
-              <span>Ngày Chốt Lương Hàng Tháng</span>
-            </Label>
-            <Select 
-              value={settings.payday.toString()} 
-              onValueChange={(val) => updateSettings({...settings, payday: parseInt(val)})}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn ngày" />
-              </SelectTrigger>
-              <SelectContent>
-                {daysInMonth.map(day => (
-                  <SelectItem key={day} value={day.toString()}>Ngày {day}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Hệ số Chủ Nhật</Label>
+              <Input 
+                type="number" step="0.1"
+                value={settings.sundayMultiplier}
+                onChange={(e) => updateSettings({...settings, sundayMultiplier: parseFloat(e.target.value) || 2.0})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Hệ số Ngày Lễ</Label>
+              <Input 
+                type="number" step="0.1"
+                value={settings.holidayMultiplier}
+                onChange={(e) => updateSettings({...settings, holidayMultiplier: parseFloat(e.target.value) || 3.0})}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Phụ cấp hàng tháng */}
       <Card className="border-none shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
-            <Target className="w-5 h-5 text-primary" />
-            <span>Mục Tiêu Thu Nhập</span>
+            <Gift className="w-5 h-5 text-primary" />
+            <span>Phụ Cấp Cố Định</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Nhà ở</Label>
+              <Input type="number" value={settings.allowanceHousing} onChange={(e) => updateSettings({...settings, allowanceHousing: parseFloat(e.target.value) || 0})} />
+            </div>
+            <div className="space-y-2">
+              <Label>Xăng xe</Label>
+              <Input type="number" value={settings.allowanceFuel} onChange={(e) => updateSettings({...settings, allowanceFuel: parseFloat(e.target.value) || 0})} />
+            </div>
+            <div className="space-y-2">
+              <Label>Tiền cơm</Label>
+              <Input type="number" value={settings.allowanceLunch} onChange={(e) => updateSettings({...settings, allowanceLunch: parseFloat(e.target.value) || 0})} />
+            </div>
+            <div className="space-y-2">
+              <Label>Chuyên cần</Label>
+              <Input type="number" value={settings.allowanceAttendance} onChange={(e) => updateSettings({...settings, allowanceAttendance: parseFloat(e.target.value) || 0})} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bảo hiểm & Khấu trừ */}
+      <Card className="border-none shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center space-x-2">
+            <ShieldCheck className="w-5 h-5 text-primary" />
+            <span>Bảo Hiểm & Khấu Trừ</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="monthlyTarget">Mục Tiêu Hàng Tháng</Label>
-            <div className="relative">
-              <Input 
-                id="monthlyTarget" 
-                type="number" 
-                className="pr-8"
-                value={settings.monthlyTarget}
-                onChange={(e) => updateSettings({...settings, monthlyTarget: parseFloat(e.target.value) || 0})}
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">
-                {settings.currency}
-              </span>
-            </div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
-              Đặt mục tiêu giúp bạn có thêm động lực làm việc.
-            </p>
+            <Label>Tỷ lệ đóng Bảo hiểm (%)</Label>
+            <Input type="number" step="0.1" value={settings.insuranceRate} onChange={(e) => updateSettings({...settings, insuranceRate: parseFloat(e.target.value) || 0})} />
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-none shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <Sun className="w-5 h-5 text-primary" />
-            <span>Hiển Thị</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Chế Độ Tối</Label>
-              <p className="text-xs text-muted-foreground">Điều chỉnh giao diện cho ban đêm</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Đoàn phí</Label>
+              <Input type="number" value={settings.deductionUnionFee || settings.unionFee} onChange={(e) => updateSettings({...settings, unionFee: parseFloat(e.target.value) || 0})} />
             </div>
-            <div className="flex items-center space-x-2">
-              <Sun className="w-4 h-4 text-muted-foreground" />
-              <Switch 
-                checked={settings.darkMode}
-                onCheckedChange={(checked) => updateSettings({...settings, darkMode: checked})}
-              />
-              <Moon className="w-4 h-4 text-muted-foreground" />
+            <div className="space-y-2">
+              <Label>Thuế TNCN</Label>
+              <Input type="number" value={settings.incomeTax} onChange={(e) => updateSettings({...settings, incomeTax: parseFloat(e.target.value) || 0})} />
             </div>
           </div>
         </CardContent>
       </Card>
-
-      <Alert className="bg-primary/5 border-none">
-        <Info className="h-4 w-4 text-primary" />
-        <AlertDescription className="text-xs">
-          Dữ liệu được lưu cục bộ trên máy. Bạn nên thường xuyên sử dụng tính năng "Xuất CSV" để sao lưu.
-        </AlertDescription>
-      </Alert>
-
-      <div className="pt-10 text-center">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30">
-          TimeSnap Premium v1.2.0
-        </p>
-      </div>
     </div>
   );
 }

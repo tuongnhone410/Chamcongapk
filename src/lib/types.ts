@@ -5,6 +5,7 @@ export interface WorkSession {
   checkOut: string | null; // ISO string
   totalMinutes: number;
   salary: number;
+  multiplier: number; // Hệ số lương (1.5, 2.0, 3.0...)
   note: string;
   createdAt: string;
 }
@@ -15,4 +16,21 @@ export interface AppSettings {
   darkMode: boolean;
   payday: number; // Ngày chốt lương (1-31)
   monthlyTarget: number; // Mục tiêu thu nhập hàng tháng
+  
+  // Phụ cấp hàng tháng
+  allowanceHousing: number; // Tiền nhà ở
+  allowanceFuel: number;    // Tiền xăng xe
+  allowanceLunch: number;   // Tiền ăn trưa
+  allowancePhone: number;   // Tiền điện thoại
+  allowanceAttendance: number; // Tiền chuyên cần
+  
+  // Khấu trừ hàng tháng
+  insuranceRate: number;    // % đóng BHXH (mặc định 10.5%)
+  unionFee: number;         // Đoàn phí
+  incomeTax: number;        // Thuế TNCN (tạm tính)
+  
+  // Hệ số mặc định
+  defaultMultiplier: number;
+  sundayMultiplier: number;
+  holidayMultiplier: number;
 }
