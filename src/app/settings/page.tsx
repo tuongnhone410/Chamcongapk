@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -18,7 +19,7 @@ export default function SettingsPage() {
 
   const formatMoneyDisplay = (val: number) => {
     if (val === 0) return "";
-    return val.toLocaleString('vi-VN');
+    return Math.round(val).toLocaleString('vi-VN');
   };
 
   const formatPercentDisplay = (val: number) => {
@@ -135,7 +136,7 @@ export default function SettingsPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Lương / Giờ (OT gốc)</Label>
+              <Label>Lương / Giờ (Gốc)</Label>
               <div className="relative">
                 <Input 
                   type="text" 
@@ -146,6 +147,27 @@ export default function SettingsPage() {
                   className="pr-8 font-medium"
                 />
                 <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-orange-600 font-bold">Lương OT 1.5 / Giờ</Label>
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.hourlyRate * settings.overtimeMultiplier)}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "");
+                    const num = val === "" ? 0 : parseInt(val);
+                    updateSettings({
+                      ...settings,
+                      hourlyRate: Math.round(num / settings.overtimeMultiplier)
+                    });
+                  }}
+                  className="pr-8 font-bold border-orange-200 focus-visible:ring-orange-500 text-orange-600"
+                />
+                <span className="absolute right-3 top-2.5 text-orange-400 text-sm font-bold">đ</span>
               </div>
             </div>
             <div className="space-y-2">
