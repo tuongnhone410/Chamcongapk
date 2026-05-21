@@ -254,7 +254,7 @@ export default function SettingsPage() {
       {/* Các khoản phụ cấp */}
       <Card className="border-zinc-800 bg-zinc-900 overflow-hidden rounded-[2rem]">
         <CardHeader className="pb-2">
-          <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-zinc-500">
+          <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-green-500">
             <Gift className="w-4 h-4" /> Các khoản phụ cấp
           </CardTitle>
         </CardHeader>
@@ -317,14 +317,14 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-orange-500")}>Độc hại</Label>
+              <Label className={cn(labelClass, "text-zinc-500")}>Độc hại</Label>
               <div className="relative">
                 <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceToxic)} onChange={(e) => handleMoneyInput('allowanceToxic', e.target.value)} />
                 <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-green-500")}>Doanh thu</Label>
+              <Label className={cn(labelClass, "text-zinc-500")}>Doanh thu</Label>
               <div className="relative">
                 <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceBonus)} onChange={(e) => handleMoneyInput('allowanceBonus', e.target.value)} />
                 <span className={currencyClass}>đ</span>
