@@ -47,7 +47,6 @@ import {
   AlertDialogAction, 
   AlertDialogCancel, 
   AlertDialogContent, 
-  AlertDialogDescription, 
   AlertDialogFooter, 
   AlertDialogHeader, 
   AlertDialogTitle, 
@@ -591,7 +590,7 @@ export default function HistoryPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1.0">x1.0 (Tự động OT 1.5)</SelectItem>
+                    <SelectItem value="1.0">x1.0 (Tự động OT thường)</SelectItem>
                     <SelectItem value={settings.sundayMultiplier.toString()}>OT {settings.sundayMultiplier.toFixed(1)}</SelectItem>
                     <SelectItem value={settings.holidayMultiplier.toString()}>OT {settings.holidayMultiplier.toFixed(1)}</SelectItem>
                   </SelectContent>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -191,7 +190,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
-            <Label className={labelClass}>OT 1.5</Label>
+            <Label className={labelClass}>OT thường</Label>
             <Input type="number" step="0.1" className={inputClass} value={localSettings.overtimeMultiplier.toString()} onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)} />
             <p className="text-[10px] font-black text-orange-500 mt-1">
               {formatMoneyDisplay(localSettings.hourlyRate * localSettings.overtimeMultiplier)}đ/h

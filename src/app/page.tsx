@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DigitalClock } from '@/components/attendance/DigitalClock';
@@ -209,7 +208,7 @@ export default function Home() {
                         : "bg-primary/10 text-primary border-primary/20"
                     )}>
                       {activeSession.multiplier === 1.0 
-                        ? (effectiveSessionMinutes > 510 ? `TRẠNG THÁI: ĐANG TÍNH OT ${settings.overtimeMultiplier}` : "TRẠNG THÁI: GIỜ HÀNH CHÍNH")
+                        ? (effectiveSessionMinutes > 510 ? `TRẠNG THÁI: ĐANG TÍNH OT THƯỜNG` : "TRẠNG THÁI: GIỜ HÀNH CHÍNH")
                         : "TRẠNG THÁI: TĂNG CA ĐẶC BIỆT"}
                     </span>
                     {((activeSession.multiplier === 1.0 && effectiveSessionMinutes > 510) || activeSession.multiplier !== 1.0) && (
@@ -374,10 +373,10 @@ export default function Home() {
                       <span>Lương cơ bản:</span> <span className="text-white">{formatCurrency(settings.baseMonthlySalary)}</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-zinc-400">
-                      <span>Lương OT {settings.breakTimeDeduction > 0 ? `(Đã trừ ${settings.breakTimeDeduction}h)` : ''}:</span> <span className="text-green-500">+{formatCurrency(salaryInfo.sessionSalary)}</span>
+                      <span>Lương OT thường {settings.breakTimeDeduction > 0 ? `(Đã trừ ${settings.breakTimeDeduction}h)` : ''}:</span> <span className="text-green-500">+{formatCurrency(salaryInfo.sessionSalary)}</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-orange-400">
-                      <span>Tổng giờ OT 1.5:</span> <span>{(salaryInfo.totalOTMinutes / 60).toFixed(2)}h</span>
+                      <span>Tổng giờ OT thường:</span> <span>{(salaryInfo.totalOTMinutes / 60).toFixed(2)}h</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-zinc-400">
                       <span>Phụ cấp/Cơm:</span> <span className="text-green-500">+{formatCurrency(salaryInfo.lunchAllowance + (salaryInfo.otherAllowances || 0))}</span>
