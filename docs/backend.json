@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "WorkSession": {
@@ -34,6 +33,10 @@
         "allowanceToxic": { "type": "number" },
         "allowanceBonus": { "type": "number" },
         "allowanceProduct": { "type": "number" },
+        "allowanceTechnical": { "type": "number" },
+        "allowanceResponsibility": { "type": "number" },
+        "allowancePosition": { "type": "number" },
+        "allowancePerformance": { "type": "number" },
         "insuranceRate": { "type": "number" },
         "unionFee": { "type": "number" },
         "incomeTaxRate": { "type": "number" },

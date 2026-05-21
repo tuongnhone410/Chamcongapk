@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldCheck, Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap, Skull } from 'lucide-react';
+import { ShieldCheck, Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap, Skull, Briefcase, Star, Award, Shield } from 'lucide-react';
 import { AppSettings } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -65,7 +64,7 @@ export default function SettingsPage() {
 
   const getNumberValue = (val: number) => val === 0 ? "" : val.toString();
 
-  const calculatedInsuranceMoney = Math.round((settings.insuranceSalary * settings.insuranceRate) / 100);
+  const calculatedInsuranceMoney = Math.round(((settings.insuranceSalary || 0) * (settings.insuranceRate || 0)) / 100);
 
   const getAbsenceColorClasses = (count: number) => {
     if (count === 0) return { text: "text-green-600", border: "border-l-green-500", input: "border-green-200 focus-visible:ring-green-500", bg: "bg-green-50" };
@@ -315,6 +314,9 @@ export default function SettingsPage() {
               />
             </div>
           </div>
+          <p className="text-[10px] text-muted-foreground italic">
+            * Các khoản phụ cấp kỹ thuật, trách nhiệm, chức vụ, hiệu suất sẽ bị trừ theo tỷ lệ 1/30 cho mỗi ngày nghỉ không phép.
+          </p>
         </CardContent>
       </Card>
 
@@ -327,6 +329,70 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1 text-primary font-bold">
+                <Briefcase className="w-3 h-3" /> Kỹ thuật (Trừ KP)
+              </Label>
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowanceTechnical)} 
+                  onChange={(e) => handleMoneyInput('allowanceTechnical', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1 text-primary font-bold">
+                <Shield className="w-3 h-3" /> Trách nhiệm (Trừ KP)
+              </Label>
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowanceResponsibility)} 
+                  onChange={(e) => handleMoneyInput('allowanceResponsibility', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1 text-primary font-bold">
+                <Award className="w-3 h-3" /> Chức vụ (Trừ KP)
+              </Label>
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowancePosition)} 
+                  onChange={(e) => handleMoneyInput('allowancePosition', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1 text-primary font-bold">
+                <Star className="w-3 h-3" /> Hiệu suất (Trừ KP)
+              </Label>
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowancePerformance)} 
+                  onChange={(e) => handleMoneyInput('allowancePerformance', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label className="flex items-center gap-1 text-primary font-bold">
                 <Package className="w-3 h-3" /> Tiền sản phẩm

@@ -1,4 +1,3 @@
-
 export interface WorkSession {
   id: string;
   checkIn: string; // ISO string
@@ -31,6 +30,12 @@ export interface AppSettings {
   allowanceBonus: number;      // Thưởng doanh thu/năng suất
   allowanceProduct: number;    // Tiền sản phẩm (tự nhập 2.3 - 3.0tr)
   
+  // Các phụ cấp mới có khấu trừ theo ngày nghỉ
+  allowanceTechnical: number;    // Tiền kỹ thuật
+  allowanceResponsibility: number; // Tiền trách nhiệm
+  allowancePosition: number;     // Tiền chức vụ
+  allowancePerformance: number;  // Tiền hiệu suất
+
   // Quản lý phép
   annualLeaveBalance: number;  // Số ngày phép năm còn lại
   

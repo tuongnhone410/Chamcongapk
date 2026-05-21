@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useMemo, useCallback } from 'react';
@@ -58,6 +57,10 @@ const defaultSettings: AppSettings = {
   allowanceToxic: 287000,
   allowanceBonus: 213000,
   allowanceProduct: 2500000, 
+  allowanceTechnical: 0,
+  allowanceResponsibility: 0,
+  allowancePosition: 0,
+  allowancePerformance: 0,
   insuranceRate: 10.5,
   unionFee: 40000,
   incomeTax: 0,
@@ -93,7 +96,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const { data: settingsData, loading: settingsLoading } = useDoc<AppSettings>(settingsRef);
 
   const sessions = useMemo(() => sessionsData || [], [sessionsData]);
-  const settings = useMemo(() => settingsData || defaultSettings, [settingsData]);
+  const settings = useMemo(() => ({ ...defaultSettings, ...settingsData }), [settingsData]);
   const isLoaded = !sessionsLoading && !settingsLoading;
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
@@ -182,17 +185,27 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       return acc + dailyLunch;
     }, 0);
 
+    // Tính chuyên cần
     let attendanceBonus = settings.allowanceAttendanceBase;
     if (settings.unexcusedAbsences === 1) attendanceBonus -= 200000;
     else if (settings.unexcusedAbsences >= 2) attendanceBonus = 0;
     attendanceBonus = Math.max(0, attendanceBonus);
+
+    // Tính các loại phụ cấp bị khấu trừ theo ngày nghỉ kphep (Base / 30 * absences)
+    const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + 
+                                  (settings.allowanceResponsibility || 0) + 
+                                  (settings.allowancePosition || 0) + 
+                                  (settings.allowancePerformance || 0);
+    const deductionForAbsence = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
+    const netSubjectToAbsence = Math.max(0, baseSubjectToAbsence - deductionForAbsence);
 
     const otherAllowances = (settings.allowanceHousing || 0) + 
                            (settings.allowanceFuel || 0) + 
                            (settings.allowancePhone || 0) + 
                            (settings.allowanceToxic || 0) +
                            (settings.allowanceBonus || 0) +
-                           (settings.allowanceProduct || 0);
+                           (settings.allowanceProduct || 0) +
+                           netSubjectToAbsence;
     
     const grossIncome = (settings.baseMonthlySalary || 0) + sessionSalary + otherAllowances + lunchAllowance + attendanceBonus;
     const insuranceAmount = ((settings.insuranceSalary || 0) * (settings.insuranceRate || 0)) / 100;
