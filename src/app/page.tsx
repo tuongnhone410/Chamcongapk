@@ -78,7 +78,6 @@ export default function Home() {
 
   const getNumberValue = (val: number) => val === 0 ? "" : val.toString();
 
-  // Logic màu sắc cho nghỉ không phép
   const getAbsenceColorClasses = (count: number) => {
     if (count === 0) return { text: "text-green-600", border: "border-l-green-500", icon: "text-green-500", bg: "bg-green-50", input: "border-green-200 focus-visible:ring-green-500" };
     if (count === 1) return { text: "text-orange-600", border: "border-l-orange-500", icon: "text-orange-500", bg: "bg-orange-50", input: "border-orange-200 focus-visible:ring-orange-500" };
