@@ -48,10 +48,10 @@ export default function Home() {
   });
 
   const salaryInfo = calculateFullSalary(periodSessions);
-  const targetPercent = Math.min(Math.round((salaryInfo.netSalary / settings.monthlyTarget) * 100), 100);
+  const targetPercent = Math.min(Math.round((salaryInfo.netSalary / (settings.monthlyTarget || 1)) * 100), 100);
 
   const formatCurrency = (val: number) => {
-    return `${val.toLocaleString('vi-VN')}${settings.currency}`;
+    return `${(val || 0).toLocaleString('vi-VN')}${settings.currency}`;
   };
 
   return (
@@ -87,7 +87,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Thống kê thu nhập chi tiết */}
       <Card className="border-none shadow-sm overflow-hidden bg-primary text-primary-foreground">
         <CardContent className="p-6 space-y-4">
           <div className="flex justify-between items-start">
@@ -126,7 +125,7 @@ export default function Home() {
                   </div>
                   <div className="flex justify-between text-sm text-destructive font-medium">
                     <span>Đoàn phí & Thuế:</span> 
-                    <span>-{formatCurrency(settings.unionFee + settings.incomeTax)}</span>
+                    <span>-{formatCurrency((settings.unionFee || 0) + (settings.incomeTax || 0))}</span>
                   </div>
                   <div className="border-t-2 border-dashed pt-2 flex justify-between font-black text-lg text-primary">
                     <span>THỰC LĨNH:</span> 

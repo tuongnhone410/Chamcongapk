@@ -8,17 +8,19 @@ const STORAGE_KEY_SESSIONS = 'timesnap_sessions';
 const STORAGE_KEY_SETTINGS = 'timesnap_settings';
 
 const defaultSettings: AppSettings = {
-  baseMonthlySalary: 5000000,
-  hourlyRate: 30000,
+  baseMonthlySalary: 5730000,
+  hourlyRate: 27548, // Tự động tính: 5730000 / 208
   currency: '₫',
   darkMode: false,
-  payday: 1,
+  payday: 5,
   monthlyTarget: 10000000,
-  allowanceHousing: 0,
+  allowanceHousing: 300000,
   allowanceFuel: 0,
   allowanceLunch: 0,
   allowancePhone: 0,
-  allowanceAttendance: 0,
+  allowanceAttendance: 600000,
+  allowanceToxic: 287000,
+  allowanceBonus: 213000,
   insuranceRate: 10.5,
   unionFee: 40000,
   incomeTax: 0,
@@ -117,13 +119,17 @@ export function useAttendance() {
 
   const calculateFullSalary = (periodSessions: WorkSession[]) => {
     const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
-    const totalAllowances = settings.allowanceHousing + settings.allowanceFuel + 
-                           settings.allowanceLunch + settings.allowancePhone + 
-                           settings.allowanceAttendance;
+    const totalAllowances = (settings.allowanceHousing || 0) + 
+                           (settings.allowanceFuel || 0) + 
+                           (settings.allowanceLunch || 0) + 
+                           (settings.allowancePhone || 0) + 
+                           (settings.allowanceAttendance || 0) +
+                           (settings.allowanceToxic || 0) +
+                           (settings.allowanceBonus || 0);
     
-    const grossIncome = settings.baseMonthlySalary + sessionSalary + totalAllowances;
-    const insuranceAmount = (grossIncome * settings.insuranceRate) / 100;
-    const netSalary = grossIncome - insuranceAmount - settings.unionFee - settings.incomeTax;
+    const grossIncome = (settings.baseMonthlySalary || 0) + sessionSalary + totalAllowances;
+    const insuranceAmount = (grossIncome * (settings.insuranceRate || 0)) / 100;
+    const netSalary = grossIncome - insuranceAmount - (settings.unionFee || 0) - (settings.incomeTax || 0);
 
     return {
       sessionSalary,

@@ -24,6 +24,8 @@ export interface AppSettings {
   allowanceLunch: number;   // Tiền ăn trưa
   allowancePhone: number;   // Tiền điện thoại
   allowanceAttendance: number; // Tiền chuyên cần
+  allowanceToxic: number;      // Phụ cấp độc hại
+  allowanceBonus: number;      // Thưởng doanh thu/năng suất
   
   // Khấu trừ hàng tháng
   insuranceRate: number;    // % đóng BHXH (mặc định 10.5%)
