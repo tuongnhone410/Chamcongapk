@@ -22,7 +22,7 @@ import {
   ChartTooltipContent,
   type ChartConfig 
 } from "@/components/ui/chart";
-import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
+import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Cell, LabelList, ReferenceLine } from "recharts";
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useMemo } from 'react';
 
@@ -127,7 +127,6 @@ export default function Home() {
 
   const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
   
-  // Logic hiển thị tiền OT "nhảy" theo thời gian thực (đã trừ giờ nghỉ)
   const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
   const effectiveSessionMinutes = sessionMinutes > breakMinutes ? sessionMinutes - breakMinutes : sessionMinutes;
 
@@ -266,14 +265,17 @@ export default function Home() {
         <CardHeader className="p-6 pb-2">
           <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-zinc-400">
             <BarChart3 className="w-4 h-4 text-primary" />
-            Giờ công 7 ngày qua
+            Biểu đồ giờ công 7 ngày qua
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 pt-2">
-          <div className="h-[180px] w-full mb-2">
+          <div className="h-[220px] w-full mb-2">
             <ChartContainer config={chartConfig}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analyticsData.chartData}>
+                <BarChart 
+                  data={analyticsData.chartData} 
+                  margin={{ top: 30, right: 10, left: 10, bottom: 0 }}
+                >
                   <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#27272a" />
                   <XAxis 
                     dataKey="date" 
@@ -281,24 +283,37 @@ export default function Home() {
                     tickLine={false}
                     tick={{ fill: '#71717a', fontSize: 10, fontWeight: 'bold' }}
                   />
+                  <YAxis hide domain={[0, 'dataMax + 2']} />
                   <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <ReferenceLine y={8} stroke="#ef4444" strokeDasharray="5 5" strokeWidth={1} label={{ position: 'right', value: '8h', fill: '#ef4444', fontSize: 10, fontWeight: 'bold' }} />
                   <Bar 
                     dataKey="hours" 
                     radius={[6, 6, 0, 0]} 
-                    barSize={20}
+                    barSize={24}
                   >
+                    <LabelList 
+                      dataKey="hours" 
+                      position="top" 
+                      offset={12}
+                      className="fill-white text-[10px] font-black"
+                      formatter={(value: number) => value > 0 ? `${value}h` : ''}
+                    />
                     {analyticsData.chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.hours >= 8 ? "hsl(var(--primary))" : "#3f3f46"} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.hours >= 8 ? "hsl(var(--primary))" : "#3f3f46"} 
+                        fillOpacity={entry.hours >= 8 ? 1 : 0.6}
+                      />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
           </div>
-          <div className="flex justify-between items-center px-2 mt-6">
+          <div className="flex justify-between items-center px-2 mt-4 pt-4 border-t border-zinc-800/50">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-primary rounded-sm" />
-              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-tighter">Trên 8h</span>
+              <div className="w-3 h-3 bg-primary rounded-sm shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-tighter">Đạt chỉ tiêu (≥ 8h)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-zinc-700 rounded-sm" />
