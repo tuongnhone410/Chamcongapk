@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldCheck, Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap, Skull, Briefcase, Star, Award, Shield } from 'lucide-react';
+import { Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap, Skull, Briefcase, Star, Award, Shield, ShieldCheck } from 'lucide-react';
 import { AppSettings } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -32,7 +32,6 @@ export default function SettingsPage() {
     const num = numericValue === "" ? 0 : parseInt(numericValue);
     
     if (key === 'baseMonthlySalary') {
-      // Tự động tính lương giờ gốc khi nhập LCB (chia 208 giờ chuẩn)
       const calculatedHourly = Math.round(num / 208);
       updateSettings({
         ...settings,
@@ -76,36 +75,36 @@ export default function SettingsPage() {
 
   const absenceColors = getAbsenceColorClasses(settings.unexcusedAbsences);
 
+  const labelClass = "flex items-center gap-1.5 h-6 font-bold text-xs uppercase tracking-wider mb-1.5";
+  const inputClass = "h-11 font-bold";
+
   return (
     <div className="space-y-6 pb-24">
       <header>
-        <h1 className="text-2xl font-bold font-headline">Thông tin lương</h1>
-        <p className="text-muted-foreground text-sm">Thiết lập chi tiết dựa trên hợp đồng lao động</p>
+        <h1 className="text-2xl font-black font-headline tracking-tighter">CÀI ĐẶT LƯƠNG</h1>
+        <p className="text-zinc-500 text-sm font-medium">Thiết lập chi tiết dựa trên hợp đồng lao động</p>
       </header>
 
       {/* Quản Lý Phép Năm */}
-      <Card className="border-none shadow-sm border-l-4 border-l-green-500">
+      <Card className="border-none shadow-sm border-l-4 border-l-green-500 bg-zinc-900 overflow-hidden">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <CalendarCheck className="w-5 h-5 text-green-500" />
+          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center space-x-2 text-green-500">
+            <CalendarCheck className="w-5 h-5" />
             <span>Quản Lý Phép Năm</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-lg flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Số ngày phép hiện có</p>
-                <p className="text-3xl font-black text-green-600">{settings.annualLeaveBalance} <span className="text-sm font-normal">ngày</span></p>
-              </div>
+          <div className="bg-green-500/10 p-4 rounded-2xl flex items-center justify-between border border-green-500/20">
+            <div>
+              <p className="text-[10px] text-green-500/70 uppercase font-black tracking-widest">Số ngày phép hiện có</p>
+              <p className="text-3xl font-black text-green-500">{settings.annualLeaveBalance} <span className="text-xs font-normal opacity-70">ngày</span></p>
             </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label className="text-xs font-bold text-green-700">Chỉnh sửa trực tiếp số dư phép năm</Label>
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-green-500")}>Chỉnh sửa số dư phép năm</Label>
             <Input 
               type="number" 
-              className="h-10 border-green-200 focus-visible:ring-green-500 font-bold"
+              className={cn(inputClass, "border-green-500/20 focus-visible:ring-green-500")}
               placeholder="0"
               value={getNumberValue(settings.annualLeaveBalance)}
               onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
@@ -115,16 +114,16 @@ export default function SettingsPage() {
       </Card>
 
       {/* Lương Cơ Bản & Hệ Số */}
-      <Card className="border-none shadow-sm">
+      <Card className="border-none shadow-sm bg-zinc-900 overflow-hidden border border-zinc-800">
         <CardHeader>
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <Clock className="w-5 h-5 text-primary" />
+          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center space-x-2 text-primary">
+            <Clock className="w-5 h-5" />
             <span>Lương Cơ Bản & Hệ Số</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-primary font-bold">Lương cơ bản hàng tháng (LCB)</Label>
+        <CardContent className="space-y-6">
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-primary")}>Lương cơ bản hàng tháng (LCB)</Label>
             <div className="relative">
               <Input 
                 type="text" 
@@ -132,30 +131,29 @@ export default function SettingsPage() {
                 value={formatMoneyDisplay(settings.baseMonthlySalary)}
                 onChange={(e) => handleMoneyInput('baseMonthlySalary', e.target.value)}
                 placeholder="0"
-                className="pr-10 font-black text-lg h-12"
+                className={cn(inputClass, "pr-10 text-lg h-12 border-primary/20")}
               />
-              <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-sm">đ</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Lương / Giờ (Gốc)</Label>
+            <div className="space-y-1">
+              <Label className={labelClass}>Lương / Giờ (Gốc)</Label>
               <div className="relative">
                 <Input 
                   readOnly
                   disabled
-                  type="text" 
                   value={formatMoneyDisplay(settings.hourlyRate)}
-                  className="pr-8 font-bold bg-muted/50 cursor-not-allowed h-11"
+                  className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 cursor-not-allowed")}
                 />
-                <span className="absolute right-3 top-3 text-muted-foreground text-xs">đ</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Ngày chốt lương</Label>
+            <div className="space-y-1">
+              <Label className={labelClass}>Ngày chốt lương</Label>
               <Select value={settings.payday.toString()} onValueChange={(val) => updateSettings({...settings, payday: parseInt(val)})}>
-                <SelectTrigger className="h-11 font-bold">
+                <SelectTrigger className={cn(inputClass, "border-zinc-800")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -165,89 +163,73 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="pt-4 border-t space-y-4">
-            <Label className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Hệ số & Lương OT tương ứng</Label>
-            
-            <div className="grid grid-cols-2 gap-x-4 gap-y-6">
-              {/* OT 1.5 Pair */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1.5 text-orange-500 h-5">
-                  <Zap className="w-3.5 h-3.5" /> Hệ số Tăng ca
-                </Label>
+          <div className="pt-4 border-t border-zinc-800 grid grid-cols-2 gap-x-4 gap-y-4">
+            {/* OT 1.5 */}
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-orange-500")}><Zap className="w-3.5 h-3.5" /> Hệ số Tăng ca</Label>
+              <Input 
+                type="number" 
+                step="0.1"
+                className={cn(inputClass, "border-orange-500/20")}
+                value={getNumberValue(settings.overtimeMultiplier)}
+                onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-zinc-500")}>Lương OT 1.5 / Giờ</Label>
+              <div className="relative">
                 <Input 
-                  type="number" 
-                  step="0.1"
-                  placeholder="1.5"
-                  className="font-bold h-11"
-                  value={getNumberValue(settings.overtimeMultiplier)}
-                  onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)}
+                  readOnly disabled
+                  value={formatMoneyDisplay(settings.hourlyRate * settings.overtimeMultiplier)}
+                  className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-orange-500/70")}
                 />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
               </div>
-              <div className="space-y-2">
-                <Label className="text-muted-foreground h-5">Lương OT 1.5 / Giờ</Label>
-                <div className="relative">
-                  <Input 
-                    readOnly
-                    disabled
-                    value={formatMoneyDisplay(settings.hourlyRate * settings.overtimeMultiplier)}
-                    className="pr-8 font-bold bg-muted/50 text-orange-500/80 h-11"
-                  />
-                  <span className="absolute right-3 top-3 text-muted-foreground text-[10px]">đ</span>
-                </div>
-              </div>
+            </div>
 
-              {/* OT 2.0 (Sunday) Pair */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1.5 text-blue-500 h-5">
-                  <Calculator className="w-3.5 h-3.5" /> Hệ số Chủ Nhật
-                </Label>
+            {/* OT 2.0 */}
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-blue-500")}><Calculator className="w-3.5 h-3.5" /> Hệ số Chủ Nhật</Label>
+              <Input 
+                type="number" 
+                step="0.1"
+                className={cn(inputClass, "border-blue-500/20")}
+                value={getNumberValue(settings.sundayMultiplier)}
+                onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-zinc-500")}>Lương CN (x2.0) / Giờ</Label>
+              <div className="relative">
                 <Input 
-                  type="number" 
-                  step="0.1"
-                  placeholder="2.0"
-                  className="font-bold h-11"
-                  value={getNumberValue(settings.sundayMultiplier)}
-                  onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)}
+                  readOnly disabled
+                  value={formatMoneyDisplay(settings.hourlyRate * settings.sundayMultiplier)}
+                  className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-blue-500/70")}
                 />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
               </div>
-              <div className="space-y-2">
-                <Label className="text-muted-foreground h-5">Lương CN (x{settings.sundayMultiplier}) / Giờ</Label>
-                <div className="relative">
-                  <Input 
-                    readOnly
-                    disabled
-                    value={formatMoneyDisplay(settings.hourlyRate * settings.sundayMultiplier)}
-                    className="pr-8 font-bold bg-muted/50 text-blue-500/80 h-11"
-                  />
-                  <span className="absolute right-3 top-3 text-muted-foreground text-[10px]">đ</span>
-                </div>
-              </div>
+            </div>
 
-              {/* OT 3.0 (Holiday) Pair */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1.5 text-red-500 h-5">
-                  <Star className="w-3.5 h-3.5" /> Hệ số Ngày Lễ
-                </Label>
+            {/* OT 3.0 */}
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-red-500")}><Star className="w-3.5 h-3.5" /> Hệ số Ngày Lễ</Label>
+              <Input 
+                type="number" 
+                step="0.1"
+                className={cn(inputClass, "border-red-500/20")}
+                value={getNumberValue(settings.holidayMultiplier)}
+                onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-zinc-500")}>Lương Lễ (x3.0) / Giờ</Label>
+              <div className="relative">
                 <Input 
-                  type="number" 
-                  step="0.1"
-                  placeholder="3.0"
-                  className="font-bold h-11"
-                  value={getNumberValue(settings.holidayMultiplier)}
-                  onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)}
+                  readOnly disabled
+                  value={formatMoneyDisplay(settings.hourlyRate * settings.holidayMultiplier)}
+                  className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-red-500/70")}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-muted-foreground h-5">Lương Lễ (x{settings.holidayMultiplier}) / Giờ</Label>
-                <div className="relative">
-                  <Input 
-                    readOnly
-                    disabled
-                    value={formatMoneyDisplay(settings.hourlyRate * settings.holidayMultiplier)}
-                    className="pr-8 font-bold bg-muted/50 text-red-500/80 h-11"
-                  />
-                  <span className="absolute right-3 top-3 text-muted-foreground text-[10px]">đ</span>
-                </div>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
               </div>
             </div>
           </div>
@@ -255,78 +237,71 @@ export default function SettingsPage() {
       </Card>
 
       {/* Bảo Hiểm & Thuế */}
-      <Card className="border-none shadow-sm">
+      <Card className="border-none shadow-sm bg-zinc-900 border border-zinc-800">
         <CardHeader>
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <ShieldCheck className="w-5 h-5 text-primary" />
+          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center space-x-2 text-primary">
+            <ShieldCheck className="w-5 h-5" />
             <span>Bảo Hiểm & Thuế</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-primary font-bold">Mức lương đóng BH (SI Wage)</Label>
+          <div className="space-y-1">
+            <Label className={labelClass}>Mức lương đóng BH (SI Wage)</Label>
             <div className="relative">
               <Input 
                 type="text" 
                 inputMode="numeric"
-                placeholder="0"
                 value={formatMoneyDisplay(settings.insuranceSalary)} 
                 onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} 
-                className="pr-8 font-medium h-11"
+                className={inputClass}
               />
-              <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="h-5">Tỷ lệ đóng Bảo hiểm</Label>
+            <div className="space-y-1">
+              <Label className={labelClass}>Tỷ lệ đóng Bảo hiểm</Label>
               <div className="relative">
                 <Input 
                   type="text" 
                   inputMode="decimal"
-                  placeholder="0"
                   value={formatPercentDisplay(settings.insuranceRate)} 
                   onChange={(e) => handlePercentInput('insuranceRate', e.target.value)} 
-                  className="pr-8 font-medium h-11"
+                  className={inputClass}
                 />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">%</span>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-primary font-bold h-5">Tiền BH phải đóng (10.5%)</Label>
-              <div className="h-11 flex items-center px-3 bg-muted/50 rounded-md border font-bold text-primary">
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-primary")}>Tiền BH (10.5%)</Label>
+              <div className="h-11 flex items-center px-3 bg-zinc-950 border border-zinc-800 rounded-md font-black text-primary text-sm">
                 {calculatedInsuranceMoney.toLocaleString('vi-VN')} đ
               </div>
             </div>
-          </div>
-          
-          <div className="pt-2 border-t mt-4 grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-green-600 font-bold h-5">Tỷ lệ Thuế TNCN (%)</Label>
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-green-500")}>Thuế TNCN (%)</Label>
               <div className="relative">
                 <Input 
                   type="text" 
                   inputMode="decimal"
-                  placeholder="0"
                   value={formatPercentDisplay(settings.incomeTaxRate)} 
                   onChange={(e) => handlePercentInput('incomeTaxRate', e.target.value)} 
-                  className="pr-8 font-medium border-green-200 focus-visible:ring-green-500 h-11"
+                  className={cn(inputClass, "border-green-500/20")}
                 />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">%</span>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="h-5">Đoàn phí (Cố định)</Label>
+            <div className="space-y-1">
+              <Label className={labelClass}>Đoàn phí</Label>
               <div className="relative">
                 <Input 
                   type="text" 
                   inputMode="numeric"
-                  placeholder="0"
                   value={formatMoneyDisplay(settings.unionFee)} 
                   onChange={(e) => handleMoneyInput('unionFee', e.target.value)} 
-                  className="pr-8 font-medium h-11"
+                  className={inputClass}
                 />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
               </div>
             </div>
           </div>
@@ -334,227 +309,113 @@ export default function SettingsPage() {
       </Card>
 
       {/* Chuyên Cần & Nghỉ Không Phép */}
-      <Card className={cn("border-none shadow-sm border-l-4 transition-all duration-300", absenceColors.border)}>
+      <Card className={cn("border-none shadow-sm border-l-4 bg-zinc-900 border-zinc-800", absenceColors.border)}>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center space-x-2">
+          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center space-x-2 text-zinc-400">
             <AlertTriangle className={cn("w-5 h-5", absenceColors.text)} />
             <span>Chuyên Cần & Nghỉ Không Phép</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="h-5">Tiền chuyên cần gốc</Label>
+            <div className="space-y-1">
+              <Label className={labelClass}>Tiền chuyên cần gốc</Label>
               <div className="relative">
                 <Input 
                   type="text" 
                   inputMode="numeric"
-                  placeholder="0"
                   value={formatMoneyDisplay(settings.allowanceAttendanceBase)} 
                   onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} 
-                  className="pr-8 font-medium h-11"
+                  className={inputClass}
                 />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className={cn("font-bold transition-colors h-5", absenceColors.text)}>Số ngày nghỉ K.Phép</Label>
+            <div className="space-y-1">
+              <Label className={cn(labelClass, absenceColors.text)}>Số ngày nghỉ K.Phép</Label>
               <Input 
                 type="number" 
-                placeholder="0"
-                className={cn("h-11 font-bold border-2 transition-all", absenceColors.input)}
+                className={cn(inputClass, "border-2", absenceColors.input)}
                 value={getNumberValue(settings.unexcusedAbsences)} 
                 onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} 
               />
             </div>
           </div>
-          <p className="text-[10px] text-muted-foreground italic">
-            * Các khoản phụ cấp kỹ thuật, trách nhiệm, chức vụ, hiệu suất sẽ bị trừ theo tỷ lệ 1/30 cho mỗi ngày nghỉ không phép.
-          </p>
         </CardContent>
       </Card>
 
       {/* Phụ Cấp & Tiền Cơm */}
-      <Card className="border-none shadow-sm">
+      <Card className="border-none shadow-sm bg-zinc-900 border border-zinc-800">
         <CardHeader>
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <Gift className="w-5 h-5 text-primary" />
+          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center space-x-2 text-primary">
+            <Gift className="w-5 h-5" />
             <span>Phụ Cấp & Tiền Cơm</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-primary font-bold h-5">
-                <Briefcase className="w-3 h-3" /> Kỹ thuật (Trừ KP)
+        <CardContent className="grid grid-cols-2 gap-x-4 gap-y-4">
+          {[
+            { key: 'allowanceTechnical', label: 'Kỹ thuật', icon: Briefcase },
+            { key: 'allowanceResponsibility', label: 'Trách nhiệm', icon: Shield },
+            { key: 'allowancePosition', label: 'Chức vụ', icon: Award },
+            { key: 'allowancePerformance', label: 'Hiệu suất', icon: Star },
+            { key: 'allowanceProduct', label: 'Tiền sản phẩm', icon: Package },
+            { key: 'allowanceLunchPerShift', label: 'Tiền cơm/ca', icon: Clock },
+            { key: 'allowanceLunchOT', label: 'Cơm thêm (OT)', icon: Zap },
+            { key: 'allowanceHousing', label: 'Tiền nhà ở', icon: HomeIcon },
+            { key: 'allowanceToxic', label: 'Độc hại', icon: Skull, color: "text-orange-500" },
+            { key: 'allowanceBonus', label: 'Doanh thu', icon: TrendingUp, color: "text-green-500" },
+          ].map((item) => (
+            <div key={item.key} className="space-y-1">
+              <Label className={cn(labelClass, item.color)}>
+                <item.icon className="w-3.5 h-3.5" /> {item.label}
               </Label>
               <div className="relative">
                 <Input 
                   type="text" 
                   inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.allowanceTechnical)} 
-                  onChange={(e) => handleMoneyInput('allowanceTechnical', e.target.value)} 
-                  className="pr-8 font-medium h-11"
+                  value={formatMoneyDisplay(settings[item.key as keyof AppSettings] as number)} 
+                  onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} 
+                  className={inputClass}
                 />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-primary font-bold h-5">
-                <Shield className="w-3 h-3" /> Trách nhiệm (Trừ KP)
-              </Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.allowanceResponsibility)} 
-                  onChange={(e) => handleMoneyInput('allowanceResponsibility', e.target.value)} 
-                  className="pr-8 font-medium h-11"
-                />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-primary font-bold h-5">
-                <Award className="w-3 h-3" /> Chức vụ (Trừ KP)
-              </Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.allowancePosition)} 
-                  onChange={(e) => handleMoneyInput('allowancePosition', e.target.value)} 
-                  className="pr-8 font-medium h-11"
-                />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-primary font-bold h-5">
-                <Star className="w-3 h-3" /> Hiệu suất (Trừ KP)
-              </Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.allowancePerformance)} 
-                  onChange={(e) => handleMoneyInput('allowancePerformance', e.target.value)} 
-                  className="pr-8 font-medium h-11"
-                />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-primary font-bold h-5">
-                <Package className="w-3 h-3" /> Tiền sản phẩm
-              </Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.allowanceProduct)} 
-                  onChange={(e) => handleMoneyInput('allowanceProduct', e.target.value)} 
-                  className="pr-8 font-medium h-11"
-                />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="h-5">Tiền cơm/ca</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.allowanceLunchPerShift)} 
-                  onChange={(e) => handleMoneyInput('allowanceLunchPerShift', e.target.value)} 
-                  className="pr-8 font-medium h-11"
-                />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="h-5">Cơm thêm (OT &ge; 2h)</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.allowanceLunchOT)} 
-                  onChange={(e) => handleMoneyInput('allowanceLunchOT', e.target.value)} 
-                  className="pr-8 font-medium h-11"
-                />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="h-5">Nhà ở</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.allowanceHousing)} 
-                  onChange={(e) => handleMoneyInput('allowanceHousing', e.target.value)} 
-                  className="pr-8 font-medium h-11"
-                />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-orange-600 font-bold h-5">
-                <Skull className="w-3 h-3" /> Độc hại
-              </Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.allowanceToxic)} 
-                  onChange={(e) => handleMoneyInput('allowanceToxic', e.target.value)} 
-                  className="pr-8 font-medium h-11"
-                />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-green-600 font-bold h-5">
-                <TrendingUp className="w-3 h-3" /> Doanh thu
-              </Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.allowanceBonus)} 
-                  onChange={(e) => handleMoneyInput('allowanceBonus', e.target.value)} 
-                  className="pr-8 font-medium h-11"
-                />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="h-5">Xăng xe</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.allowanceFuel)} 
-                  onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} 
-                  className="pr-8 font-medium h-11"
-                />
-                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
-              </div>
+          ))}
+          <div className="space-y-1">
+            <Label className={labelClass}>Xăng xe</Label>
+            <div className="relative">
+              <Input 
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.allowanceFuel)} 
+                onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} 
+                className={inputClass}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
             </div>
           </div>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function HomeIcon(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
   );
 }
