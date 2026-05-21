@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle, CalendarCheck, PlusCircle, MinusCircle, Package, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppSettings } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
   const { settings, updateSettings, isLoaded } = useAttendance();
@@ -67,6 +68,15 @@ export default function SettingsPage() {
 
   const calculatedInsuranceMoney = Math.round((settings.insuranceSalary * settings.insuranceRate) / 100);
 
+  // Logic màu sắc cho nghỉ không phép
+  const getAbsenceColorClasses = (count: number) => {
+    if (count === 0) return { text: "text-green-600", border: "border-l-green-500", input: "border-green-200 focus-visible:ring-green-500", bg: "bg-green-50" };
+    if (count === 1) return { text: "text-orange-600", border: "border-l-orange-500", input: "border-orange-200 focus-visible:ring-orange-500", bg: "bg-orange-50" };
+    return { text: "text-red-600", border: "border-l-red-600", input: "border-red-200 focus-visible:ring-red-500", bg: "bg-red-50" };
+  };
+
+  const absenceColors = getAbsenceColorClasses(settings.unexcusedAbsences);
+
   return (
     <div className="space-y-6 pb-24">
       <header>
@@ -109,21 +119,13 @@ export default function SettingsPage() {
                 </Button>
               </div>
             </div>
-            <div className="text-[10px] text-muted-foreground bg-white/50 dark:bg-black/20 p-2 rounded border border-green-100 dark:border-green-900/30">
-              <p className="font-bold text-green-700 dark:text-green-400 mb-1 underline">Quy tắc hợp đồng:</p>
-              <ul className="list-disc pl-3 space-y-0.5">
-                <li>Tích lũy 1 ngày phép cho mỗi tháng làm việc.</li>
-                <li>Nghỉ phép năm <strong>không mất chuyên cần</strong>.</li>
-                <li>Nghỉ phép năm <strong>không bị trừ lương</strong> cơ bản.</li>
-              </ul>
-            </div>
           </div>
           
           <div className="space-y-2">
-            <Label className="text-xs">Điều chỉnh trực tiếp số dư</Label>
+            <Label className="text-xs font-bold text-green-700">Chỉnh sửa trực tiếp số dư phép năm</Label>
             <Input 
               type="number" 
-              className="h-9"
+              className="h-10 border-green-200 focus-visible:ring-green-500 font-bold"
               placeholder="0"
               value={getNumberValue(settings.annualLeaveBalance)}
               onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
@@ -283,16 +285,13 @@ export default function SettingsPage() {
               />
             </div>
           </div>
-          <p className="text-[10px] text-muted-foreground italic">
-            * Thuế TNCN sẽ tự động tính dựa trên % bạn nhập nhân với tổng thu nhập (Gross).
-          </p>
         </CardContent>
       </Card>
 
-      <Card className="border-none shadow-sm border-l-4 border-l-orange-500">
+      <Card className={cn("border-none shadow-sm border-l-4 transition-all duration-300", absenceColors.border)}>
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
-            <AlertTriangle className="w-5 h-5 text-orange-500" />
+            <AlertTriangle className={cn("w-5 h-5", absenceColors.text)} />
             <span>Chuyên Cần & Nghỉ Không Phép</span>
           </CardTitle>
         </CardHeader>
@@ -310,19 +309,24 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-destructive font-bold">Số ngày nghỉ K.Phép</Label>
+              <Label className={cn("font-bold transition-colors", absenceColors.text)}>Số ngày nghỉ K.Phép</Label>
               <Input 
                 type="number" 
                 placeholder="0"
-                className="border-destructive/50 focus-visible:ring-destructive"
+                className={cn("h-10 font-bold border-2 transition-all", absenceColors.input)}
                 value={getNumberValue(settings.unexcusedAbsences)} 
                 onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} 
               />
             </div>
           </div>
-          <p className="text-[10px] text-muted-foreground italic">
-            * 1 ngày nghỉ K.P trừ 200k, từ 2 ngày trở lên trừ hết chuyên cần. Nghỉ phép năm sẽ không bị trừ ở đây.
-          </p>
+          <div className={cn("text-[10px] p-2 rounded italic border", absenceColors.bg, absenceColors.input)}>
+            <p className="font-bold mb-1">Quy tắc cảnh báo:</p>
+            <ul className="list-disc pl-3">
+              <li className={settings.unexcusedAbsences === 0 ? "font-bold text-green-700" : ""}>0 ngày: An toàn (Màu xanh)</li>
+              <li className={settings.unexcusedAbsences === 1 ? "font-bold text-orange-700" : ""}>1 ngày: Trừ 200k (Màu vàng cam)</li>
+              <li className={settings.unexcusedAbsences >= 2 ? "font-bold text-red-700" : ""}>&ge; 2 ngày: Mất hết chuyên cần (Màu đỏ)</li>
+            </ul>
+          </div>
         </CardContent>
       </Card>
 
