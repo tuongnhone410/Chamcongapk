@@ -142,8 +142,8 @@ export function useAttendance() {
     
     const lunchAllowance = periodSessions.reduce((acc, s) => {
       let dailyLunch = settings.allowanceLunchPerShift;
-      // Cập nhật: Nếu có OT thực sự (vượt 8h30p) thì mới tính cơm thêm
-      if (s.totalMinutes > 510) { 
+      // Cơm thêm chỉ tính khi OT thực sự từ 2 tiếng trở lên (Tổng >= 10h = 600p)
+      if (s.totalMinutes >= 600) { 
         dailyLunch += settings.allowanceLunchOT;
       }
       return acc + dailyLunch;
