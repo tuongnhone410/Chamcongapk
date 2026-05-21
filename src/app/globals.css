@@ -19,12 +19,12 @@
     --muted-foreground: 240 5% 64.9%;
     --accent: 217 91% 60%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 217 91% 60%;
-    --radius: 1rem;
+    --radius: 1.25rem;
     
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -47,5 +47,9 @@
 }
 
 .font-headline {
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
+}
+
+.card-shadow {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
 }

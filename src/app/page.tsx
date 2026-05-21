@@ -96,49 +96,12 @@ export default function Home() {
     return calculateFullSalary(periodData.periodSessions);
   }, [periodData, calculateFullSalary]);
 
-  const progressData = useMemo(() => {
-    if (!isLoaded) return null;
-    
-    const now = new Date();
-    const startOfWeek = new Date();
-    const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
-    startOfWeek.setDate(diff);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const weekMins = sessions
-      .filter(s => new Date(s.checkIn) >= startOfWeek && s.checkOut)
-      .reduce((acc, s) => acc + s.totalMinutes, 0);
-    
-    const monthMins = sessions
-      .filter(s => new Date(s.checkIn) >= startOfMonth && s.checkOut)
-      .reduce((acc, s) => acc + s.totalMinutes, 0);
-
-    const weekHours = weekMins / 60;
-    const monthHours = monthMins / 60;
-    const weekTarget = 48;
-    const monthTargetHours = 208;
-
-    return {
-      weekHours,
-      monthHours,
-      weekProgress: Math.min((weekHours / weekTarget) * 100, 100),
-      monthProgress: Math.min((monthHours / monthTargetHours) * 100, 100),
-      weekTarget,
-      monthTargetHours
-    };
-  }, [sessions, isLoaded]);
-
-  if (!isLoaded || !periodData || !salaryInfo || !progressData) return null;
+  if (!isLoaded || !periodData || !salaryInfo) return null;
 
   const targetPercent = Math.min(Math.round((salaryInfo.netSalary / (settings.monthlyTarget || 1)) * 100), 100);
 
   const formatCurrency = (val: number) => {
-    return `${Math.round(val || 0).toLocaleString('vi-VN')}${settings.currency}`;
+    return `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
   };
 
   const handleNumberInput = (key: keyof AppSettings, val: string) => {
@@ -159,279 +122,220 @@ export default function Home() {
     }
   })();
 
-  const getAbsenceColorClasses = (count: number) => {
-    if (count === 0) return { text: "text-green-600", border: "border-l-green-500", icon: "text-green-500", bg: "bg-green-50" };
-    if (count === 1) return { text: "text-orange-600", border: "border-l-orange-500", icon: "text-orange-500", bg: "bg-orange-50" };
-    return { text: "text-red-600", border: "border-l-red-600", icon: "text-red-600", bg: "bg-red-50" };
-  };
-
-  const absenceColors = getAbsenceColorClasses(settings.unexcusedAbsences);
   const isOvertime = sessionMinutes > 480;
 
   return (
     <div className="space-y-6 pb-24">
       <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold font-headline">TimeSnap</h1>
-          <p className="text-muted-foreground text-sm">Chấm công chuyên nghiệp</p>
+        <div className="space-y-0.5">
+          <h1 className="text-2xl font-black font-headline tracking-tighter">TimeSnap</h1>
+          <p className="text-zinc-500 text-xs font-medium">Chấm công chuyên nghiệp</p>
         </div>
-        <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold border border-primary/20">
+        <div className="bg-primary/20 text-primary px-4 py-1.5 rounded-full text-[10px] font-black border border-primary/30 uppercase tracking-wider">
           Kỳ: {periodData.startDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' })} - {periodData.endDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' })}
         </div>
       </header>
 
       <DigitalClock />
 
-      <div className="flex flex-col items-center justify-center py-2">
+      <div className="flex flex-col items-center justify-center">
         {!activeSession ? (
           <div className="w-full space-y-4">
             <div className="text-center space-y-1">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Hệ thống ghi nhận</p>
-              <p className="text-lg font-black text-primary uppercase">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800">
+                <div className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Hệ thống sẵn sàng</span>
+              </div>
+              <p className="text-base font-black text-primary uppercase mt-2">
                 {isHoliday ? "Ngày Lễ (x3.0)" : new Date().getDay() === 0 ? "Chủ Nhật (x2.0)" : "Ngày Thường (Tự động OT x1.5)"}
               </p>
             </div>
             <Button 
               onClick={() => punchIn()} 
-              className="w-full rounded-2xl h-20 text-xl font-black shadow-xl gap-3 group bg-primary hover:bg-primary/90 transition-all active:scale-95"
+              className="w-full rounded-2xl h-24 text-2xl font-black shadow-2xl gap-3 group bg-primary hover:bg-primary/90 transition-all active:scale-95 border-b-4 border-primary-foreground/20"
             >
               <PlayCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
               VÀO CA
             </Button>
           </div>
         ) : (
-          <Card className="w-full border-none shadow-2xl overflow-hidden bg-zinc-950 text-white">
+          <Card className="w-full border-zinc-800 shadow-2xl overflow-hidden bg-zinc-950 rounded-[2rem] border-2">
             <CardContent className="p-0">
-              <div className="bg-zinc-900 p-4 border-b border-zinc-800 flex items-center justify-between">
+              <div className="bg-zinc-900/50 p-5 border-b border-zinc-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-green-500">Đang trong ca làm</span>
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                  <span className="text-xs font-black uppercase tracking-widest text-green-500">ĐANG TRONG CA LÀM</span>
                 </div>
-                <div className="text-[10px] bg-primary/20 text-primary-foreground px-2 py-0.5 rounded font-bold border border-primary/30">
-                  Hệ số tự động
+                <div className="text-[10px] bg-zinc-800 text-zinc-400 px-2.5 py-1 rounded-md font-black border border-zinc-700">
+                  Hệ số x{activeSession.multiplier.toFixed(1)}
                 </div>
               </div>
               
-              <div className="p-6 text-center space-y-6">
-                <div className="space-y-1">
-                  <p className="text-[10px] text-zinc-400 uppercase font-bold">Thời gian làm việc</p>
-                  <div className="text-5xl font-black text-white font-mono tracking-tighter">
+              <div className="p-8 text-center space-y-8">
+                <div className="space-y-2">
+                  <p className="text-[10px] text-zinc-500 uppercase font-black tracking-[0.2em]">THỜI GIAN LÀM VIỆC</p>
+                  <div className="text-6xl font-black text-white font-mono tracking-tighter leading-none">
                     {elapsedTime}
                   </div>
-                  <div className="flex items-center justify-center gap-2 mt-2">
+                  <div className="pt-2">
                     <span className={cn(
-                      "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-                      isOvertime ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                      "text-[10px] font-black px-4 py-1.5 rounded-full border uppercase tracking-widest",
+                      isOvertime ? "bg-orange-500/10 text-orange-500 border-orange-500/20" : "bg-primary/10 text-primary border-primary/20"
                     )}>
                       {isOvertime ? "TRẠNG THÁI: TĂNG CA (OT)" : "TRẠNG THÁI: GIỜ HÀNH CHÍNH"}
                     </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 border-y border-zinc-800 py-4">
-                  <div className="text-left border-r border-zinc-800 pr-4">
-                    <p className="text-[10px] text-zinc-400 uppercase font-bold">Bắt đầu lúc</p>
-                    <p className="text-sm font-bold text-zinc-200">{new Date(activeSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
+                <div className="grid grid-cols-2 gap-8 border-y border-zinc-900 py-6">
+                  <div className="text-left border-r border-zinc-900 pr-4">
+                    <p className="text-[10px] text-zinc-500 uppercase font-black tracking-wider mb-1">BẮT ĐẦU LÚC</p>
+                    <p className="text-xl font-black text-white">{new Date(activeSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[10px] text-zinc-400 uppercase font-bold">Lương OT tạm tính</p>
-                    <p className="text-sm font-black text-green-400">+{formatCurrency(currentSalary)}</p>
+                  <div className="text-right pl-4">
+                    <p className="text-[10px] text-zinc-500 uppercase font-black tracking-wider mb-1">LƯƠNG OT TẠM TÍNH</p>
+                    <p className="text-xl font-black text-green-500">+{formatCurrency(currentSalary)}</p>
                   </div>
                 </div>
 
                 <Button 
                   onClick={punchOut} 
                   variant="destructive" 
-                  className="w-full h-16 rounded-xl shadow-lg flex items-center justify-center gap-3 text-lg font-black group"
+                  className="w-full h-20 rounded-2xl shadow-xl flex items-center justify-center gap-3 text-xl font-black group border-b-4 border-black/20"
                 >
-                  <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                  RA CA
+                  <LogOut className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+                  KẾT THÚC CA LÀM
                 </Button>
+                
+                <p className="text-[10px] text-zinc-600 font-medium italic">Nhấn kết thúc để lưu vào nhật ký chấm công</p>
               </div>
             </CardContent>
           </Card>
         )}
       </div>
 
-      <Card className="border-none shadow-lg overflow-hidden bg-primary text-primary-foreground">
-        <CardContent className="p-6 space-y-4">
+      <Card className="border-none shadow-2xl overflow-hidden bg-primary text-primary-foreground rounded-[2rem] card-shadow">
+        <CardContent className="p-8 space-y-6">
           <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs uppercase font-bold opacity-70 tracking-wider">Thực lĩnh dự kiến kỳ này</p>
-              <p className="text-4xl font-black mt-1 tracking-tighter">{formatCurrency(salaryInfo.netSalary)}</p>
+            <div className="space-y-1">
+              <p className="text-[10px] uppercase font-black opacity-80 tracking-[0.15em]">THỰC LĨNH DỰ KIẾN KỲ NÀY</p>
+              <p className="text-5xl font-black tracking-tighter">{formatCurrency(salaryInfo.netSalary)}</p>
             </div>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-12 w-12">
-                  <Calculator className="w-6 h-6" />
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-12 w-12 rounded-xl">
+                  <Calculator className="w-7 h-7" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 shadow-2xl border-none p-4">
-                <div className="space-y-3">
-                  <h4 className="font-bold border-b pb-2 text-primary flex items-center gap-2">
-                    <Calculator className="w-4 h-4" />
-                    Chi tiết bảng tính lương
+              <PopoverContent className="w-80 shadow-2xl border-none p-5 rounded-3xl bg-zinc-900 text-white">
+                <div className="space-y-4">
+                  <h4 className="font-black border-b border-zinc-800 pb-3 text-primary flex items-center gap-2 text-lg uppercase tracking-tight">
+                    <Calculator className="w-5 h-5" />
+                    BẢNG TÍNH LƯƠNG
                   </h4>
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Lương cơ bản (Tháng):</span> 
-                      <span className="font-medium">{formatCurrency(settings.baseMonthlySalary)}</span>
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between text-xs font-bold text-zinc-400">
+                      <span>Lương cơ bản (Tháng):</span> 
+                      <span className="text-white">{formatCurrency(settings.baseMonthlySalary)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground font-bold">Tiền sản phẩm:</span> 
-                      <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.productSalary)}</span>
+                    <div className="flex justify-between text-xs font-bold text-zinc-400">
+                      <span>Lương tăng ca (OT):</span> 
+                      <span className="text-green-500">+{formatCurrency(salaryInfo.sessionSalary)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Lương tăng ca (OT):</span> 
-                      <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.sessionSalary)}</span>
+                    <div className="flex justify-between text-xs font-bold text-zinc-400">
+                      <span>Tiền cơm & Phụ cấp:</span> 
+                      <span className="text-green-500">+{formatCurrency(salaryInfo.lunchAllowance + salaryInfo.otherAllowances)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground font-bold">Tiền cơm:</span> 
-                      <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.lunchAllowance)}</span>
+                    <div className="border-t border-zinc-800 pt-2.5 flex justify-between text-sm font-black">
+                      <span className="text-zinc-300">Tổng thu nhập:</span>
+                      <span className="text-primary">{formatCurrency(salaryInfo.grossIncome)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground font-bold">Chuyên cần:</span> 
-                      <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.attendanceBonus)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Phụ cấp khác:</span> 
-                      <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.otherAllowances)}</span>
-                    </div>
-                    <div className="border-t pt-2 flex justify-between text-sm font-bold">
-                      <span>Tổng thu nhập (Gross):</span>
-                      <span>{formatCurrency(salaryInfo.grossIncome)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-destructive font-medium">
-                      <span>Bảo hiểm (10.5%):</span>
-                      <span>-{formatCurrency(salaryInfo.insuranceAmount)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-destructive font-medium">
-                      <span>Thuế TNCN ({settings.incomeTaxRate}%):</span>
-                      <span>-{formatCurrency(salaryInfo.incomeTaxAmount)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-destructive font-medium">
-                      <span>Đoàn phí:</span> 
-                      <span>-{formatCurrency(settings.unionFee || 0)}</span>
+                    <div className="flex justify-between text-xs font-bold text-red-500">
+                      <span>Khấu trừ (BH+Thuế+Đoàn):</span>
+                      <span>-{formatCurrency(salaryInfo.insuranceAmount + salaryInfo.incomeTaxAmount + (settings.unionFee || 0))}</span>
                     </div>
                   </div>
-                  <div className="border-t-2 border-dashed pt-2 flex justify-between font-black text-xl text-primary">
-                    <span>THỰC LĨNH:</span> 
-                    <span>{formatCurrency(salaryInfo.netSalary)}</span>
+                  <div className="border-t-2 border-dashed border-zinc-700 pt-3 flex justify-between font-black text-2xl text-white">
+                    <span>CÒN LẠI:</span> 
+                    <span className="text-primary">{formatCurrency(salaryInfo.netSalary)}</span>
                   </div>
                 </div>
               </PopoverContent>
             </Popover>
           </div>
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-[10px] uppercase font-bold">
-              <span>Mục tiêu: {formatCurrency(settings.monthlyTarget)}</span>
+          <div className="space-y-2">
+            <div className="flex justify-between text-[10px] uppercase font-black tracking-widest">
+              <span>MỤC TIÊU: {formatCurrency(settings.monthlyTarget)}</span>
               <span>{targetPercent}%</span>
             </div>
-            <Progress value={targetPercent} className="h-2.5 bg-white/20" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-none shadow-md bg-white dark:bg-zinc-900 overflow-hidden">
-        <CardHeader className="p-4 pb-2 border-b">
-          <CardTitle className="text-sm font-bold flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-primary" />
-            Tiến Độ Số Giờ Làm Việc
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 space-y-5">
-          <div className="space-y-2">
-            <div className="flex justify-between items-end">
-              <div className="flex items-center gap-2">
-                <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs font-bold uppercase tracking-wider">Tuần này</span>
-              </div>
-              <span className="text-xs font-black text-primary">{Math.round(progressData.weekHours)}h / {progressData.weekTarget}h</span>
-            </div>
-            <Progress value={progressData.weekProgress} className="h-2" />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between items-end">
-              <div className="flex items-center gap-2">
-                <Timer className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs font-bold uppercase tracking-wider">Tháng này</span>
-              </div>
-              <span className="text-xs font-black text-primary">{Math.round(progressData.monthHours)}h / {progressData.monthTargetHours}h</span>
-            </div>
-            <Progress value={progressData.monthProgress} className="h-2" />
+            <Progress value={targetPercent} className="h-3 bg-white/20 rounded-full" />
           </div>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-2 gap-4">
-        <Card className="border-none shadow-sm border-l-4 border-l-green-500 overflow-hidden">
-          <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-xs font-bold flex items-center gap-2">
+        <Card className="border-none shadow-xl bg-zinc-900 rounded-[1.5rem] overflow-hidden border-l-4 border-l-green-500">
+          <CardHeader className="p-4 pb-1">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-zinc-500">
               <CalendarCheck className="w-4 h-4 text-green-500" />
-              <span>Phép Năm Còn Lại</span>
+              Phép Năm Còn Lại
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-2">
-            <Input 
-              type="number"
-              placeholder="0"
-              className="h-10 font-black text-xl text-green-600 border-none bg-transparent focus-visible:ring-0 p-0 shadow-none"
-              value={settings.annualLeaveBalance || ""}
-              onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
-            />
+          <CardContent className="p-4 pt-1">
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-black text-white">{settings.annualLeaveBalance || 0}</span>
+              <span className="text-[10px] font-bold text-zinc-500 uppercase">Ngày</span>
+            </div>
+            <p className="text-[9px] text-zinc-600 font-medium mt-1">Nghỉ không mất lương & chuyên cần</p>
           </CardContent>
         </Card>
 
-        <Card className={cn("border-none shadow-sm border-l-4 overflow-hidden transition-all duration-300", absenceColors.border)}>
-          <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-xs font-bold flex items-center gap-2">
-              <AlertTriangle className={cn("w-4 h-4", absenceColors.icon)} />
-              <span>Số Ngày Nghỉ K.Phép</span>
+        <Card className="border-none shadow-xl bg-zinc-900 rounded-[1.5rem] overflow-hidden border-l-4 border-l-orange-500">
+          <CardHeader className="p-4 pb-1">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-zinc-500">
+              <AlertTriangle className="w-4 h-4 text-orange-500" />
+              Số Ngày Nghỉ K.Phép
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-2">
-            <Input 
-              type="number"
-              placeholder="0"
-              className={cn("h-10 font-black text-xl border-none bg-transparent focus-visible:ring-0 p-0 shadow-none", absenceColors.text)}
-              value={settings.unexcusedAbsences || ""}
-              onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)}
-            />
-            <div className="flex items-center gap-1 mt-1">
-              <Award className={cn("w-3 h-3", salaryInfo.attendanceBonus > 0 ? "text-green-500" : "text-muted-foreground")} />
-              <span className="text-[9px] font-bold">Thưởng chuyên cần: {formatCurrency(salaryInfo.attendanceBonus)}</span>
+          <CardContent className="p-4 pt-1">
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-black text-white">{settings.unexcusedAbsences || 0}</span>
+              <span className="text-[10px] font-bold text-zinc-500 uppercase">Ngày</span>
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <Award className="w-3.5 h-3.5 text-green-500" />
+              <span className="text-[9px] font-bold text-green-500">Thưởng: {formatCurrency(salaryInfo.attendanceBonus)}</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <Card className="border-none shadow-sm bg-muted/40">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Wallet className="w-3.5 h-3.5 text-primary" />
-              <p className="text-[9px] text-muted-foreground uppercase font-bold leading-none">Lương tháng</p>
+        <Card className="border-none shadow-md bg-zinc-900/40 rounded-2xl border border-zinc-800">
+          <CardContent className="p-4 space-y-1">
+            <div className="flex items-center gap-1.5">
+              <Wallet className="w-3.5 h-3.5 text-zinc-500" />
+              <p className="text-[9px] text-zinc-500 uppercase font-black tracking-tight">LƯƠNG THÁNG</p>
             </div>
-            <p className="text-xs font-black truncate">{formatCurrency(settings.baseMonthlySalary)}</p>
+            <p className="text-xs font-black text-white">{formatCurrency(settings.baseMonthlySalary)}</p>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm bg-muted/40">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Clock className="w-3.5 h-3.5 text-primary" />
-              <p className="text-[9px] text-muted-foreground uppercase font-bold leading-none">Tăng ca / 1h</p>
+        <Card className="border-none shadow-md bg-zinc-900/40 rounded-2xl border border-zinc-800">
+          <CardContent className="p-4 space-y-1">
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-zinc-500" />
+              <p className="text-[9px] text-zinc-500 uppercase font-black tracking-tight">TĂNG CA / 1H</p>
             </div>
-            <p className="text-xs font-black truncate">{formatCurrency(settings.hourlyRate)}/h</p>
+            <p className="text-xs font-black text-white">{formatCurrency(settings.hourlyRate)}/h</p>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm bg-muted/40">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-1.5 mb-1">
+        <Card className="border-none shadow-md bg-zinc-900/40 rounded-2xl border border-zinc-800">
+          <CardContent className="p-4 space-y-1">
+            <div className="flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5 text-primary" />
-              <p className="text-[9px] text-muted-foreground uppercase font-bold leading-none">OT (x1.5)</p>
+              <p className="text-[9px] text-primary uppercase font-black tracking-tight">OT (X1.5)</p>
             </div>
-            <p className="text-xs font-black truncate">{formatCurrency(Math.round(settings.hourlyRate * 1.5))}/h</p>
+            <p className="text-xs font-black text-primary">{formatCurrency(Math.round(settings.hourlyRate * 1.5))}/h</p>
           </CardContent>
         </Card>
       </div>
