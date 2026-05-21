@@ -98,26 +98,6 @@ export default function SettingsPage() {
                 <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Số ngày phép hiện có</p>
                 <p className="text-3xl font-black text-green-600">{settings.annualLeaveBalance} <span className="text-sm font-normal">ngày</span></p>
               </div>
-              <div className="flex flex-col gap-2">
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  className="h-9 bg-green-600 hover:bg-green-700 gap-2 shadow-sm"
-                  onClick={() => updateSettings({...settings, annualLeaveBalance: settings.annualLeaveBalance + 1})}
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  Tháng mới (+1)
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="h-9 border-destructive text-destructive hover:bg-destructive/5 gap-2"
-                  onClick={() => updateSettings({...settings, annualLeaveBalance: Math.max(0, settings.annualLeaveBalance - 1)})}
-                >
-                  <MinusCircle className="w-4 h-4" />
-                  Đã dùng (-1)
-                </Button>
-              </div>
             </div>
           </div>
           
@@ -318,14 +298,6 @@ export default function SettingsPage() {
                 onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} 
               />
             </div>
-          </div>
-          <div className={cn("text-[10px] p-2 rounded italic border", absenceColors.bg, absenceColors.input)}>
-            <p className="font-bold mb-1">Quy tắc cảnh báo:</p>
-            <ul className="list-disc pl-3">
-              <li className={settings.unexcusedAbsences === 0 ? "font-bold text-green-700" : ""}>0 ngày: An toàn (Màu xanh)</li>
-              <li className={settings.unexcusedAbsences === 1 ? "font-bold text-orange-700" : ""}>1 ngày: Trừ 200k (Màu vàng cam)</li>
-              <li className={settings.unexcusedAbsences >= 2 ? "font-bold text-red-700" : ""}>&ge; 2 ngày: Mất hết chuyên cần (Màu đỏ)</li>
-            </ul>
           </div>
         </CardContent>
       </Card>
