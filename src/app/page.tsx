@@ -5,7 +5,7 @@ import { DigitalClock } from '@/components/attendance/DigitalClock';
 import { useAttendance } from '@/hooks/useAttendance';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { LogOut, TrendingUp, Wallet, Calculator, Info } from 'lucide-react';
+import { LogOut, TrendingUp, Wallet, Calculator, Info, CalendarCheck } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -61,6 +61,10 @@ export default function Home() {
         <div>
           <h1 className="text-2xl font-bold font-headline">TimeSnap</h1>
           <p className="text-muted-foreground text-sm">Chấm công chuyên nghiệp</p>
+        </div>
+        <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/30 px-3 py-1.5 rounded-full border border-green-200 dark:border-green-800">
+          <CalendarCheck className="w-4 h-4 text-green-600" />
+          <span className="text-xs font-bold text-green-700 dark:text-green-400">Phép: {settings.annualLeaveBalance} ngày</span>
         </div>
       </header>
 
@@ -153,6 +157,9 @@ export default function Home() {
                     <span>THỰC LĨNH:</span> 
                     <span>{formatCurrency(salaryInfo.netSalary)}</span>
                   </div>
+                  <p className="text-[10px] text-muted-foreground italic mt-2 text-center">
+                    * Nghỉ phép năm được trả lương đầy đủ và không bị trừ ở bảng này.
+                  </p>
                 </div>
               </PopoverContent>
             </Popover>

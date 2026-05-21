@@ -22,6 +22,7 @@ const defaultSettings: AppSettings = {
   allowancePhone: 0,
   allowanceAttendanceBase: 600000,
   unexcusedAbsences: 0,
+  annualLeaveBalance: 11, // Giả sử đã dùng 1 ngày trong tháng này (còn 11 ngày cho năm)
   allowanceToxic: 287000,
   allowanceBonus: 213000,
   insuranceRate: 10.5,
@@ -132,6 +133,8 @@ export function useAttendance() {
     }, 0);
 
     let attendanceBonus = settings.allowanceAttendanceBase;
+    // Chỉ trừ chuyên cần nếu là "Nghỉ không phép" (unexcusedAbsences)
+    // Phép năm không tính vào đây.
     if (settings.unexcusedAbsences === 1) {
       attendanceBonus -= 200000;
     } else if (settings.unexcusedAbsences >= 2) {

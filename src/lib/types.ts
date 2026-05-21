@@ -30,6 +30,9 @@ export interface AppSettings {
   allowanceToxic: number;      // Phụ cấp độc hại
   allowanceBonus: number;      // Thưởng doanh thu/năng suất
   
+  // Quản lý phép
+  annualLeaveBalance: number;  // Số ngày phép năm còn lại
+  
   // Khấu trừ hàng tháng
   insuranceRate: number;    // % đóng BHXH+BHYT+BHTN (mặc định 10.5%)
   unionFee: number;         // Đoàn phí

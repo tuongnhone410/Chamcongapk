@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle, CalendarCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
   const { settings, updateSettings, isLoaded } = useAttendance();
@@ -23,7 +24,6 @@ export default function SettingsPage() {
       ...settings,
       baseMonthlySalary: numVal,
       hourlyRate: calculatedHourly,
-      // Mặc định lương đóng BH bằng lương cơ bản nếu chưa nhập
       insuranceSalary: settings.insuranceSalary || numVal 
     });
   };
@@ -43,6 +43,53 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold font-headline">Cấu Hình Lương</h1>
         <p className="text-muted-foreground text-sm">Thiết lập chi tiết dựa trên hợp đồng lao động</p>
       </header>
+
+      {/* Quản lý phép năm */}
+      <Card className="border-none shadow-sm border-l-4 border-l-green-500">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center space-x-2">
+            <CalendarCheck className="w-5 h-5 text-green-500" />
+            <span>Quản Lý Phép Năm</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between bg-green-50 dark:bg-green-900/10 p-4 rounded-lg">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase font-bold">Số ngày phép còn lại</p>
+              <p className="text-2xl font-black text-green-600">{settings.annualLeaveBalance} ngày</p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="h-8"
+                onClick={() => updateSettings({...settings, annualLeaveBalance: settings.annualLeaveBalance + 1})}
+              >
+                +1 ngày
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="h-8 text-destructive"
+                onClick={() => updateSettings({...settings, annualLeaveBalance: Math.max(0, settings.annualLeaveBalance - 1)})}
+              >
+                Dùng 1 ngày
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Điều chỉnh trực tiếp số phép</Label>
+            <Input 
+              type="number" 
+              value={getInputValue(settings.annualLeaveBalance)}
+              onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
+            />
+            <p className="text-[10px] text-muted-foreground italic">
+              * Nghỉ phép năm không mất chuyên cần và không mất lương cơ bản.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-none shadow-sm">
         <CardHeader>
@@ -149,7 +196,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground italic">
-            * 1 ngày nghỉ K.P trừ 200k, từ 2 ngày trở lên trừ hết chuyên cần.
+            * 1 ngày nghỉ K.P trừ 200k, từ 2 ngày trở lên trừ hết chuyên cần. Nghỉ phép năm sẽ không bị trừ ở đây.
           </p>
         </CardContent>
       </Card>
