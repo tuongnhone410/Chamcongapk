@@ -113,7 +113,6 @@ export default function Home() {
 
   const salaryInfo = useMemo(() => {
     if (!isLoaded) return null;
-    // Sử dụng logic tính toán lương dựa trên kỳ payday (giữ nguyên logic cũ cho phần tài chính)
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
@@ -223,7 +222,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Tổng giờ công tháng này - Điểm nhấn mới */}
       <Card className="border-none shadow-2xl bg-zinc-900 rounded-[2rem] overflow-hidden border border-zinc-800">
         <CardContent className="p-6 flex items-center justify-between">
           <div className="space-y-1">
@@ -239,7 +237,6 @@ export default function Home() {
         </CardContent>
       </Card>
 
-      {/* Biểu đồ 1 tuần */}
       <Card className="border-zinc-800 bg-zinc-900 shadow-xl rounded-[2rem] overflow-hidden border">
         <CardHeader className="p-6 pb-2">
           <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-zinc-400">
@@ -247,38 +244,40 @@ export default function Home() {
             Biểu đồ giờ công 7 ngày qua
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6 pt-2 h-[220px]">
-          <ChartContainer config={chartConfig} className="h-full w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analyticsData.chartData}>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis 
-                  dataKey="date" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#71717a', fontSize: 10, fontWeight: 'bold' }}
-                />
-                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                <Bar 
-                  dataKey="hours" 
-                  radius={[6, 6, 0, 0]} 
-                  barSize={20}
-                >
-                  {analyticsData.chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.hours > 8 ? "hsl(var(--primary))" : "#3f3f46"} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-          <div className="flex justify-between mt-4 px-2">
+        <CardContent className="p-6 pt-2">
+          <div className="h-[180px] w-full mb-2">
+            <ChartContainer config={chartConfig}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analyticsData.chartData}>
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#71717a', fontSize: 10, fontWeight: 'bold' }}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <Bar 
+                    dataKey="hours" 
+                    radius={[6, 6, 0, 0]} 
+                    barSize={20}
+                  >
+                    {analyticsData.chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.hours >= 8 ? "hsl(var(--primary))" : "#3f3f46"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </div>
+          <div className="flex justify-between items-center px-2 mt-6">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-primary rounded-sm" />
-              <span className="text-[9px] font-bold text-zinc-500 uppercase">Trên 8h</span>
+              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-tighter">Trên 8h</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-zinc-700 rounded-sm" />
-              <span className="text-[9px] font-bold text-zinc-500 uppercase">Dưới 8h</span>
+              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-tighter">Dưới 8h</span>
             </div>
           </div>
         </CardContent>
