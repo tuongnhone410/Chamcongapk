@@ -88,10 +88,10 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 pb-24">
-      <header className="flex items-center justify-between sticky top-0 z-20 bg-zinc-950/90 backdrop-blur-md py-4">
+      <header className="flex items-center justify-between sticky top-0 z-20 bg-zinc-950/90 py-4">
         <div>
-          <h1 className="text-2xl font-black font-headline tracking-tighter uppercase">Cài đặt lương</h1>
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest tracking-[0.2em]">Hệ thống tính toán Pro</p>
+          <h1 className="text-2xl font-black font-headline tracking-tighter uppercase text-white">Cài đặt lương</h1>
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Hệ thống tính toán Pro</p>
         </div>
         <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 rounded-xl px-6 font-black gap-2 shadow-xl h-12 active:scale-95 transition-all">
           <Save className="w-5 h-5" />
@@ -198,14 +198,14 @@ export default function SettingsPage() {
             </p>
           </div>
           <div className="space-y-1">
-            <Label className={labelClass}>CN x2.0</Label>
+            <Label className={labelClass}>OT CN</Label>
             <Input type="number" step="0.1" className={inputClass} value={localSettings.sundayMultiplier.toString()} onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)} />
             <p className="text-[10px] font-black text-orange-500 mt-1">
               {formatMoneyDisplay(localSettings.hourlyRate * localSettings.sundayMultiplier)}đ/h
             </p>
           </div>
           <div className="space-y-1">
-            <Label className={labelClass}>Lễ x3.0</Label>
+            <Label className={labelClass}>OT Lễ</Label>
             <Input type="number" step="0.1" className={inputClass} value={localSettings.holidayMultiplier.toString()} onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)} />
             <p className="text-[10px] font-black text-orange-500 mt-1">
               {formatMoneyDisplay(localSettings.hourlyRate * localSettings.holidayMultiplier)}đ/h
