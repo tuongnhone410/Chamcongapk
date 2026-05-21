@@ -255,7 +255,7 @@ export default function SettingsPage() {
       <Card className="border-zinc-800 bg-zinc-900 overflow-hidden rounded-[2rem]">
         <CardHeader className="pb-2">
           <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-blue-500">
-            <Gift className="w-4 h-4" /> Phụ Cấp & Tiền Cơm
+            <Gift className="w-4 h-4" /> Các khoản phụ cấp
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
