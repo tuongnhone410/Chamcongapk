@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
-import { LogIn, UserPlus, Github, Chrome } from 'lucide-react';
+import { LogIn, Chrome } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AuthPage() {
@@ -144,8 +144,9 @@ export default function AuthPage() {
                 Google
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

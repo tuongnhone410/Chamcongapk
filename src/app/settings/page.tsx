@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldCheck, Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap } from 'lucide-react';
+import { ShieldCheck, Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap, Skull } from 'lucide-react';
 import { AppSettings } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -437,23 +437,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-const Skull = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" 
-    height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M9 10L9.01 10" />
-    <path d="M15 10L15.01 10" />
-    <path d="M10 20v-3a2 2 0 1 1 4 0v3" />
-    <path d="M12 2a8 8 0 0 0-8 8c0 1.84.62 3.52 1.66 4.85a3 3 0 0 1 .34 3.15V20a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2a3 3 0 0 1 .34-3.15 8 8 0 0 0 1.66-4.85 8 8 0 0 0-8-8z" />
-  </svg>
-);
