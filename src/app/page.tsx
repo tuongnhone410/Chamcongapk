@@ -5,6 +5,7 @@ import { DigitalClock } from '@/components/attendance/DigitalClock';
 import { useAttendance } from '@/hooks/useAttendance';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { 
   LogOut, 
   TrendingUp, 
@@ -20,6 +21,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from '@/lib/utils';
+import { AppSettings } from '@/lib/types';
 
 export default function Home() {
   const { 
@@ -67,11 +69,20 @@ export default function Home() {
     return `${(val || 0).toLocaleString('vi-VN')}${settings.currency}`;
   };
 
+  const handleNumberInput = (key: keyof AppSettings, val: string) => {
+    updateSettings({
+      ...settings,
+      [key]: val === "" ? 0 : parseFloat(val)
+    });
+  };
+
+  const getNumberValue = (val: number) => val === 0 ? "" : val.toString();
+
   // Logic màu sắc cho nghỉ không phép
   const getAbsenceColorClasses = (count: number) => {
-    if (count === 0) return { text: "text-green-600", border: "border-l-green-500", icon: "text-green-500", bg: "bg-green-200" };
-    if (count === 1) return { text: "text-orange-600", border: "border-l-orange-500", icon: "text-orange-500", bg: "bg-orange-200" };
-    return { text: "text-red-600", border: "border-l-red-600", icon: "text-red-600", bg: "bg-red-200" };
+    if (count === 0) return { text: "text-green-600", border: "border-l-green-500", icon: "text-green-500", bg: "bg-green-50", input: "border-green-200 focus-visible:ring-green-500" };
+    if (count === 1) return { text: "text-orange-600", border: "border-l-orange-500", icon: "text-orange-500", bg: "bg-orange-50", input: "border-orange-200 focus-visible:ring-orange-500" };
+    return { text: "text-red-600", border: "border-l-red-600", icon: "text-red-600", bg: "bg-red-50", input: "border-red-200 focus-visible:ring-red-500" };
   };
 
   const absenceColors = getAbsenceColorClasses(settings.unexcusedAbsences);
@@ -204,28 +215,34 @@ export default function Home() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-2 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-2xl font-black text-green-600">{settings.annualLeaveBalance}</span>
-              <div className="flex gap-1">
+            <div className="flex items-center gap-2">
+              <Input 
+                type="number"
+                placeholder="0"
+                className="h-9 font-black text-lg text-green-600 border-green-200 focus-visible:ring-green-500 w-full"
+                value={getNumberValue(settings.annualLeaveBalance)}
+                onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
+              />
+              <div className="flex flex-col gap-1">
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className="h-7 w-7 rounded-full border-green-200"
-                  onClick={() => updateSettings({...settings, annualLeaveBalance: Math.max(0, settings.annualLeaveBalance - 1)})}
+                  className="h-4 w-7 border-green-200"
+                  onClick={() => updateSettings({...settings, annualLeaveBalance: settings.annualLeaveBalance + 1})}
                 >
-                  <MinusCircle className="w-4 h-4 text-green-600" />
+                  <PlusCircle className="w-3 h-3 text-green-600" />
                 </Button>
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className="h-7 w-7 rounded-full border-green-200"
-                  onClick={() => updateSettings({...settings, annualLeaveBalance: settings.annualLeaveBalance + 1})}
+                  className="h-4 w-7 border-green-200"
+                  onClick={() => updateSettings({...settings, annualLeaveBalance: Math.max(0, settings.annualLeaveBalance - 1)})}
                 >
-                  <PlusCircle className="w-4 h-4 text-green-600" />
+                  <MinusCircle className="w-3 h-3 text-green-600" />
                 </Button>
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground italic leading-tight">Mỗi tháng làm việc đủ sẽ được tích lũy 1 ngày phép.</p>
+            <p className="text-[9px] text-muted-foreground italic leading-tight">Tích lũy 1 ngày/tháng.</p>
           </CardContent>
         </Card>
 
@@ -237,32 +254,36 @@ export default function Home() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-2 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className={cn("text-2xl font-black transition-colors duration-300", absenceColors.text)}>
-                {settings.unexcusedAbsences}
-              </span>
-              <div className="flex gap-1">
+            <div className="flex items-center gap-2">
+              <Input 
+                type="number"
+                placeholder="0"
+                className={cn("h-9 font-black text-lg w-full transition-all border-2", absenceColors.text, absenceColors.input)}
+                value={getNumberValue(settings.unexcusedAbsences)}
+                onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)}
+              />
+              <div className="flex flex-col gap-1">
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className={cn("h-7 w-7 rounded-full border-opacity-30", absenceColors.bg.replace('bg-', 'border-'))}
-                  onClick={() => updateSettings({...settings, unexcusedAbsences: Math.max(0, settings.unexcusedAbsences - 1)})}
+                  className={cn("h-4 w-7 border-opacity-30", absenceColors.bg.replace('bg-', 'border-'))}
+                  onClick={() => updateSettings({...settings, unexcusedAbsences: settings.unexcusedAbsences + 1})}
                 >
-                  <MinusCircle className={cn("w-4 h-4", absenceColors.text)} />
+                  <PlusCircle className={cn("w-3 h-3", absenceColors.text)} />
                 </Button>
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className={cn("h-7 w-7 rounded-full border-opacity-30", absenceColors.bg.replace('bg-', 'border-'))}
-                  onClick={() => updateSettings({...settings, unexcusedAbsences: settings.unexcusedAbsences + 1})}
+                  className={cn("h-4 w-7 border-opacity-30", absenceColors.bg.replace('bg-', 'border-'))}
+                  onClick={() => updateSettings({...settings, unexcusedAbsences: Math.max(0, settings.unexcusedAbsences - 1)})}
                 >
-                  <PlusCircle className={cn("w-4 h-4", absenceColors.text)} />
+                  <MinusCircle className={cn("w-3 h-3", absenceColors.text)} />
                 </Button>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Award className={cn("w-3.5 h-3.5", salaryInfo.attendanceBonus > 0 ? "text-green-500" : "text-muted-foreground")} />
-              <span className="text-[10px] font-bold">Chuyên cần: {formatCurrency(salaryInfo.attendanceBonus)}</span>
+            <div className="flex items-center gap-1">
+              <Award className={cn("w-3 h-3", salaryInfo.attendanceBonus > 0 ? "text-green-500" : "text-muted-foreground")} />
+              <span className="text-[9px] font-bold">Thưởng: {formatCurrency(salaryInfo.attendanceBonus)}</span>
             </div>
           </CardContent>
         </Card>
