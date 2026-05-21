@@ -18,13 +18,28 @@ import {
   Timer,
   PlayCircle,
   BarChart3,
-  CalendarDays
+  CalendarDays,
+  TrendingUp
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent,
+  type ChartConfig 
+} from "@/components/ui/chart";
+import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from "recharts";
 import { cn } from '@/lib/utils';
 import { AppSettings } from '@/lib/types';
 import { useState, useEffect, useMemo } from 'react';
+
+const chartConfig = {
+  salary: {
+    label: "Thu nhập",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig;
 
 export default function Home() {
   const { 
@@ -88,7 +103,22 @@ export default function Home() {
       return checkIn >= startDate && checkIn <= endDate;
     });
 
-    return { startDate, endDate, periodSessions };
+    // Group sessions by day for the chart
+    const dailyData: Record<string, number> = {};
+    periodSessions.forEach(s => {
+      const dateKey = new Date(s.checkIn).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      dailyData[dateKey] = (dailyData[dateKey] || 0) + s.salary;
+    });
+
+    const chartData = Object.entries(dailyData)
+      .map(([date, salary]) => ({ date, salary }))
+      .sort((a, b) => {
+        const [dayA, monthA] = a.date.split('/').map(Number);
+        const [dayB, monthB] = b.date.split('/').map(Number);
+        return monthA !== monthB ? monthA - monthB : dayA - dayB;
+      });
+
+    return { startDate, endDate, periodSessions, chartData };
   }, [sessions, settings.payday, isLoaded]);
 
   const salaryInfo = useMemo(() => {
@@ -102,14 +132,6 @@ export default function Home() {
 
   const formatCurrency = (val: number) => {
     return `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
-  };
-
-  const handleNumberInput = (key: keyof AppSettings, val: string) => {
-    const num = val === "" ? 0 : parseFloat(val);
-    updateSettings({
-      ...settings,
-      [key]: num
-    });
   };
 
   const currentSalary = (() => {
@@ -206,8 +228,6 @@ export default function Home() {
                   <LogOut className="w-6 h-6 group-hover:rotate-12 transition-transform" />
                   KẾT THÚC CA LÀM
                 </Button>
-                
-                <p className="text-[10px] text-zinc-600 font-medium italic">Nhấn kết thúc để lưu vào nhật ký chấm công</p>
               </div>
             </CardContent>
           </Card>
@@ -270,6 +290,43 @@ export default function Home() {
             </div>
             <Progress value={targetPercent} className="h-3 bg-white/20 rounded-full" />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Biểu đồ xu hướng thu nhập */}
+      <Card className="border-zinc-800 bg-zinc-900 shadow-xl rounded-[2rem] overflow-hidden border">
+        <CardHeader className="p-6 pb-2">
+          <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-zinc-400">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            Biểu đồ thu nhập OT hàng ngày
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-2 h-[200px]">
+          <ChartContainer config={chartConfig} className="h-full w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={periodData.chartData}>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#71717a', fontSize: 10, fontWeight: 'bold' }}
+                />
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                <Bar 
+                  dataKey="salary" 
+                  fill="var(--color-salary)" 
+                  radius={[4, 4, 0, 0]} 
+                  barSize={12}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+          {periodData.chartData.length === 0 && (
+            <div className="flex items-center justify-center h-full -mt-4">
+              <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">Chưa có dữ liệu cho kỳ này</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
