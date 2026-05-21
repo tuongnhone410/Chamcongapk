@@ -198,16 +198,19 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         const checkIn = new Date(`${dateStr}T${data.startTime}`);
         const checkOut = new Date(`${dateStr}T${data.endTime}`);
         const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-        const salary = calculateSessionSalary(diffMinutes, data.multiplier);
+        
+        // Cải tiến: Nếu chọn -1 thì tự động nhận diện CN/Lễ
+        const finalMultiplier = data.multiplier === -1 ? getAutoMultiplier(current) : data.multiplier;
+        const salary = calculateSessionSalary(diffMinutes, finalMultiplier);
         
         const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
         batch.set(newDocRef, {
           checkIn: checkIn.toISOString(),
           checkOut: checkOut.toISOString(),
-          multiplier: data.multiplier,
+          multiplier: finalMultiplier,
           totalMinutes: diffMinutes,
           salary,
-          note: 'Thêm hàng loạt',
+          note: data.multiplier === -1 ? 'Thêm hàng loạt (Tự động)' : 'Thêm hàng loạt',
           createdAt: new Date().toISOString()
         });
       }
@@ -215,7 +218,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     }
     
     await batch.commit();
-  }, [db, user, sessions, calculateSessionSalary]);
+  }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier]);
 
   const updateSettings = useCallback((newSettings: AppSettings) => {
     if (!db || !user) return;

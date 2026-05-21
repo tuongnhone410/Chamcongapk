@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { History, Trash2, Edit3, Clock, Calendar, StickyNote, Download, Zap, PlusCircle, Layers } from 'lucide-react';
+import { History, Trash2, Edit3, Clock, Calendar, StickyNote, Download, Zap, PlusCircle, Layers, Star } from 'lucide-react';
 import { useState } from 'react';
 import { WorkSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -42,7 +42,7 @@ export default function HistoryPage() {
     endDate: new Date().toISOString().slice(0, 10),
     startTime: '08:00',
     endTime: '17:30',
-    multiplier: 1.0,
+    multiplier: -1, // -1 means AUTO recognition (Sun/Holiday)
     excludeSundays: true
   });
 
@@ -159,15 +159,17 @@ export default function HistoryPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Loại hình</Label>
+                  <Label>Loại hình (Hệ số lương)</Label>
                   <Select value={batchData.multiplier.toString()} onValueChange={(v) => setBatchData({...batchData, multiplier: parseFloat(v)})}>
                     <SelectTrigger className="bg-zinc-900 border-zinc-800">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="-1">Tự động nhận diện (CN/Lễ)</SelectItem>
                       <SelectItem value="1.0">Ngày thường (x1.0)</SelectItem>
-                      <SelectItem value={settings.overtimeMultiplier.toString()}>Tăng ca (x{settings.overtimeMultiplier})</SelectItem>
-                      <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (x{settings.sundayMultiplier})</SelectItem>
+                      <SelectItem value={settings.overtimeMultiplier.toString()}>Tăng ca (OT {settings.overtimeMultiplier})</SelectItem>
+                      <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (OT {settings.sundayMultiplier})</SelectItem>
+                      <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (OT {settings.holidayMultiplier})</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -179,7 +181,7 @@ export default function HistoryPage() {
                   />
                   <Label htmlFor="excludeSundays" className="text-xs font-bold cursor-pointer">Nghỉ Chủ Nhật (Không thêm vào CN)</Label>
                 </div>
-                <p className="text-[10px] text-zinc-500 italic">* Hệ thống sẽ bỏ qua những ngày đã có dữ liệu chấm công.</p>
+                <p className="text-[10px] text-zinc-500 italic">* Hệ thống sẽ tự dùng hệ số trong Cài đặt và bỏ qua ngày đã có dữ liệu.</p>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowBatchDialog(false)} className="border-zinc-800">Hủy</Button>
@@ -226,9 +228,9 @@ export default function HistoryPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1.0">Ngày thường (x1.0)</SelectItem>
-                      <SelectItem value={settings.overtimeMultiplier.toString()}>Tăng ca (x{settings.overtimeMultiplier})</SelectItem>
-                      <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (x{settings.sundayMultiplier})</SelectItem>
-                      <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (x{settings.holidayMultiplier})</SelectItem>
+                      <SelectItem value={settings.overtimeMultiplier.toString()}>Tăng ca (OT {settings.overtimeMultiplier})</SelectItem>
+                      <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (OT {settings.sundayMultiplier})</SelectItem>
+                      <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (OT {settings.holidayMultiplier})</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -288,6 +290,7 @@ export default function HistoryPage() {
                       <span className="font-bold text-sm">
                         {new Date(session.checkIn).toLocaleDateString('vi-VN', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </span>
+                      {session.multiplier === settings.holidayMultiplier && <Star className="w-3 h-3 text-red-500 fill-red-500" />}
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button 
@@ -341,9 +344,9 @@ export default function HistoryPage() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="1.0">Ngày thường (x1.0)</SelectItem>
-                                    <SelectItem value={settings.overtimeMultiplier.toString()}>Tăng ca (x{settings.overtimeMultiplier})</SelectItem>
-                                    <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (x{settings.sundayMultiplier})</SelectItem>
-                                    <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (x{settings.holidayMultiplier})</SelectItem>
+                                    <SelectItem value={settings.overtimeMultiplier.toString()}>Tăng ca (OT {settings.overtimeMultiplier})</SelectItem>
+                                    <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (OT {settings.sundayMultiplier})</SelectItem>
+                                    <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (OT {settings.holidayMultiplier})</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
@@ -381,7 +384,7 @@ export default function HistoryPage() {
                         <Zap className="w-3 h-3" />
                         <span>{formatHours(otMinutes)}</span>
                       </div>
-                      <p className="text-[9px] text-zinc-500">Tổng: {formatHours(session.totalMinutes)}</p>
+                      <p className="text-[9px] text-zinc-500">Tổng: {formatHours(session.totalMinutes)} (x{session.multiplier})</p>
                     </div>
                     <div className="space-y-1 text-right">
                       <p className="text-[10px] text-zinc-500 uppercase font-black">Lương OT</p>
