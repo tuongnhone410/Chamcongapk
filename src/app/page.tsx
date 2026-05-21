@@ -5,9 +5,10 @@ import { DigitalClock } from '@/components/attendance/DigitalClock';
 import { useAttendance } from '@/hooks/useAttendance';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { LogOut, TrendingUp, Wallet, Calculator } from 'lucide-react';
+import { LogOut, TrendingUp, Wallet, Calculator, Info } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Home() {
   const { 
@@ -127,8 +128,21 @@ export default function Home() {
                     <span>Tổng thu nhập (Gross):</span>
                     <span>{formatCurrency(salaryInfo.grossIncome)}</span>
                   </div>
-                  <div className="flex justify-between text-sm text-destructive font-medium">
-                    <span>Bảo hiểm (-{settings.insuranceRate}%):</span> 
+                  <div className="flex justify-between text-sm text-destructive font-medium items-center gap-1">
+                    <div className="flex items-center gap-1">
+                      <span>Bảo hiểm ({settings.insuranceRate}%):</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="w-3 h-3 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">BHXH (8%) + BHYT (1.5%) + BHTN (1%)</p>
+                            <p className="text-xs font-bold mt-1">Tính trên mức: {formatCurrency(settings.insuranceSalary)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <span>-{formatCurrency(salaryInfo.insuranceAmount)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-destructive font-medium">

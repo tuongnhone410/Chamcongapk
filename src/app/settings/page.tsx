@@ -22,7 +22,9 @@ export default function SettingsPage() {
     updateSettings({
       ...settings,
       baseMonthlySalary: numVal,
-      hourlyRate: calculatedHourly
+      hourlyRate: calculatedHourly,
+      // Mặc định lương đóng BH bằng lương cơ bản nếu chưa nhập
+      insuranceSalary: settings.insuranceSalary || numVal 
     });
   };
 
@@ -80,6 +82,43 @@ export default function SettingsPage() {
                   {daysInMonth.map(day => <SelectItem key={day} value={day.toString()}>Ngày {day}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-none shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center space-x-2">
+            <ShieldCheck className="w-5 h-5 text-primary" />
+            <span>Bảo Hiểm & Khấu Trừ</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-primary font-bold">Mức lương đóng BH (SI Wage)</Label>
+            <Input 
+              type="number" 
+              placeholder="Ví dụ: 6.017.000"
+              value={getInputValue(settings.insuranceSalary)} 
+              onChange={(e) => handleNumberInput('insuranceSalary', e.target.value)} 
+            />
+            <p className="text-[10px] text-muted-foreground italic">
+              * Đây là mức lương dùng để tính 10.5% bảo hiểm trong phiếu lương.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>Tỷ lệ đóng Bảo hiểm (BHXH, BHYT, BHTN) %</Label>
+            <Input type="number" step="0.1" value={getInputValue(settings.insuranceRate)} onChange={(e) => handleNumberInput('insuranceRate', e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Đoàn phí</Label>
+              <Input type="number" value={getInputValue(settings.unionFee)} onChange={(e) => handleNumberInput('unionFee', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Thuế TNCN</Label>
+              <Input type="number" value={getInputValue(settings.incomeTax)} onChange={(e) => handleNumberInput('incomeTax', e.target.value)} />
             </div>
           </div>
         </CardContent>
@@ -151,31 +190,6 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label>Xăng xe</Label>
               <Input type="number" value={getInputValue(settings.allowanceFuel)} onChange={(e) => handleNumberInput('allowanceFuel', e.target.value)} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-none shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <ShieldCheck className="w-5 h-5 text-primary" />
-            <span>Bảo Hiểm & Khấu Trừ</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Tỷ lệ đóng Bảo hiểm (%)</Label>
-            <Input type="number" step="0.1" value={getInputValue(settings.insuranceRate)} onChange={(e) => handleNumberInput('insuranceRate', e.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Đoàn phí</Label>
-              <Input type="number" value={getInputValue(settings.unionFee)} onChange={(e) => handleNumberInput('unionFee', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Thuế TNCN</Label>
-              <Input type="number" value={getInputValue(settings.incomeTax)} onChange={(e) => handleNumberInput('incomeTax', e.target.value)} />
             </div>
           </div>
         </CardContent>

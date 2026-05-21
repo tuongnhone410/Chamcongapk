@@ -12,6 +12,7 @@ export interface WorkSession {
 
 export interface AppSettings {
   baseMonthlySalary: number; // Lương cơ bản hàng tháng
+  insuranceSalary: number;    // Mức lương đóng bảo hiểm (SI Wage)
   hourlyRate: number; // Lương làm thêm / OT mỗi giờ
   currency: string;
   darkMode: boolean;
@@ -30,7 +31,7 @@ export interface AppSettings {
   allowanceBonus: number;      // Thưởng doanh thu/năng suất
   
   // Khấu trừ hàng tháng
-  insuranceRate: number;    // % đóng BHXH (mặc định 10.5%)
+  insuranceRate: number;    // % đóng BHXH+BHYT+BHTN (mặc định 10.5%)
   unionFee: number;         // Đoàn phí
   incomeTax: number;        // Thuế TNCN (tạm tính)
   

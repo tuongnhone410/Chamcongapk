@@ -9,6 +9,7 @@ const STORAGE_KEY_SETTINGS = 'timesnap_settings';
 
 const defaultSettings: AppSettings = {
   baseMonthlySalary: 5730000,
+  insuranceSalary: 6017000,
   hourlyRate: 27548,
   currency: '₫',
   darkMode: false,
@@ -122,16 +123,14 @@ export function useAttendance() {
   const calculateFullSalary = (periodSessions: WorkSession[]) => {
     const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
     
-    // Tính tiền cơm: 30k/ca, nếu làm > 10h (8h + 2h OT) thì thêm 15k
     const lunchAllowance = periodSessions.reduce((acc, s) => {
       let dailyLunch = settings.allowanceLunchPerShift;
-      if (s.totalMinutes >= 600) { // 600 phút = 10 tiếng
+      if (s.totalMinutes >= 600) { 
         dailyLunch += settings.allowanceLunchOT;
       }
       return acc + dailyLunch;
     }, 0);
 
-    // Tính tiền chuyên cần: Nghỉ 1 ngày -200k, >= 2 ngày mất hết
     let attendanceBonus = settings.allowanceAttendanceBase;
     if (settings.unexcusedAbsences === 1) {
       attendanceBonus -= 200000;
@@ -149,7 +148,11 @@ export function useAttendance() {
     const totalAllowances = otherAllowances + lunchAllowance + attendanceBonus;
     
     const grossIncome = (settings.baseMonthlySalary || 0) + sessionSalary + totalAllowances;
-    const insuranceAmount = (grossIncome * (settings.insuranceRate || 0)) / 100;
+    
+    // Bảo hiểm tính trên Lương đóng bảo hiểm (SI Wage)
+    const insSalary = settings.insuranceSalary || settings.baseMonthlySalary || 0;
+    const insuranceAmount = (insSalary * (settings.insuranceRate || 0)) / 100;
+    
     const netSalary = grossIncome - insuranceAmount - (settings.unionFee || 0) - (settings.incomeTax || 0);
 
     return {
