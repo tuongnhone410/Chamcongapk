@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
-import { LogIn, Chrome, AlertCircle, Clock } from 'lucide-react';
+import { LogIn, Chrome, AlertCircle, Clock, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AuthPage() {
@@ -35,11 +35,32 @@ export default function AuthPage() {
 
   const handleEmailAuth = async (mode: 'login' | 'signup') => {
     if (!auth) return;
-    if (!email || !password) {
+
+    // Chuẩn hóa dữ liệu đầu vào
+    let targetEmail = email.trim();
+    const targetPassword = password.trim();
+
+    // Hỗ trợ lối tắt "admin" như yêu cầu của người dùng
+    if (targetEmail.toLowerCase() === 'admin') {
+      targetEmail = 'admin@timesnap.com';
+    }
+
+    if (!targetEmail || !targetPassword) {
       toast({
         variant: 'destructive',
         title: 'Thiếu thông tin',
-        description: 'Vui lòng nhập đầy đủ email và mật khẩu.',
+        description: 'Vui lòng nhập đầy đủ tài khoản và mật khẩu.',
+      });
+      return;
+    }
+
+    // Kiểm tra định dạng email cơ bản trước khi gửi lên Firebase
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(targetEmail)) {
+      toast({
+        variant: 'destructive',
+        title: 'Định dạng không hợp lệ',
+        description: 'Vui lòng nhập email đúng định dạng (ví dụ: name@company.com).',
       });
       return;
     }
@@ -47,19 +68,18 @@ export default function AuthPage() {
     setLoading(true);
     try {
       if (mode === 'login') {
-        await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, targetEmail, targetPassword);
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        await createUserWithEmailAndPassword(auth, targetEmail, targetPassword);
       }
       router.push('/');
     } catch (error: any) {
-      console.error('Auth error:', error);
       let errorMessage = 'Đã có lỗi xảy ra';
       
       switch (error.code) {
         case 'auth/invalid-credential':
         case 'auth/wrong-password':
-          errorMessage = 'Email hoặc mật khẩu không chính xác';
+          errorMessage = 'Tài khoản hoặc mật khẩu không chính xác';
           break;
         case 'auth/user-not-found':
           errorMessage = 'Tài khoản này chưa tồn tại';
@@ -73,11 +93,8 @@ export default function AuthPage() {
         case 'auth/invalid-email':
           errorMessage = 'Định dạng email không hợp lệ';
           break;
-        case 'auth/network-request-failed':
-          errorMessage = 'Lỗi kết nối mạng, vui lòng kiểm tra lại';
-          break;
         default:
-          errorMessage = `Lỗi: ${error.message} (${error.code})`;
+          errorMessage = `Lỗi hệ thống: ${error.message}`;
       }
       
       toast({
@@ -98,7 +115,6 @@ export default function AuthPage() {
       await signInWithPopup(auth, provider);
       router.push('/');
     } catch (error: any) {
-      console.error('Google Auth error:', error);
       toast({
         variant: 'destructive',
         title: 'Lỗi đăng nhập Google',
@@ -116,10 +132,10 @@ export default function AuthPage() {
       <Card className="w-full max-w-md shadow-2xl border-zinc-800 bg-zinc-900 text-white overflow-hidden rounded-2xl">
         <CardHeader className="text-center space-y-2 pb-2">
           <div className="mx-auto w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-2 border border-primary/30">
-            <Clock className="w-8 h-8 text-primary" />
+            <ShieldCheck className="w-8 h-8 text-primary" />
           </div>
           <CardTitle className="text-3xl font-black tracking-tighter">TimeSnap</CardTitle>
-          <CardDescription className="text-zinc-400 font-medium">Đồng bộ ca làm việc lên đám mây</CardDescription>
+          <CardDescription className="text-zinc-400 font-medium">Hệ thống chấm công bảo mật</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           <Tabs defaultValue="login" className="w-full">
@@ -130,11 +146,11 @@ export default function AuthPage() {
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-zinc-300 font-bold ml-1 uppercase text-[10px] tracking-wider">Email công việc</Label>
+                <Label htmlFor="email" className="text-zinc-300 font-bold ml-1 uppercase text-[10px] tracking-wider">Tài khoản / Email</Label>
                 <Input 
                   id="email" 
-                  type="email" 
-                  placeholder="admin@example.com" 
+                  type="text" 
+                  placeholder="Nhập email của bạn..." 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-primary h-12 rounded-xl"
@@ -164,7 +180,7 @@ export default function AuthPage() {
                   onClick={() => handleEmailAuth('login')}
                   disabled={loading}
                 >
-                  {loading ? 'Đang xác thực...' : 'VÀO HỆ THỐNG'}
+                  {loading ? 'Đang xác thực...' : 'ĐĂNG NHẬP'}
                 </Button>
               </TabsContent>
               
@@ -196,13 +212,6 @@ export default function AuthPage() {
                 <Chrome className="w-5 h-5" />
                 Google Account
               </Button>
-              
-              <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10 mt-6">
-                <AlertCircle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                <p className="text-[11px] text-zinc-400 leading-relaxed">
-                  Lưu ý: Bạn cần <span className="text-white font-bold">Đăng ký (Signup)</span> lần đầu trước khi có thể đăng nhập. Tài khoản của bạn sẽ lưu trữ dữ liệu chấm công an toàn trên đám mây.
-                </p>
-              </div>
             </div>
           </Tabs>
         </CardContent>
