@@ -1,0 +1,23 @@
+{
+  "name": "TimeSnap Pro",
+  "short_name": "TimeSnap",
+  "description": "Hệ thống quản lý công và lương cá nhân chuyên nghiệp",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/timesnap/192/192",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://picsum.photos/seed/timesnap/512/512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
