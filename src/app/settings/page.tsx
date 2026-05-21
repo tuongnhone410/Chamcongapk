@@ -88,7 +88,7 @@ export default function SettingsPage() {
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center space-x-2">
             <CalendarCheck className="w-5 h-5 text-green-500" />
-            <span>Quản Lý Phép Năm (Tích Lũy)</span>
+            <span>Quản Lý Phép Năm</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">

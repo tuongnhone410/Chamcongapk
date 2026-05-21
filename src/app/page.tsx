@@ -13,8 +13,6 @@ import {
   Calculator, 
   CalendarCheck, 
   AlertTriangle, 
-  PlusCircle, 
-  MinusCircle,
   Award,
   Zap
 } from 'lucide-react';
@@ -215,34 +213,14 @@ export default function Home() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <Input 
-                type="number"
-                placeholder="0"
-                className="h-9 font-black text-lg text-green-600 border-green-200 focus-visible:ring-green-500 w-full"
-                value={getNumberValue(settings.annualLeaveBalance)}
-                onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
-              />
-              <div className="flex flex-col gap-1">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-4 w-7 border-green-200"
-                  onClick={() => updateSettings({...settings, annualLeaveBalance: settings.annualLeaveBalance + 1})}
-                >
-                  <PlusCircle className="w-3 h-3 text-green-600" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-4 w-7 border-green-200"
-                  onClick={() => updateSettings({...settings, annualLeaveBalance: Math.max(0, settings.annualLeaveBalance - 1)})}
-                >
-                  <MinusCircle className="w-3 h-3 text-green-600" />
-                </Button>
-              </div>
-            </div>
-            <p className="text-[9px] text-muted-foreground italic leading-tight">Tích lũy 1 ngày/tháng.</p>
+            <Input 
+              type="number"
+              placeholder="0"
+              className="h-10 font-black text-xl text-green-600 border-green-200 focus-visible:ring-green-500 w-full"
+              value={getNumberValue(settings.annualLeaveBalance)}
+              onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
+            />
+            <p className="text-[9px] text-muted-foreground italic leading-tight">Mỗi tháng được cộng 1 ngày phép.</p>
           </CardContent>
         </Card>
 
@@ -254,33 +232,13 @@ export default function Home() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <Input 
-                type="number"
-                placeholder="0"
-                className={cn("h-9 font-black text-lg w-full transition-all border-2", absenceColors.text, absenceColors.input)}
-                value={getNumberValue(settings.unexcusedAbsences)}
-                onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)}
-              />
-              <div className="flex flex-col gap-1">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className={cn("h-4 w-7 border-opacity-30", absenceColors.bg.replace('bg-', 'border-'))}
-                  onClick={() => updateSettings({...settings, unexcusedAbsences: settings.unexcusedAbsences + 1})}
-                >
-                  <PlusCircle className={cn("w-3 h-3", absenceColors.text)} />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className={cn("h-4 w-7 border-opacity-30", absenceColors.bg.replace('bg-', 'border-'))}
-                  onClick={() => updateSettings({...settings, unexcusedAbsences: Math.max(0, settings.unexcusedAbsences - 1)})}
-                >
-                  <MinusCircle className={cn("w-3 h-3", absenceColors.text)} />
-                </Button>
-              </div>
-            </div>
+            <Input 
+              type="number"
+              placeholder="0"
+              className={cn("h-10 font-black text-xl w-full transition-all border-2", absenceColors.text, absenceColors.input)}
+              value={getNumberValue(settings.unexcusedAbsences)}
+              onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)}
+            />
             <div className="flex items-center gap-1">
               <Award className={cn("w-3 h-3", salaryInfo.attendanceBonus > 0 ? "text-green-500" : "text-muted-foreground")} />
               <span className="text-[9px] font-bold">Thưởng: {formatCurrency(salaryInfo.attendanceBonus)}</span>
