@@ -129,7 +129,7 @@ export default function SettingsPage() {
               <Input type="number" value={getInputValue(settings.allowanceLunchPerShift)} onChange={(e) => handleNumberInput('allowanceLunchPerShift', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Cơm thêm (OT >= 2h)</Label>
+              <Label>Cơm thêm (OT &ge; 2h)</Label>
               <Input type="number" value={getInputValue(settings.allowanceLunchOT)} onChange={(e) => handleNumberInput('allowanceLunchOT', e.target.value)} />
             </div>
             <div className="space-y-2">
