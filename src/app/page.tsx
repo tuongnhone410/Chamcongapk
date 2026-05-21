@@ -14,7 +14,8 @@ import {
   CalendarCheck, 
   AlertTriangle, 
   Award,
-  Zap
+  Zap,
+  Clock
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -68,9 +69,10 @@ export default function Home() {
   };
 
   const handleNumberInput = (key: keyof AppSettings, val: string) => {
+    const num = val === "" ? 0 : parseFloat(val);
     updateSettings({
       ...settings,
-      [key]: val === "" ? 0 : parseFloat(val)
+      [key]: num
     });
   };
 
@@ -209,18 +211,18 @@ export default function Home() {
           <CardHeader className="p-3 pb-1">
             <CardTitle className="text-xs font-bold flex items-center gap-2">
               <CalendarCheck className="w-4 h-4 text-green-500" />
-              <span>Phép Năm</span>
+              <span>Phép Năm Còn Lại</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-2 space-y-3">
+          <CardContent className="p-3 pt-2">
             <Input 
               type="number"
               placeholder="0"
-              className="h-10 font-black text-xl text-green-600 border-green-200 focus-visible:ring-green-500 w-full"
+              className="h-10 font-black text-xl text-green-600 border-none bg-transparent focus-visible:ring-0 p-0 shadow-none"
               value={getNumberValue(settings.annualLeaveBalance)}
               onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
             />
-            <p className="text-[9px] text-muted-foreground italic leading-tight">Mỗi tháng được cộng 1 ngày phép.</p>
+            <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Nghỉ không mất lương & chuyên cần.</p>
           </CardContent>
         </Card>
 
@@ -228,42 +230,51 @@ export default function Home() {
           <CardHeader className="p-3 pb-1">
             <CardTitle className="text-xs font-bold flex items-center gap-2">
               <AlertTriangle className={cn("w-4 h-4", absenceColors.icon)} />
-              <span>Nghỉ K.Phép</span>
+              <span>Số Ngày Nghỉ K.Phép</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-2 space-y-3">
+          <CardContent className="p-3 pt-2">
             <Input 
               type="number"
               placeholder="0"
-              className={cn("h-10 font-black text-xl w-full transition-all border-2", absenceColors.text, absenceColors.input)}
+              className={cn("h-10 font-black text-xl border-none bg-transparent focus-visible:ring-0 p-0 shadow-none", absenceColors.text)}
               value={getNumberValue(settings.unexcusedAbsences)}
               onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)}
             />
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 mt-1">
               <Award className={cn("w-3 h-3", salaryInfo.attendanceBonus > 0 ? "text-green-500" : "text-muted-foreground")} />
-              <span className="text-[9px] font-bold">Thưởng: {formatCurrency(salaryInfo.attendanceBonus)}</span>
+              <span className="text-[9px] font-bold">Thưởng chuyên cần: {formatCurrency(salaryInfo.attendanceBonus)}</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         <Card className="border-none shadow-sm bg-muted/40">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Wallet className="w-3 h-3 text-primary" />
-              <p className="text-[10px] text-muted-foreground uppercase font-bold">Lương cơ bản</p>
+          <CardContent className="p-3">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Wallet className="w-3.5 h-3.5 text-primary" />
+              <p className="text-[9px] text-muted-foreground uppercase font-bold leading-none">Lương cơ bản</p>
             </div>
-            <p className="text-sm font-black">{formatCurrency(settings.baseMonthlySalary)}</p>
+            <p className="text-xs font-black truncate">{formatCurrency(settings.baseMonthlySalary)}</p>
           </CardContent>
         </Card>
         <Card className="border-none shadow-sm bg-muted/40">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-3 h-3 text-primary" />
-              <p className="text-[10px] text-muted-foreground uppercase font-bold">Lương OT / Giờ</p>
+          <CardContent className="p-3">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Clock className="w-3.5 h-3.5 text-primary" />
+              <p className="text-[9px] text-muted-foreground uppercase font-bold leading-none">Tăng ca / 1h</p>
             </div>
-            <p className="text-sm font-black">{formatCurrency(settings.hourlyRate)}/h</p>
+            <p className="text-xs font-black truncate">{formatCurrency(settings.hourlyRate)}/h</p>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm bg-muted/40">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-1.5 mb-1">
+              <TrendingUp className="w-3.5 h-3.5 text-primary" />
+              <p className="text-[9px] text-muted-foreground uppercase font-bold leading-none">Lương OT (x1.5)</p>
+            </div>
+            <p className="text-xs font-black truncate">{formatCurrency(Math.round(settings.hourlyRate * 1.5))}/h</p>
           </CardContent>
         </Card>
       </div>
