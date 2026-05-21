@@ -18,12 +18,10 @@ export default function SettingsPage() {
   const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
 
   const formatMoneyDisplay = (val: number) => {
-    if (val === 0) return "";
     return val.toLocaleString('vi-VN') + " đ";
   };
 
   const formatPercentDisplay = (val: number) => {
-    if (val === 0) return "";
     return val.toString() + " %";
   };
 
@@ -63,7 +61,7 @@ export default function SettingsPage() {
     });
   };
 
-  const getNumberValue = (val: number) => (val === 0 ? "" : val.toString());
+  const getNumberValue = (val: number) => val.toString();
 
   const calculatedInsuranceMoney = Math.round((settings.insuranceSalary * settings.insuranceRate) / 100);
 
