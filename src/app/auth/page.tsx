@@ -15,12 +15,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
-import { LogIn, Chrome, AlertCircle, Clock, ShieldCheck } from 'lucide-react';
+import { LogIn, Chrome, AlertCircle, Clock, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
   const auth = useAuth();
@@ -40,7 +41,7 @@ export default function AuthPage() {
     let targetEmail = email.trim();
     const targetPassword = password.trim();
 
-    // Hỗ trợ lối tắt "admin" như yêu cầu của người dùng
+    // Hỗ trợ lối tắt "admin"
     if (targetEmail.toLowerCase() === 'admin') {
       targetEmail = 'admin@timesnap.com';
     }
@@ -54,13 +55,13 @@ export default function AuthPage() {
       return;
     }
 
-    // Kiểm tra định dạng email cơ bản trước khi gửi lên Firebase
+    // Kiểm tra định dạng email cơ bản
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(targetEmail)) {
       toast({
         variant: 'destructive',
         title: 'Định dạng không hợp lệ',
-        description: 'Vui lòng nhập email đúng định dạng (ví dụ: name@company.com).',
+        description: 'Vui lòng nhập đúng định dạng email (hoặc gõ "admin").',
       });
       return;
     }
@@ -150,7 +151,7 @@ export default function AuthPage() {
                 <Input 
                   id="email" 
                   type="text" 
-                  placeholder="Nhập email của bạn..." 
+                  placeholder="Nhập email hoặc 'admin'..." 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-primary h-12 rounded-xl"
@@ -159,22 +160,31 @@ export default function AuthPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-zinc-300 font-bold ml-1 uppercase text-[10px] tracking-wider">Mật khẩu</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-zinc-800 border-zinc-700 text-white focus-visible:ring-primary h-12 rounded-xl"
-                  disabled={loading}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleEmailAuth('login');
-                    }
-                  }}
-                />
+                <div className="relative">
+                  <Input 
+                    id="password" 
+                    type={showPassword ? "text" : "password"} 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-zinc-800 border-zinc-700 text-white focus-visible:ring-primary h-12 rounded-xl pr-12"
+                    disabled={loading}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleEmailAuth('login');
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
 
-              <TabsContent value="login" className="mt-0">
+              <TabsContent value="login" className="mt-0 pt-2">
                 <Button 
                   className="w-full h-14 font-black text-lg rounded-xl shadow-lg hover:scale-[1.02] transition-transform active:scale-95" 
                   onClick={() => handleEmailAuth('login')}
@@ -184,7 +194,7 @@ export default function AuthPage() {
                 </Button>
               </TabsContent>
               
-              <TabsContent value="signup" className="mt-0">
+              <TabsContent value="signup" className="mt-0 pt-2">
                 <Button 
                   className="w-full h-14 font-black text-lg rounded-xl shadow-lg hover:scale-[1.02] transition-transform active:scale-95 bg-emerald-600 hover:bg-emerald-500" 
                   onClick={() => handleEmailAuth('signup')}
