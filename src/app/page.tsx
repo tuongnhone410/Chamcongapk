@@ -15,12 +15,14 @@ import {
   AlertTriangle, 
   Award,
   Zap,
-  Clock
+  Clock,
+  Timer
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from '@/lib/utils';
 import { AppSettings } from '@/lib/types';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
   const { 
@@ -33,6 +35,33 @@ export default function Home() {
     updateSettings,
     calculateFullSalary
   } = useAttendance();
+
+  const [elapsedTime, setElapsedTime] = useState<string>("00:00:00");
+  const [sessionMinutes, setSessionMinutes] = useState<number>(0);
+
+  // Cập nhật đồng hồ đếm giờ làm việc thực tế
+  useEffect(() => {
+    if (!activeSession) return;
+
+    const updateTimer = () => {
+      const start = new Date(activeSession.checkIn).getTime();
+      const now = new Date().getTime();
+      const diffMs = now - start;
+      
+      const hours = Math.floor(diffMs / 3600000);
+      const minutes = Math.floor((diffMs % 3600000) / 60000);
+      const seconds = Math.floor((diffMs % 60000) / 1000);
+      
+      setElapsedTime(
+        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+      );
+      setSessionMinutes(Math.floor(diffMs / 60000));
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [activeSession]);
 
   if (!isLoaded) return null;
 
@@ -79,12 +108,27 @@ export default function Home() {
   const getNumberValue = (val: number) => val === 0 ? "" : val.toString();
 
   const getAbsenceColorClasses = (count: number) => {
-    if (count === 0) return { text: "text-green-600", border: "border-l-green-500", icon: "text-green-500", bg: "bg-green-50", input: "border-green-200 focus-visible:ring-green-500" };
-    if (count === 1) return { text: "text-orange-600", border: "border-l-orange-500", icon: "text-orange-500", bg: "bg-orange-50", input: "border-orange-200 focus-visible:ring-orange-500" };
-    return { text: "text-red-600", border: "border-l-red-600", icon: "text-red-600", bg: "bg-red-50", input: "border-red-200 focus-visible:ring-red-500" };
+    if (count === 0) return { text: "text-green-600", border: "border-l-green-500", icon: "text-green-500", bg: "bg-green-50" };
+    if (count === 1) return { text: "text-orange-600", border: "border-l-orange-500", icon: "text-orange-500", bg: "bg-orange-50" };
+    return { text: "text-red-600", border: "border-l-red-600", icon: "text-red-600", bg: "bg-red-50" };
   };
 
   const absenceColors = getAbsenceColorClasses(settings.unexcusedAbsences);
+
+  // Tính lương tạm tính cho ca hiện tại
+  const calculateCurrentSessionSalary = () => {
+    if (!activeSession) return 0;
+    if (activeSession.multiplier !== 1.0) {
+      return (sessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier;
+    } else {
+      // Ngày thường: chỉ tính tiền OT sau 8 tiếng (có 30p ân hạn)
+      if (sessionMinutes <= 510) return 0; // Dưới 8h30p chưa tính OT
+      return ((sessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier;
+    }
+  };
+
+  const currentSalary = calculateCurrentSessionSalary();
+  const isOvertime = sessionMinutes > 480;
 
   return (
     <div className="space-y-6 pb-24">
@@ -100,30 +144,76 @@ export default function Home() {
 
       <DigitalClock />
 
-      <div className="flex flex-col items-center justify-center py-2 gap-6">
-        <div className="flex flex-wrap justify-center gap-3">
-          {!activeSession ? (
-            <>
-              <Button onClick={() => punchIn(1.0)} className="rounded-full px-6 shadow-sm h-12 text-base font-bold">Ngày thường</Button>
-              <Button onClick={() => punchIn(settings.overtimeMultiplier)} variant="outline" className="rounded-full px-6 shadow-sm h-12 text-base font-bold border-2 border-primary/30">
-                <Zap className="w-4 h-4 mr-1 text-primary" />
-                Tăng ca x{settings.overtimeMultiplier}
-              </Button>
-              <Button onClick={() => punchIn(settings.sundayMultiplier)} variant="outline" className="rounded-full px-6 shadow-sm h-12 text-base font-bold border-2">Chủ Nhật</Button>
-              <Button onClick={() => punchIn(settings.holidayMultiplier)} variant="secondary" className="rounded-full px-6 shadow-sm h-12 text-base font-bold">Ngày Lễ</Button>
-            </>
-          ) : (
-            <Button 
-              onClick={punchOut} 
-              variant="destructive" 
-              className="w-44 h-44 rounded-full border-8 border-background shadow-2xl flex flex-col gap-2 animate-pulse"
-            >
-              <LogOut className="w-10 h-10" />
-              <span className="font-black text-xl">KẾT THÚC</span>
-              <span className="text-xs opacity-80 bg-black/20 px-2 py-0.5 rounded-full">Hệ số x{activeSession.multiplier}</span>
+      <div className="flex flex-col items-center justify-center py-2">
+        {!activeSession ? (
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button onClick={() => punchIn(1.0)} className="rounded-full px-6 shadow-sm h-12 text-base font-bold">Ngày thường</Button>
+            <Button onClick={() => punchIn(settings.overtimeMultiplier)} variant="outline" className="rounded-full px-6 shadow-sm h-12 text-base font-bold border-2 border-primary/30">
+              <Zap className="w-4 h-4 mr-1 text-primary" />
+              Tăng ca x{settings.overtimeMultiplier}
             </Button>
-          )}
-        </div>
+            <Button onClick={() => punchIn(settings.sundayMultiplier)} variant="outline" className="rounded-full px-6 shadow-sm h-12 text-base font-bold border-2">Chủ Nhật</Button>
+            <Button onClick={() => punchIn(settings.holidayMultiplier)} variant="secondary" className="rounded-full px-6 shadow-sm h-12 text-base font-bold">Ngày Lễ</Button>
+          </div>
+        ) : (
+          <Card className="w-full border-2 border-primary/20 shadow-xl overflow-hidden bg-white/50 backdrop-blur-sm">
+            <CardContent className="p-0">
+              <div className="bg-primary/5 p-4 border-b flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-primary">Đang trong ca làm</span>
+                </div>
+                <div className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">
+                  Hệ số x{activeSession.multiplier}
+                </div>
+              </div>
+              
+              <div className="p-6 text-center space-y-6">
+                <div className="space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Thời gian làm việc</p>
+                  <div className="text-5xl font-black text-primary font-mono tracking-tighter">
+                    {elapsedTime}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    {activeSession.multiplier === 1.0 ? (
+                      <span className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                        isOvertime ? "bg-orange-100 text-orange-600 border-orange-200" : "bg-blue-100 text-blue-600 border-blue-200"
+                      )}>
+                        {isOvertime ? "TRẠNG THÁI: TĂNG CA (OT)" : "TRẠNG THÁI: GIỜ HÀNH CHÍNH"}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-600 border border-purple-200">
+                        TRẠNG THÁI: TĂNG CA ĐẶC BIỆT
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 border-y py-4">
+                  <div className="text-left">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Bắt đầu lúc</p>
+                    <p className="text-sm font-bold">{new Date(activeSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Lương tăng ca tạm tính</p>
+                    <p className="text-sm font-black text-green-600">+{formatCurrency(currentSalary)}</p>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={punchOut} 
+                  variant="destructive" 
+                  className="w-full h-14 rounded-xl shadow-lg flex items-center justify-center gap-3 text-lg font-black group"
+                >
+                  <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                  KẾT THÚC CA LÀM
+                </Button>
+                <p className="text-[9px] text-muted-foreground italic">Nhấn kết thúc để lưu dữ liệu vào nhật ký chấm công</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Card className="border-none shadow-lg overflow-hidden bg-primary text-primary-foreground">
