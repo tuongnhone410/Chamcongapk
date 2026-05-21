@@ -23,6 +23,12 @@ export default function SettingsPage() {
     return val.toLocaleString('vi-VN') + " đ";
   };
 
+  // Định dạng phần trăm
+  const formatPercentDisplay = (val: number) => {
+    if (val === 0) return "";
+    return val.toString() + " %";
+  };
+
   // Xử lý khi nhập tiền (loại bỏ ký tự không phải số)
   const handleMoneyInput = (key: keyof AppSettings, val: string) => {
     const numericValue = val.replace(/\D/g, "");
@@ -44,7 +50,17 @@ export default function SettingsPage() {
     }
   };
 
-  // Đối với các số không phải tiền (phần trăm, ngày, số lần)
+  // Xử lý khi nhập số phần trăm
+  const handlePercentInput = (val: string) => {
+    const numericValue = val.replace(/[^0-9.]/g, "");
+    const num = numericValue === "" ? 0 : parseFloat(numericValue);
+    updateSettings({
+      ...settings,
+      insuranceRate: num
+    });
+  };
+
+  // Đối với các số không phải tiền (ngày, số lần)
   const handleNumberInput = (key: keyof AppSettings, val: string) => {
     updateSettings({
       ...settings,
@@ -187,8 +203,14 @@ export default function SettingsPage() {
             </p>
           </div>
           <div className="space-y-2">
-            <Label>Tỷ lệ đóng Bảo hiểm (BHXH, BHYT, BHTN) %</Label>
-            <Input type="number" step="0.1" value={getNumberValue(settings.insuranceRate)} onChange={(e) => handleNumberInput('insuranceRate', e.target.value)} />
+            <Label>Tỷ lệ đóng Bảo hiểm (BHXH, BHYT, BHTN)</Label>
+            <Input 
+              type="text" 
+              inputMode="decimal"
+              value={formatPercentDisplay(settings.insuranceRate)} 
+              onChange={(e) => handlePercentInput(e.target.value)} 
+              className="font-medium"
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
