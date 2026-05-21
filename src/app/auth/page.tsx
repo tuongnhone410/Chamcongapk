@@ -14,8 +14,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
-import { LogIn, Chrome, ShieldCheck } from 'lucide-react';
+import { LogIn, Chrome, ShieldCheck, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -69,16 +70,26 @@ export default function AuthPage() {
 
   const handleAdminBypass = async () => {
     if (!auth) return;
+    
+    // Thêm mã PIN để bảo mật nút Admin
+    const pin = window.prompt("Nhập mã PIN Admin để tiếp tục (Mặc định: 2024):");
+    if (pin !== "2024") {
+      toast({
+        variant: 'destructive',
+        title: 'Sai mã PIN',
+        description: 'Bạn không có quyền truy cập vào tài khoản Admin demo.',
+      });
+      return;
+    }
+
     setLoading(true);
     const adminEmail = 'admin@timesnap.com';
     const adminPass = 'admin123456';
     
     try {
-      // Thử đăng nhập trước
       await signInWithEmailAndPassword(auth, adminEmail, adminPass);
       router.push('/');
     } catch (error: any) {
-      // Nếu chưa có tài khoản admin demo, hãy tạo nó
       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
         try {
           await createUserWithEmailAndPassword(auth, adminEmail, adminPass);
@@ -190,6 +201,13 @@ export default function AuthPage() {
                   ADMIN
                 </Button>
               </div>
+
+              <Alert className="bg-primary/5 border-primary/20 mt-4">
+                <Info className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-[10px] text-zinc-400 leading-tight">
+                  Tài khoản ADMIN là tài khoản dùng chung để trải nghiệm. Để bảo mật dữ liệu cá nhân, vui lòng sử dụng Google hoặc Email riêng.
+                </AlertDescription>
+              </Alert>
             </div>
           </Tabs>
         </CardContent>
