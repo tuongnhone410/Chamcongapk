@@ -143,20 +143,18 @@ export default function HistoryPage() {
     }
   };
 
-  const handleBatchAdd = async () => {
+  const handleBatchAdd = () => {
     setIsProcessing(true);
     setShowBatchDialog(false);
     try {
       batchAddSessions(batchData);
-      toast({ title: "Thành công", description: "Đang xử lý dải ngày hàng loạt..." });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm hàng loạt." });
+      toast({ title: "Thành công", description: "Dữ liệu đang được đồng bộ..." });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleMultiAdd = async () => {
+  const handleMultiAdd = () => {
     if (!selectedDates || selectedDates.length === 0) {
       toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn ít nhất 1 ngày." });
       return;
@@ -171,9 +169,7 @@ export default function HistoryPage() {
         multiplier: multiData.multiplier
       });
       setSelectedDates([]);
-      toast({ title: "Thành công", description: `Đã xử lý ${selectedDates.length} phiên OT.` });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm dữ liệu." });
+      toast({ title: "Thành công", description: `Đang xử lý ${selectedDates.length} phiên OT.` });
     } finally {
       setIsProcessing(false);
     }
@@ -349,7 +345,6 @@ export default function HistoryPage() {
               </div>
               <DialogFooter className="gap-2">
                 <Button onClick={handleMultiAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/90 rounded-xl h-12 font-black shadow-xl w-full">
-                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   LƯU DỮ LIỆU
                 </Button>
               </DialogFooter>
@@ -393,7 +388,7 @@ export default function HistoryPage() {
               </div>
               <DialogFooter>
                 <Button onClick={handleBatchAdd} disabled={isProcessing} className="bg-primary rounded-xl h-12 font-black shadow-xl w-full">
-                  {isProcessing ? "ĐANG XỬ LÝ..." : "ĐỒNG BỘ NGAY"}
+                  ĐỒNG BỘ NGAY
                 </Button>
               </DialogFooter>
             </DialogContent>
