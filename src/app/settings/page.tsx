@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap, Skull, Briefcase, Star, Award, Shield, ShieldCheck, HomeIcon, Coffee, Save } from 'lucide-react';
+import { Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap, Skull, Briefcase, Star, Award, Shield, ShieldCheck, HomeIcon, Share2, Save } from 'lucide-react';
 import { AppSettings } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -106,7 +105,7 @@ export default function SettingsPage() {
     <div className="space-y-6 pb-24">
       <header className="flex items-center justify-between sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-md py-2">
         <div>
-          <h1 className="text-2xl font-black font-headline tracking-tighter">CÀI ĐẶT LƯƠNG</h1>
+          <h1 className="text-2xl font-black font-headline tracking-tighter uppercase">Cài đặt lương</h1>
           <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Hợp đồng & Phụ cấp</p>
         </div>
         <Button 
@@ -200,7 +199,7 @@ export default function SettingsPage() {
 
           <div className="pt-4 border-t border-zinc-800 space-y-4">
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-orange-500")}><Coffee className="w-3.5 h-3.5" /> Khấu trừ thời gian nghỉ (Giờ)</Label>
+              <Label className={cn(labelClass, "text-orange-500")}>Khấu trừ thời gian nghỉ (Giờ)</Label>
               <div className="relative">
                 <Input 
                   type="number" 
@@ -290,100 +289,23 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Bảo Hiểm & Thuế */}
-      <Card className="border-none shadow-sm bg-zinc-900 border border-zinc-800">
-        <CardHeader>
+      {/* Chia sẻ App */}
+      <Card className="border-none shadow-sm bg-primary/5 border border-primary/20 overflow-hidden">
+        <CardHeader className="pb-2">
           <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center space-x-2 text-primary">
-            <ShieldCheck className="w-5 h-5" />
-            <span>Bảo Hiểm & Thuế</span>
+            <Share2 className="w-5 h-5" />
+            <span>Chia sẻ ứng dụng</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-1">
-            <Label className={labelClass}>Mức lương đóng BH (SI Wage)</Label>
-            <div className="relative">
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                value={formatMoneyDisplay(localSettings.insuranceSalary)} 
-                onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} 
-                onKeyDown={handleKeyDown}
-                className={inputClass}
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
-            </div>
+        <CardContent className="space-y-3">
+          <p className="text-xs font-medium text-zinc-400 leading-relaxed">
+            Để gửi ứng dụng cho người khác, bạn cần triển khai (Deploy) dự án này lên Firebase Hosting. Sau khi có link, bạn chỉ cần copy link đó gửi cho bạn bè.
+          </p>
+          <div className="bg-zinc-900 p-3 rounded-xl border border-zinc-800">
+            <p className="text-[10px] font-black uppercase text-zinc-500 mb-1">Cách cài đặt cho bạn bè:</p>
+            <p className="text-[10px] text-zinc-400">1. Gửi link web công khai cho họ.</p>
+            <p className="text-[10px] text-zinc-400">2. Họ mở bằng Chrome/Safari và chọn "Thêm vào màn hình chính".</p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label className={labelClass}>Tỷ lệ Bảo hiểm (%)</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="decimal"
-                  value={formatPercentDisplay(localSettings.insuranceRate)} 
-                  onChange={(e) => handlePercentInput('insuranceRate', e.target.value)} 
-                  onKeyDown={handleKeyDown}
-                  className={inputClass}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">%</span>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label className={cn(labelClass, "text-green-500")}>Thuế TNCN (%)</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="decimal"
-                  value={formatPercentDisplay(localSettings.incomeTaxRate)} 
-                  onChange={(e) => handlePercentInput('incomeTaxRate', e.target.value)} 
-                  onKeyDown={handleKeyDown}
-                  className={cn(inputClass, "border-green-500/20")}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">%</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Phụ Cấp & Tiền Cơm */}
-      <Card className="border-none shadow-sm bg-zinc-900 border border-zinc-800">
-        <CardHeader>
-          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center space-x-2 text-primary">
-            <Gift className="w-5 h-5" />
-            <span>Phụ Cấp & Tiền Cơm</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-x-4 gap-y-6">
-          {[
-            { key: 'allowanceTechnical', label: 'Kỹ thuật', icon: Briefcase },
-            { key: 'allowanceResponsibility', label: 'Trách nhiệm', icon: Shield },
-            { key: 'allowancePosition', label: 'Chức vụ', icon: Award },
-            { key: 'allowancePerformance', label: 'Hiệu suất', icon: Star },
-            { key: 'allowanceProduct', label: 'Tiền sản phẩm', icon: Package },
-            { key: 'allowanceLunchPerShift', label: 'Tiền cơm/ca', icon: Clock },
-            { key: 'allowanceLunchOT', label: 'Cơm thêm (OT)', icon: Zap },
-            { key: 'allowanceHousing', label: 'Tiền nhà ở', icon: HomeIcon },
-            { key: 'allowanceToxic', label: 'Độc hại', icon: Skull, color: "text-orange-500" },
-            { key: 'allowanceBonus', label: 'Doanh thu', icon: TrendingUp, color: "text-green-500" },
-          ].map((item) => (
-            <div key={item.key} className="space-y-1">
-              <Label className={cn(labelClass, item.color)}>
-                <item.icon className="w-3.5 h-3.5" /> {item.label}
-              </Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} 
-                  onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} 
-                  onKeyDown={handleKeyDown}
-                  className={inputClass}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
-              </div>
-            </div>
-          ))}
         </CardContent>
       </Card>
 
