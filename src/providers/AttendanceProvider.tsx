@@ -37,6 +37,12 @@ export interface AttendanceContextType {
     multiplier: number, 
     excludeSundays: boolean 
   }) => Promise<void>;
+  multiAddSessions: (data: {
+    dates: Date[],
+    startTime: string,
+    endTime: string,
+    multiplier: number
+  }) => Promise<void>;
   updateSettings: (newSettings: AppSettings) => void;
   deleteSession: (id: string) => void;
   updateSession: (updated: WorkSession) => void;
@@ -111,7 +117,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
     if (multiplier === 1.0) {
-      // Ngày thường: Sau 8h30p tính OT 1.5
+      // Ngày thường: Sau 8h30p (510p) tính OT 1.5 cho phần vượt quá 8h (480p)
       const otMinutes = totalMinutes > 510 ? totalMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
@@ -173,6 +179,38 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     });
   }, [db, user, calculateSessionSalary]);
 
+  const multiAddSessions = useCallback(async (data: {
+    dates: Date[],
+    startTime: string,
+    endTime: string,
+    multiplier: number
+  }) => {
+    if (!db || !user) return;
+    const batch = writeBatch(db);
+    
+    for (const date of data.dates) {
+      const dateStr = date.toISOString().split('T')[0];
+      const checkIn = new Date(`${dateStr}T${data.startTime}`);
+      const checkOut = new Date(`${dateStr}T${data.endTime}`);
+      const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+      
+      const finalMultiplier = data.multiplier === -1 ? getAutoMultiplier(date) : data.multiplier;
+      const salary = calculateSessionSalary(diffMinutes, finalMultiplier);
+      
+      const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
+      batch.set(newDocRef, {
+        checkIn: checkIn.toISOString(),
+        checkOut: checkOut.toISOString(),
+        multiplier: finalMultiplier,
+        totalMinutes: diffMinutes,
+        salary,
+        note: data.multiplier === -1 ? 'Tự động' : 'Chọn ngày',
+        createdAt: new Date().toISOString()
+      });
+    }
+    await batch.commit();
+  }, [db, user, calculateSessionSalary, getAutoMultiplier]);
+
   const batchAddSessions = useCallback(async (data: { 
     startDate: string, 
     endDate: string, 
@@ -188,7 +226,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     
     let current = new Date(start);
     while (current <= end) {
-      // Chỉ kiểm tra "Bỏ qua chủ nhật" nếu người dùng KHÔNG chọn đích danh OT 2.0
       if (data.excludeSundays && current.getDay() === 0 && data.multiplier !== settings.sundayMultiplier) {
         current.setDate(current.getDate() + 1);
         continue;
@@ -202,7 +239,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         const checkOut = new Date(`${dateStr}T${data.endTime}`);
         const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
         
-        // Tự động nhận diện nếu multiplier = -1
         const finalMultiplier = data.multiplier === -1 ? getAutoMultiplier(current) : data.multiplier;
         const salary = calculateSessionSalary(diffMinutes, finalMultiplier);
         
@@ -273,7 +309,10 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
                            (settings.allowanceToxic || 0) +
                            (settings.allowanceBonus || 0) +
                            (settings.allowanceProduct || 0) +
-                           netSubjectToAbsence;
+                           (settings.allowanceTechnical || 0) +
+                           (settings.allowanceResponsibility || 0) +
+                           (settings.allowancePosition || 0) +
+                           (settings.allowancePerformance || 0) - deductionForAbsence;
     
     const grossIncome = (settings.baseMonthlySalary || 0) + sessionSalary + otherAllowances + lunchAllowance + attendanceBonus;
     const insuranceAmount = ((settings.insuranceSalary || 0) * (settings.insuranceRate || 0)) / 100;
@@ -325,6 +364,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     punchOut,
     addManualSession,
     batchAddSessions,
+    multiAddSessions,
     updateSettings,
     deleteSession,
     updateSession,
@@ -334,7 +374,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     isHoliday: isVietnameseHoliday(new Date())
   }), [
     sessions, activeSession, settings, isLoaded, punchIn, punchOut, 
-    addManualSession, batchAddSessions, updateSettings, deleteSession, updateSession, 
+    addManualSession, batchAddSessions, multiAddSessions, updateSettings, deleteSession, updateSession, 
     exportToCSV, calculateFullSalary, getAutoMultiplier
   ]);
 
