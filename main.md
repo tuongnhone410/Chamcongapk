@@ -1,32 +1,44 @@
 # Hướng dẫn TimeSnap Pro - TruongVanKhoa
 
-Chào bạn, đây là hướng dẫn để bạn quản lý dự án trên GitHub và lấy file cài đặt APK tự động.
+Chào bạn, đây là hướng dẫn để bạn khắc phục lỗi và đẩy code lên GitHub thành công để kích hoạt chế độ tự động tạo file APK.
 
-### 1. Cách đẩy code lên GitHub (Kích hoạt tạo APK tự động)
-Bạn hãy mở Terminal và chạy **từng dòng một** các lệnh dưới đây. Nếu có lỗi, hãy chạy lệnh xóa cấu hình cũ trước.
+### 1. Cách sửa lỗi "Authentication failed" hoặc "Repository not found"
+GitHub hiện tại **không cho phép** nhập mật khẩu cá nhân vào Terminal. Bạn phải dùng **Token** để thay thế.
+
+**Bước A: Lấy Token trên GitHub**
+1. Vào GitHub của bạn -> Chọn ảnh đại diện (góc trên cùng bên phải) -> **Settings**.
+2. Kéo xuống dưới cùng bên trái chọn **Developer settings**.
+3. Chọn **Personal access tokens** -> **Tokens (classic)**.
+4. Nhấn **Generate new token (classic)**.
+5. Phần **Note** ghi "APK Build", phần **Expiration** chọn "No expiration", phần **Select scopes** tích chọn ô **repo**.
+6. Nhấn **Generate token** và **COPY LẠI DÒNG MÃ ĐÓ** (nó có dạng `ghp_...`). Lưu ý: Bạn chỉ thấy nó một lần duy nhất.
+
+**Bước B: Đẩy code lại bằng Token**
+Mở Terminal và chạy các lệnh này:
 
 ```bash
-# Lệnh xóa cấu hình cũ (Chỉ chạy nếu bị lỗi remote origin exists)
+# Xóa cấu hình cũ bị lỗi
 git remote remove origin 
 
-# Bộ lệnh chuẩn để đẩy code
-git init
+# Thêm lại cấu hình mới (Thay <TOKEN> bằng dòng ghp_... bạn vừa copy)
+# Cấu trúc: https://<TOKEN>@github.com/tuongnhone410/Chamcongapk.git
+git remote add origin https://ghp_Dán_Token_Của_Bạn_Vào_Đây@github.com/tuongnhone410/Chamcongapk.git
+
+# Đẩy code lên
 git add .
-git commit -m "Hoàn thiện TimeSnap Pro - Kích hoạt tự động tạo APK"
+git commit -m "Fix auth and trigger APK build"
 git branch -M main
-git remote add origin https://github.com/tuongnhone410/Chamcongapk.git
 git push -u origin main
 ```
 
-### 2. Cách lấy file .apk trực tiếp từ GitHub (Sau khi push xong)
-Sau khi bạn chạy lệnh `git push` thành công, GitHub sẽ tự động "nấu" file APK cho bạn. Hãy làm như sau:
+### 2. Cách lấy file .apk sau khi push thành công
+Sau khi lệnh `git push` chạy xong mà không báo lỗi:
 
-1. Vào trang Repository của bạn trên GitHub (ví dụ: `github.com/tuongnhone410/Chamcongapk`).
-2. Nhấn vào tab **"Actions"** (Nằm ở hàng trên cùng, cạnh tab Code, Issues).
-3. Bạn sẽ thấy một tiến trình đang chạy có tên **"Build Android APK"**. Hãy đợi khoảng 3-5 phút cho đến khi nó hiện dấu tích xanh ✅.
-4. Nhấn vào tên của tiến trình đó (ví dụ: "Hoàn thiện TimeSnap Pro...").
-5. Kéo xuống dưới cùng đến phần **Artifacts**, bạn sẽ thấy file **"TimeSnapPro-Debug-APK"**.
-6. Nhấn vào đó để tải về máy. Giải nén file .zip ra bạn sẽ có file `.apk` để cài vào điện thoại.
+1. Vào trang GitHub của bạn: `github.com/tuongnhone410/Chamcongapk`.
+2. Nhấn vào tab **"Actions"**.
+3. Bạn sẽ thấy tiến trình **"Build Android APK"** đang chạy (màu vàng). Đợi khoảng 3-5 phút cho đến khi hiện dấu tích xanh ✅.
+4. Nhấn vào tên tiến trình đó -> Kéo xuống phần **Artifacts**.
+5. Tải file **"TimeSnapPro-Debug-APK"** về máy. Giải nén ra bạn sẽ có file `.apk` để cài vào điện thoại.
 
 ---
 **Thiết kế bởi TruongVanKhoa**
