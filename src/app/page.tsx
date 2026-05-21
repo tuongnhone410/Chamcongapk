@@ -24,7 +24,7 @@ import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from '@/lib/utils';
 import { AppSettings } from '@/lib/types';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 export default function Home() {
   const { 
@@ -65,11 +65,10 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [activeSession]);
 
-  if (!isLoaded) return null;
+  const periodData = useMemo(() => {
+    if (!isLoaded) return null;
 
-  const now = new Date();
-  
-  const getPayPeriod = () => {
+    const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
     const day = now.getDate();
@@ -83,42 +82,60 @@ export default function Home() {
       startDate = new Date(year, month - 1, settings.payday);
       endDate = new Date(year, month, settings.payday - 1, 23, 59, 59);
     }
-    return { startDate, endDate };
-  };
 
-  const { startDate, endDate } = getPayPeriod();
-  const periodSessions = sessions.filter(s => {
-    const checkIn = new Date(s.checkIn);
-    return checkIn >= startDate && checkIn <= endDate;
-  });
+    const periodSessions = sessions.filter(s => {
+      const checkIn = new Date(s.checkIn);
+      return checkIn >= startDate && checkIn <= endDate;
+    });
 
-  const salaryInfo = calculateFullSalary(periodSessions);
+    return { startDate, endDate, periodSessions };
+  }, [sessions, settings.payday, isLoaded]);
+
+  const salaryInfo = useMemo(() => {
+    if (!periodData) return null;
+    return calculateFullSalary(periodData.periodSessions);
+  }, [periodData, calculateFullSalary]);
+
+  const progressData = useMemo(() => {
+    if (!isLoaded) return null;
+    
+    const now = new Date();
+    const startOfWeek = new Date();
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const weekMins = sessions
+      .filter(s => new Date(s.checkIn) >= startOfWeek && s.checkOut)
+      .reduce((acc, s) => acc + s.totalMinutes, 0);
+    
+    const monthMins = sessions
+      .filter(s => new Date(s.checkIn) >= startOfMonth && s.checkOut)
+      .reduce((acc, s) => acc + s.totalMinutes, 0);
+
+    const weekHours = weekMins / 60;
+    const monthHours = monthMins / 60;
+    const weekTarget = 48;
+    const monthTargetHours = 208;
+
+    return {
+      weekHours,
+      monthHours,
+      weekProgress: Math.min((weekHours / weekTarget) * 100, 100),
+      monthProgress: Math.min((monthHours / monthTargetHours) * 100, 100),
+      weekTarget,
+      monthTargetHours
+    };
+  }, [sessions, isLoaded]);
+
+  if (!isLoaded || !periodData || !salaryInfo || !progressData) return null;
+
   const targetPercent = Math.min(Math.round((salaryInfo.netSalary / (settings.monthlyTarget || 1)) * 100), 100);
-
-  const getWorkHours = (period: 'week' | 'month') => {
-    const start = new Date();
-    if (period === 'week') {
-      const day = start.getDay();
-      const diff = start.getDate() - day + (day === 0 ? -6 : 1);
-      start.setDate(diff);
-      start.setHours(0, 0, 0, 0);
-    } else {
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
-    }
-
-    const filtered = sessions.filter(s => new Date(s.checkIn) >= start && s.checkOut);
-    const totalMinutes = filtered.reduce((acc, s) => acc + s.totalMinutes, 0);
-    return totalMinutes / 60;
-  };
-
-  const weekHours = getWorkHours('week');
-  const monthHours = getWorkHours('month');
-  const weekTarget = 48; 
-  const monthTargetHours = 208; 
-
-  const weekProgress = Math.min((weekHours / weekTarget) * 100, 100);
-  const monthProgress = Math.min((monthHours / monthTargetHours) * 100, 100);
 
   const formatCurrency = (val: number) => {
     return `${Math.round(val || 0).toLocaleString('vi-VN')}${settings.currency}`;
@@ -132,7 +149,15 @@ export default function Home() {
     });
   };
 
-  const getNumberValue = (val: number) => val === 0 ? "" : val.toString();
+  const currentSalary = (() => {
+    if (!activeSession) return 0;
+    if (activeSession.multiplier !== 1.0) {
+      return (sessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier;
+    } else {
+      if (sessionMinutes <= 510) return 0; 
+      return ((sessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier;
+    }
+  })();
 
   const getAbsenceColorClasses = (count: number) => {
     if (count === 0) return { text: "text-green-600", border: "border-l-green-500", icon: "text-green-500", bg: "bg-green-50" };
@@ -141,25 +166,7 @@ export default function Home() {
   };
 
   const absenceColors = getAbsenceColorClasses(settings.unexcusedAbsences);
-
-  const calculateCurrentSessionSalary = () => {
-    if (!activeSession) return 0;
-    if (activeSession.multiplier !== 1.0) {
-      return (sessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier;
-    } else {
-      if (sessionMinutes <= 510) return 0; 
-      return ((sessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier;
-    }
-  };
-
-  const currentSalary = calculateCurrentSessionSalary();
   const isOvertime = sessionMinutes > 480;
-
-  const getDayTypeName = () => {
-    if (isHoliday) return "Ngày Lễ (x3.0)";
-    if (now.getDay() === 0) return "Chủ Nhật (x2.0)";
-    return "Ngày Thường (Tự động OT x1.5)";
-  };
 
   return (
     <div className="space-y-6 pb-24">
@@ -169,7 +176,7 @@ export default function Home() {
           <p className="text-muted-foreground text-sm">Chấm công chuyên nghiệp</p>
         </div>
         <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold border border-primary/20">
-          Kỳ: {startDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' })} - {endDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' })}
+          Kỳ: {periodData.startDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' })} - {periodData.endDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' })}
         </div>
       </header>
 
@@ -180,7 +187,9 @@ export default function Home() {
           <div className="w-full space-y-4">
             <div className="text-center space-y-1">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Hệ thống ghi nhận</p>
-              <p className="text-lg font-black text-primary uppercase">{getDayTypeName()}</p>
+              <p className="text-lg font-black text-primary uppercase">
+                {isHoliday ? "Ngày Lễ (x3.0)" : new Date().getDay() === 0 ? "Chủ Nhật (x2.0)" : "Ngày Thường (Tự động OT x1.5)"}
+              </p>
             </div>
             <Button 
               onClick={() => punchIn()} 
@@ -277,11 +286,11 @@ export default function Home() {
                       <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.sessionSalary)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Tiền cơm ({periodSessions.length} ca):</span> 
+                      <span className="text-muted-foreground font-bold">Tiền cơm:</span> 
                       <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.lunchAllowance)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Chuyên cần:</span> 
+                      <span className="text-muted-foreground font-bold">Chuyên cần:</span> 
                       <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.attendanceBonus)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
@@ -337,9 +346,9 @@ export default function Home() {
                 <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="text-xs font-bold uppercase tracking-wider">Tuần này</span>
               </div>
-              <span className="text-xs font-black text-primary">{Math.round(weekHours)}h / {weekTarget}h</span>
+              <span className="text-xs font-black text-primary">{Math.round(progressData.weekHours)}h / {progressData.weekTarget}h</span>
             </div>
-            <Progress value={weekProgress} className="h-2" />
+            <Progress value={progressData.weekProgress} className="h-2" />
           </div>
 
           <div className="space-y-2">
@@ -348,9 +357,9 @@ export default function Home() {
                 <Timer className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="text-xs font-bold uppercase tracking-wider">Tháng này</span>
               </div>
-              <span className="text-xs font-black text-primary">{Math.round(monthHours)}h / {monthTargetHours}h</span>
+              <span className="text-xs font-black text-primary">{Math.round(progressData.monthHours)}h / {progressData.monthTargetHours}h</span>
             </div>
-            <Progress value={monthProgress} className="h-2" />
+            <Progress value={progressData.monthProgress} className="h-2" />
           </div>
         </CardContent>
       </Card>
@@ -368,7 +377,7 @@ export default function Home() {
               type="number"
               placeholder="0"
               className="h-10 font-black text-xl text-green-600 border-none bg-transparent focus-visible:ring-0 p-0 shadow-none"
-              value={getNumberValue(settings.annualLeaveBalance)}
+              value={settings.annualLeaveBalance || ""}
               onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
             />
           </CardContent>
@@ -386,7 +395,7 @@ export default function Home() {
               type="number"
               placeholder="0"
               className={cn("h-10 font-black text-xl border-none bg-transparent focus-visible:ring-0 p-0 shadow-none", absenceColors.text)}
-              value={getNumberValue(settings.unexcusedAbsences)}
+              value={settings.unexcusedAbsences || ""}
               onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)}
             />
             <div className="flex items-center gap-1 mt-1">

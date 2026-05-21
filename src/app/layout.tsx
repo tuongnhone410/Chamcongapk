@@ -6,6 +6,7 @@ import './globals.css';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { AttendanceProvider } from '@/providers/AttendanceProvider';
 import { useUser } from '@/firebase';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -48,12 +49,14 @@ export default function RootLayout({
       <body className="font-body antialiased min-h-screen bg-background text-foreground pb-20 selection:bg-primary/30">
         <FirebaseClientProvider>
           <AuthGuard>
-            <div className="min-h-screen bg-zinc-950">
-              <main className="max-w-2xl mx-auto px-4 py-8">
-                {children}
-              </main>
-              <BottomNav />
-            </div>
+            <AttendanceProvider>
+              <div className="min-h-screen bg-zinc-950">
+                <main className="max-w-2xl mx-auto px-4 py-8">
+                  {children}
+                </main>
+                <BottomNav />
+              </div>
+            </AttendanceProvider>
           </AuthGuard>
           <Toaster />
         </FirebaseClientProvider>
