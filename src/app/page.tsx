@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DigitalClock } from '@/components/attendance/DigitalClock';
@@ -169,7 +168,7 @@ export default function Home() {
           <div className="w-full space-y-4">
             <div className="text-center space-y-1">
               <p className="text-base font-black text-primary uppercase">
-                {isHoliday ? `Ngày Lễ (x${settings.holidayMultiplier.toFixed(1)})` : new Date().getDay() === 0 ? `Chủ Nhật (x${settings.sundayMultiplier.toFixed(1)})` : `Ngày Thường (Tự động OT x${settings.overtimeMultiplier.toFixed(1)} sau 8h30p làm việc)`}
+                {isHoliday ? `Ngày Lễ` : new Date().getDay() === 0 ? `Chủ Nhật` : `Ngày Thường`}
               </p>
               <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
                 {settings.breakTimeDeduction > 0 ? `Đã trừ ${settings.breakTimeDeduction}h nghỉ hàng ngày` : 'Không khấu trừ giờ nghỉ'}
