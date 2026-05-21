@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
-import { LogIn, Chrome } from 'lucide-react';
+import { LogIn, Chrome, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AuthPage() {
@@ -67,6 +67,41 @@ export default function AuthPage() {
     }
   };
 
+  const handleAdminBypass = async () => {
+    if (!auth) return;
+    setLoading(true);
+    const adminEmail = 'admin@timesnap.com';
+    const adminPass = 'admin123456';
+    
+    try {
+      // Thử đăng nhập trước
+      await signInWithEmailAndPassword(auth, adminEmail, adminPass);
+      router.push('/');
+    } catch (error: any) {
+      // Nếu chưa có tài khoản admin demo, hãy tạo nó
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        try {
+          await createUserWithEmailAndPassword(auth, adminEmail, adminPass);
+          router.push('/');
+        } catch (signupError: any) {
+          toast({
+            variant: 'destructive',
+            title: 'Lỗi Admin',
+            description: 'Không thể khởi tạo tài khoản Admin demo.',
+          });
+        }
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Lỗi Admin',
+          description: error.message,
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-950">
       <Card className="w-full max-w-md shadow-2xl border-zinc-800 bg-zinc-900 text-white overflow-hidden">
@@ -107,7 +142,7 @@ export default function AuthPage() {
                 />
               </div>
 
-              <TabsContent value="login">
+              <TabsContent value="login" className="mt-0">
                 <Button 
                   className="w-full h-12 font-bold text-lg rounded-xl" 
                   onClick={() => handleEmailAuth('login')}
@@ -117,7 +152,7 @@ export default function AuthPage() {
                 </Button>
               </TabsContent>
               
-              <TabsContent value="signup">
+              <TabsContent value="signup" className="mt-0">
                 <Button 
                   className="w-full h-12 font-bold text-lg rounded-xl" 
                   onClick={() => handleEmailAuth('signup')}
@@ -132,18 +167,29 @@ export default function AuthPage() {
                   <span className="w-full border-t border-zinc-800" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-zinc-900 px-2 text-zinc-500">Hoặc tiếp tục với</span>
+                  <span className="bg-zinc-900 px-2 text-zinc-500">Hoặc truy cập nhanh</span>
                 </div>
               </div>
 
-              <Button 
-                variant="outline" 
-                className="w-full h-12 gap-3 font-bold border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-xl"
-                onClick={handleGoogleLogin}
-              >
-                <Chrome className="w-5 h-5" />
-                Google
-              </Button>
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  variant="outline" 
+                  className="h-12 gap-2 font-bold border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-xl"
+                  onClick={handleGoogleLogin}
+                >
+                  <Chrome className="w-4 h-4" />
+                  Google
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  className="h-12 gap-2 font-black border-primary/20 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl"
+                  onClick={handleAdminBypass}
+                  disabled={loading}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  ADMIN
+                </Button>
+              </div>
             </div>
           </Tabs>
         </CardContent>
