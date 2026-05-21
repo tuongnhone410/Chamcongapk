@@ -22,7 +22,7 @@ git remote remove origin
 
 # Thêm lại cấu hình mới (Thay <TOKEN> bằng dòng ghp_... bạn vừa copy)
 # Cấu trúc: https://<TOKEN>@github.com/tuongnhone410/Chamcongapk.git
-git remote add origin https://ghp_Dán_Token_Của_Bạn_Vào_Đây@github.com/tuongnhone410/Chamcongapk.git
+git remote add origin https://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@github.com/tuongnhone410/Chamcongapk.git
 
 # Đẩy code lên
 git add .
