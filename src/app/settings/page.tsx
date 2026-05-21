@@ -16,14 +16,14 @@ export default function SettingsPage() {
   const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
 
   // Hàm cập nhật lương tháng và tự động tính lương giờ
-  const handleMonthlySalaryChange = (val: number) => {
-    const monthlySalary = val || 0;
+  const handleMonthlySalaryChange = (val: string) => {
+    const numVal = parseFloat(val) || 0;
     // Tính lương giờ dựa trên 208 giờ công (26 ngày * 8 tiếng)
-    const calculatedHourly = Math.round(monthlySalary / 208);
+    const calculatedHourly = Math.round(numVal / 208);
     
     updateSettings({
       ...settings,
-      baseMonthlySalary: monthlySalary,
+      baseMonthlySalary: numVal,
       hourlyRate: calculatedHourly
     });
   };
@@ -49,8 +49,8 @@ export default function SettingsPage() {
             <div className="relative">
               <Input 
                 type="number" 
-                value={settings.baseMonthlySalary}
-                onChange={(e) => handleMonthlySalaryChange(parseFloat(e.target.value))}
+                value={settings.baseMonthlySalary || ''}
+                onChange={(e) => handleMonthlySalaryChange(e.target.value)}
                 placeholder="Nhập lương cơ bản theo tháng..."
                 className="pr-10"
               />
@@ -65,7 +65,7 @@ export default function SettingsPage() {
               <Label>Lương cơ bản / Giờ (OT)</Label>
               <Input 
                 type="number" 
-                value={settings.hourlyRate}
+                value={settings.hourlyRate || ''}
                 onChange={(e) => updateSettings({...settings, hourlyRate: parseFloat(e.target.value) || 0})}
               />
             </div>
@@ -84,7 +84,7 @@ export default function SettingsPage() {
               <Label>Hệ số Chủ Nhật</Label>
               <Input 
                 type="number" step="0.1"
-                value={settings.sundayMultiplier}
+                value={settings.sundayMultiplier || ''}
                 onChange={(e) => updateSettings({...settings, sundayMultiplier: parseFloat(e.target.value) || 2.0})}
               />
             </div>
@@ -92,7 +92,7 @@ export default function SettingsPage() {
               <Label>Hệ số Ngày Lễ</Label>
               <Input 
                 type="number" step="0.1"
-                value={settings.holidayMultiplier}
+                value={settings.holidayMultiplier || ''}
                 onChange={(e) => updateSettings({...settings, holidayMultiplier: parseFloat(e.target.value) || 3.0})}
               />
             </div>
@@ -113,7 +113,7 @@ export default function SettingsPage() {
             <Label>Mục tiêu thực lĩnh hàng tháng</Label>
             <Input 
               type="number" 
-              value={settings.monthlyTarget}
+              value={settings.monthlyTarget || ''}
               onChange={(e) => updateSettings({...settings, monthlyTarget: parseFloat(e.target.value) || 0})}
             />
           </div>
@@ -132,19 +132,19 @@ export default function SettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Nhà ở</Label>
-              <Input type="number" value={settings.allowanceHousing} onChange={(e) => updateSettings({...settings, allowanceHousing: parseFloat(e.target.value) || 0})} />
+              <Input type="number" value={settings.allowanceHousing || ''} onChange={(e) => updateSettings({...settings, allowanceHousing: parseFloat(e.target.value) || 0})} />
             </div>
             <div className="space-y-2">
               <Label>Xăng xe</Label>
-              <Input type="number" value={settings.allowanceFuel} onChange={(e) => updateSettings({...settings, allowanceFuel: parseFloat(e.target.value) || 0})} />
+              <Input type="number" value={settings.allowanceFuel || ''} onChange={(e) => updateSettings({...settings, allowanceFuel: parseFloat(e.target.value) || 0})} />
             </div>
             <div className="space-y-2">
               <Label>Tiền cơm</Label>
-              <Input type="number" value={settings.allowanceLunch} onChange={(e) => updateSettings({...settings, allowanceLunch: parseFloat(e.target.value) || 0})} />
+              <Input type="number" value={settings.allowanceLunch || ''} onChange={(e) => updateSettings({...settings, allowanceLunch: parseFloat(e.target.value) || 0})} />
             </div>
             <div className="space-y-2">
               <Label>Chuyên cần</Label>
-              <Input type="number" value={settings.allowanceAttendance} onChange={(e) => updateSettings({...settings, allowanceAttendance: parseFloat(e.target.value) || 0})} />
+              <Input type="number" value={settings.allowanceAttendance || ''} onChange={(e) => updateSettings({...settings, allowanceAttendance: parseFloat(e.target.value) || 0})} />
             </div>
           </div>
         </CardContent>
@@ -161,16 +161,16 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Tỷ lệ đóng Bảo hiểm (%)</Label>
-            <Input type="number" step="0.1" value={settings.insuranceRate} onChange={(e) => updateSettings({...settings, insuranceRate: parseFloat(e.target.value) || 0})} />
+            <Input type="number" step="0.1" value={settings.insuranceRate || ''} onChange={(e) => updateSettings({...settings, insuranceRate: parseFloat(e.target.value) || 0})} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Đoàn phí</Label>
-              <Input type="number" value={settings.unionFee} onChange={(e) => updateSettings({...settings, unionFee: parseFloat(e.target.value) || 0})} />
+              <Input type="number" value={settings.unionFee || ''} onChange={(e) => updateSettings({...settings, unionFee: parseFloat(e.target.value) || 0})} />
             </div>
             <div className="space-y-2">
               <Label>Thuế TNCN</Label>
-              <Input type="number" value={settings.incomeTax} onChange={(e) => updateSettings({...settings, incomeTax: parseFloat(e.target.value) || 0})} />
+              <Input type="number" value={settings.incomeTax || ''} onChange={(e) => updateSettings({...settings, incomeTax: parseFloat(e.target.value) || 0})} />
             </div>
           </div>
         </CardContent>
