@@ -81,7 +81,7 @@ export default function SettingsPage() {
   };
 
   const labelClass = "text-[10px] font-black uppercase tracking-widest mb-1.5 block";
-  const inputClass = "h-11 font-bold bg-zinc-900 border-zinc-800 rounded-xl text-white";
+  const inputClass = "h-11 font-bold bg-zinc-900 border-zinc-800 rounded-xl text-white text-sm";
   const suffixClass = "absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-sm";
 
   return (
@@ -111,7 +111,7 @@ export default function SettingsPage() {
                 type="text" 
                 value={formatMoneyDisplay(localSettings.baseMonthlySalary)}
                 onChange={(e) => handleMoneyInput('baseMonthlySalary', e.target.value)}
-                className={cn(inputClass, "text-lg pr-12")}
+                className={cn(inputClass, "pr-12")}
               />
               <span className={suffixClass}>đ</span>
             </div>

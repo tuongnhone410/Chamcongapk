@@ -27,7 +27,7 @@ export interface AttendanceContextType {
   isLoaded: boolean;
   punchIn: () => void;
   punchOut: () => void;
-  addManualSession: (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => void;
+  addManualSession: (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => Promise<void>;
   batchAddSessions: (data: { 
     startDate: string, 
     endDate: string, 
@@ -172,6 +172,23 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     });
   }, [db, user, activeSession, calculateSessionSalary]);
 
+  const addManualSession = useCallback(async (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => {
+    if (!db || !user) return;
+    const checkIn = new Date(data.checkIn);
+    const checkOut = new Date(data.checkOut);
+    const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+    
+    addDoc(collection(db, 'users', user.uid, 'sessions'), {
+      checkIn: checkIn.toISOString(),
+      checkOut: checkOut.toISOString(),
+      multiplier: data.multiplier,
+      totalMinutes: diffMinutes,
+      salary: calculateSessionSalary(diffMinutes, data.multiplier),
+      note: data.note || '',
+      createdAt: new Date().toISOString()
+    });
+  }, [db, user, calculateSessionSalary]);
+
   const multiAddSessions = useCallback(async (data: { dates: Date[], startTime: string, endTime: string, multiplier: number }) => {
     if (!db || !user) return;
     const batch = writeBatch(db);
@@ -192,7 +209,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         createdAt: new Date().toISOString()
       });
     });
-    // Fire and forget - không dùng await để tránh lag UI
     batch.commit().catch(e => console.error(e));
   }, [db, user, calculateSessionSalary, getAutoMultiplier]);
 
@@ -227,6 +243,30 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     batch.commit().catch(e => console.error(e));
   }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier]);
 
+  const importFromCSV = useCallback(async (csvContent: string) => {
+    if (!db || !user) return;
+    const lines = csvContent.split('\n').filter(l => l.trim());
+    if (lines.length <= 1) return;
+    
+    const batch = writeBatch(db);
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length < 6) continue;
+      
+      const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
+      batch.set(newDocRef, {
+        checkIn: parts[1],
+        checkOut: parts[2] || null,
+        multiplier: parseFloat(parts[3]),
+        totalMinutes: parseInt(parts[4]),
+        salary: parseFloat(parts[5]),
+        note: parts[6] || '',
+        createdAt: new Date().toISOString()
+      });
+    }
+    batch.commit().catch(e => console.error(e));
+  }, [db, user]);
+
   const clearAllHistory = useCallback(async () => {
     if (!db || !user || sessions.length === 0) return;
     setDeletedSessionsCache([...sessions]);
@@ -248,6 +288,8 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     });
     batch.commit().catch(e => console.error(e));
     setCanUndo(false);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
   }, [db, user, canUndo, deletedSessionsCache]);
 
   const updateSettings = useCallback(async (newSettings: AppSettings) => {
