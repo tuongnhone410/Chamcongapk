@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DigitalClock } from '@/components/attendance/DigitalClock';
@@ -14,7 +15,6 @@ import {
   Zap,
   CheckCircle2
 } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
   ChartContainer, 
@@ -392,13 +392,6 @@ export default function Home() {
                 </div>
               </PopoverContent>
             </Popover>
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-[10px] uppercase font-black tracking-widest">
-              <span>MỤC TIÊU: {formatCurrency(settings.monthlyTarget)}</span>
-              <span>{Math.min(Math.round((salaryInfo.netSalary / (settings.monthlyTarget || 1)) * 100), 100)}%</span>
-            </div>
-            <Progress value={Math.min(Math.round((salaryInfo.netSalary / (settings.monthlyTarget || 1)) * 100), 100)} className="h-3 bg-white/20 rounded-full" />
           </div>
         </CardContent>
       </Card>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -192,14 +193,23 @@ export default function SettingsPage() {
           <div className="space-y-1">
             <Label className={labelClass}>OT 1.5</Label>
             <Input type="number" step="0.1" className={inputClass} value={localSettings.overtimeMultiplier.toString()} onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)} />
+            <p className="text-[10px] font-black text-orange-500 mt-1">
+              {formatMoneyDisplay(localSettings.hourlyRate * localSettings.overtimeMultiplier)}đ/h
+            </p>
           </div>
           <div className="space-y-1">
             <Label className={labelClass}>CN x2.0</Label>
             <Input type="number" step="0.1" className={inputClass} value={localSettings.sundayMultiplier.toString()} onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)} />
+            <p className="text-[10px] font-black text-orange-500 mt-1">
+              {formatMoneyDisplay(localSettings.hourlyRate * localSettings.sundayMultiplier)}đ/h
+            </p>
           </div>
           <div className="space-y-1">
             <Label className={labelClass}>Lễ x3.0</Label>
             <Input type="number" step="0.1" className={inputClass} value={localSettings.holidayMultiplier.toString()} onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)} />
+            <p className="text-[10px] font-black text-orange-500 mt-1">
+              {formatMoneyDisplay(localSettings.hourlyRate * localSettings.holidayMultiplier)}đ/h
+            </p>
           </div>
         </CardContent>
       </Card>
