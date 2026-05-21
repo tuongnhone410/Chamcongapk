@@ -29,11 +29,19 @@ export default function HistoryPage() {
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
   const { toast } = useToast();
   
+  // Helper to format date for datetime-local input correctly taking timezone into account
+  const formatToLocalDatetime = (isoString: string | Date) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    const offset = date.getTimezoneOffset() * 60000; // offset in milliseconds
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  };
+
   // Trạng thái Thêm lẻ
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [manualData, setManualData] = useState({
-    checkIn: new Date().toISOString().slice(0, 11) + "07:00",
-    checkOut: new Date().toISOString().slice(0, 11) + "20:00",
+    checkIn: formatToLocalDatetime(new Date()).slice(0, 11) + "07:00",
+    checkOut: formatToLocalDatetime(new Date()).slice(0, 11) + "20:00",
     multiplier: 1.0,
     note: ''
   });
@@ -41,7 +49,7 @@ export default function HistoryPage() {
   // Trạng thái Thêm hàng loạt (Khoảng ngày)
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [batchData, setBatchData] = useState({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10),
+    startDate: new Date().toISOString().slice(0, 10),
     endDate: new Date().toISOString().slice(0, 10),
     startTime: '07:00',
     endTime: '20:00',
@@ -130,9 +138,8 @@ export default function HistoryPage() {
     }
   };
 
-  const showExcludeSundays = batchData.multiplier === -1 || batchData.multiplier === 1.0;
+  const showExcludeSundays = (batchData.multiplier === -1 || batchData.multiplier === 1.0);
 
-  // Lấy danh sách ngày đã có dữ liệu để đánh dấu trên lịch
   const sessionDates = sessions.map(s => new Date(s.checkIn).toDateString());
 
   return (
@@ -143,7 +150,6 @@ export default function HistoryPage() {
           <p className="text-muted-foreground text-xs font-medium uppercase tracking-widest">Quản lý phiên làm việc</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {/* Nút Thêm Theo Ngày Chọn (Nhanh nhất cho các ngày lẻ) */}
           <Dialog open={showMultiDialog} onOpenChange={setShowMultiDialog}>
             <DialogTrigger asChild>
               <Button size="sm" variant="default" className="gap-2 text-xs rounded-xl h-10 bg-primary font-black shadow-lg">
@@ -183,18 +189,18 @@ export default function HistoryPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ vào</Label>
-                    <Input 
+                    <input 
                       type="time" 
-                      className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl"
+                      className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 outline-none focus:border-primary transition-colors text-white"
                       value={multiData.startTime}
                       onChange={(e) => setMultiData({...multiData, startTime: e.target.value})}
                     />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ ra</Label>
-                    <Input 
+                    <input 
                       type="time" 
-                      className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl border-orange-500/30 text-orange-500"
+                      className="bg-zinc-900 border border-orange-500/30 h-11 font-bold rounded-xl px-3 outline-none focus:border-orange-500 transition-colors text-orange-500"
                       value={multiData.endTime}
                       onChange={(e) => setMultiData({...multiData, endTime: e.target.value})}
                     />
@@ -213,11 +219,6 @@ export default function HistoryPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <p className="text-[10px] text-zinc-500 italic text-center font-medium">
-                  {selectedDates && selectedDates.length > 0 
-                    ? `Đã chọn ${selectedDates.length} ngày. Sau 8h30p tự động tính OT 1.5.`
-                    : "Mẹo: Tích chọn các ngày tăng ca lẻ trên lịch để thêm 1 lúc."}
-                </p>
               </div>
               <DialogFooter className="gap-2">
                 <Button variant="outline" onClick={() => setShowMultiDialog(false)} className="border-zinc-800 rounded-xl h-12 font-bold">Hủy</Button>
@@ -226,7 +227,6 @@ export default function HistoryPage() {
             </DialogContent>
           </Dialog>
 
-          {/* Nút Thêm Hàng Loạt (Khoảng ngày) */}
           <Dialog open={showBatchDialog} onOpenChange={setShowBatchDialog}>
             <DialogTrigger asChild>
               <Button size="sm" variant="outline" className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold">
@@ -381,7 +381,7 @@ export default function HistoryPage() {
                         </DialogTrigger>
                         <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
                           <DialogHeader>
-                            <DialogTitle className="font-black uppercase text-xl">Chỉnh sửa phiên</DialogTitle>
+                            <DialogTitle className="font-black uppercase text-xl text-center">Chỉnh sửa phiên</DialogTitle>
                           </DialogHeader>
                           {editingSession && (
                             <div className="space-y-4 py-4">
@@ -389,8 +389,8 @@ export default function HistoryPage() {
                                 <Label className="text-[10px] font-black uppercase text-zinc-500">Vào làm</Label>
                                 <Input 
                                   type="datetime-local" 
-                                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold"
-                                  value={editingSession.checkIn.slice(0, 16)}
+                                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white"
+                                  value={formatToLocalDatetime(editingSession.checkIn)}
                                   onChange={(e) => setEditingSession({...editingSession, checkIn: new Date(e.target.value).toISOString()})}
                                 />
                               </div>
@@ -398,9 +398,9 @@ export default function HistoryPage() {
                                 <Label className="text-[10px] font-black uppercase text-zinc-500">Ra làm</Label>
                                 <Input 
                                   type="datetime-local" 
-                                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold"
-                                  value={editingSession.checkOut?.slice(0, 16) || ''}
-                                  onChange={(e) => setEditingSession({...editingSession, checkOut: new Date(e.target.value).toISOString()})}
+                                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white"
+                                  value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""}
+                                  onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})}
                                 />
                               </div>
                               <div className="space-y-1.5">
@@ -427,8 +427,8 @@ export default function HistoryPage() {
                             </div>
                           )}
                           <DialogFooter className="gap-2">
-                            <Button variant="outline" onClick={() => setEditingSession(null)} className="border-zinc-800 rounded-xl h-12 font-bold">Hủy</Button>
-                            <Button onClick={handleUpdate} className="bg-primary rounded-xl h-12 font-black shadow-xl">CẬP NHẬT</Button>
+                            <Button variant="outline" onClick={() => setEditingSession(null)} className="border-zinc-800 rounded-xl h-12 font-bold flex-1">Hủy</Button>
+                            <Button onClick={handleUpdate} className="bg-primary rounded-xl h-12 font-black shadow-xl flex-1">CẬP NHẬT</Button>
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
