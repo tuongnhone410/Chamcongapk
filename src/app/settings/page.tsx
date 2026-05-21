@@ -9,27 +9,13 @@ import { Button } from '@/components/ui/button';
 import { 
   Clock, 
   Calculator, 
-  CalendarCheck, 
-  Zap, 
   Save, 
-  ShieldCheck, 
-  Target,
-  LogOut,
   UserCircle,
   AlertTriangle,
   Gift,
-  ChevronRight,
-  TrendingUp,
-  HardHat,
-  Trophy,
-  Coffee,
-  MapPin,
-  Phone,
-  Fuel,
-  Cpu,
-  ShieldAlert,
-  Star,
-  UserCheck
+  Zap,
+  ShieldCheck,
+  LogOut
 } from 'lucide-react';
 import { AppSettings } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -112,11 +98,11 @@ export default function SettingsPage() {
         </Button>
       </header>
 
-      {/* Lương Cơ Bản & Mục Tiêu */}
+      {/* Lương Hợp Đồng & Bảo Hiểm */}
       <Card className="border-zinc-800 bg-zinc-900 overflow-hidden rounded-[2rem]">
         <CardHeader className="pb-2">
           <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-primary">
-            <Calculator className="w-4 h-4" /> Lương Hợp Đồng
+            <Calculator className="w-4 h-4" /> Lương Hợp Đồng & Bảo Hiểm
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -132,7 +118,44 @@ export default function SettingsPage() {
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 font-bold">đ</span>
             </div>
           </div>
+          
           <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-zinc-500")}>Lương đóng bảo hiểm</Label>
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  value={formatMoneyDisplay(localSettings.insuranceSalary)}
+                  onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)}
+                  className={inputClass}
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-zinc-500")}>Tỷ lệ bảo hiểm (%)</Label>
+              <Input 
+                type="number" step="0.1"
+                className={inputClass}
+                value={localSettings.insuranceRate.toString()}
+                onChange={(e) => handleNumberInput('insuranceRate', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-zinc-500")}>Đoàn phí (Cố định)</Label>
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  value={formatMoneyDisplay(localSettings.unionFee)}
+                  onChange={(e) => handleMoneyInput('unionFee', e.target.value)}
+                  className={inputClass}
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 font-bold">đ</span>
+              </div>
+            </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Ngày chốt lương</Label>
               <Select value={localSettings.payday.toString()} onValueChange={(val) => setLocalSettings({...localSettings, payday: parseInt(val)})}>
@@ -144,33 +167,39 @@ export default function SettingsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
-              <Label className={cn(labelClass, "text-zinc-500")}>Khấu trừ giờ nghỉ</Label>
-              <Input 
-                type="number" step="0.1"
-                className={inputClass}
-                value={localSettings.breakTimeDeduction === 0 ? "" : localSettings.breakTimeDeduction.toString()}
-                onChange={(e) => handleNumberInput('breakTimeDeduction', e.target.value)}
-              />
-            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-zinc-500")}>Khấu trừ giờ nghỉ hàng ngày (giờ)</Label>
+            <Input 
+              type="number" step="0.1"
+              className={inputClass}
+              value={localSettings.breakTimeDeduction === 0 ? "" : localSettings.breakTimeDeduction.toString()}
+              onChange={(e) => handleNumberInput('breakTimeDeduction', e.target.value)}
+            />
           </div>
         </CardContent>
       </Card>
 
-      {/* Đoàn Phí */}
+      {/* Hệ Số Tăng Ca */}
       <Card className="border-zinc-800 bg-zinc-900 overflow-hidden rounded-[2rem]">
-        <CardContent className="pt-6">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-orange-500">
+            <Zap className="w-4 h-4" /> Hệ Số Tăng Ca
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
-            <Label className={cn(labelClass, "text-zinc-500")}>Đoàn phí (Cố định)</Label>
-            <div className="relative">
-              <Input 
-                type="text" 
-                value={formatMoneyDisplay(localSettings.unionFee)}
-                onChange={(e) => handleMoneyInput('unionFee', e.target.value)}
-                className={inputClass}
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 font-bold">đ</span>
-            </div>
+            <Label className={labelClass}>OT 1.5</Label>
+            <Input type="number" step="0.1" className={inputClass} value={localSettings.overtimeMultiplier.toString()} onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className={labelClass}>CN x2.0</Label>
+            <Input type="number" step="0.1" className={inputClass} value={localSettings.sundayMultiplier.toString()} onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className={labelClass}>Lễ x3.0</Label>
+            <Input type="number" step="0.1" className={inputClass} value={localSettings.holidayMultiplier.toString()} onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)} />
           </div>
         </CardContent>
       </Card>
@@ -297,59 +326,6 @@ export default function SettingsPage() {
                 <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowanceFuel)} onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Hệ Số & Bảo Hiểm */}
-      <Card className="border-zinc-800 bg-zinc-900 overflow-hidden rounded-[2rem]">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-zinc-400">
-            <Zap className="w-4 h-4" /> Hệ Số & Bảo Hiểm
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1">
-              <Label className={labelClass}>OT 1.5</Label>
-              <Input type="number" step="0.1" className={inputClass} value={localSettings.overtimeMultiplier.toString()} onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label className={labelClass}>CN x2.0</Label>
-              <Input type="number" step="0.1" className={inputClass} value={localSettings.sundayMultiplier.toString()} onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label className={labelClass}>Lễ x3.0</Label>
-              <Input type="number" step="0.1" className={inputClass} value={localSettings.holidayMultiplier.toString()} onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label className={labelClass}>Lương đóng BH</Label>
-              <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.insuranceSalary)} onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label className={labelClass}>Tỷ lệ BH (%)</Label>
-              <Input type="number" step="0.1" className={inputClass} value={localSettings.insuranceRate.toString()} onChange={(e) => handleNumberInput('insuranceRate', e.target.value)} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Mục Tiêu */}
-      <Card className="border-zinc-800 bg-primary/10 overflow-hidden rounded-[2rem]">
-        <CardContent className="pt-6">
-          <div className="space-y-1">
-            <Label className={cn(labelClass, "text-primary")}>Mục tiêu thu nhập hàng tháng</Label>
-            <div className="relative">
-              <Input 
-                type="text" 
-                value={formatMoneyDisplay(localSettings.monthlyTarget)}
-                onChange={(e) => handleMoneyInput('monthlyTarget', e.target.value)}
-                className={cn(inputClass, "text-xl h-14 border-primary/30")}
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-primary font-bold">đ</span>
             </div>
           </div>
         </CardContent>
