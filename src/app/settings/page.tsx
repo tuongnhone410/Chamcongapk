@@ -83,6 +83,7 @@ export default function SettingsPage() {
         <p className="text-muted-foreground text-sm">Thiết lập chi tiết dựa trên hợp đồng lao động</p>
       </header>
 
+      {/* Quản Lý Phép Năm */}
       <Card className="border-none shadow-sm border-l-4 border-l-green-500">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center space-x-2">
@@ -113,6 +114,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Lương Cơ Bản & Hệ Số */}
       <Card className="border-none shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
@@ -145,15 +147,17 @@ export default function SettingsPage() {
                   disabled
                   type="text" 
                   value={formatMoneyDisplay(settings.hourlyRate)}
-                  className="pr-8 font-bold bg-muted/50 cursor-not-allowed"
+                  className="pr-8 font-bold bg-muted/50 cursor-not-allowed h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-xs">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-xs">đ</span>
               </div>
             </div>
             <div className="space-y-2">
               <Label>Ngày chốt lương</Label>
               <Select value={settings.payday.toString()} onValueChange={(val) => updateSettings({...settings, payday: parseInt(val)})}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 font-bold">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {daysInMonth.map(day => <SelectItem key={day} value={day.toString()}>Ngày {day}</SelectItem>)}
                 </SelectContent>
@@ -165,9 +169,9 @@ export default function SettingsPage() {
             <Label className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Hệ số & Lương OT tương ứng</Label>
             
             <div className="grid grid-cols-2 gap-x-4 gap-y-6">
-              {/* OT 1.5 */}
+              {/* OT 1.5 Pair */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-1.5 text-orange-500">
+                <Label className="flex items-center gap-1.5 text-orange-500 h-5">
                   <Zap className="w-3.5 h-3.5" /> Hệ số Tăng ca
                 </Label>
                 <Input 
@@ -180,7 +184,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Lương OT 1.5 / Giờ</Label>
+                <Label className="text-muted-foreground h-5">Lương OT 1.5 / Giờ</Label>
                 <div className="relative">
                   <Input 
                     readOnly
@@ -192,9 +196,9 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* OT 2.0 (Sunday) */}
+              {/* OT 2.0 (Sunday) Pair */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-1.5 text-blue-500">
+                <Label className="flex items-center gap-1.5 text-blue-500 h-5">
                   <Calculator className="w-3.5 h-3.5" /> Hệ số Chủ Nhật
                 </Label>
                 <Input 
@@ -207,7 +211,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Lương CN (x{settings.sundayMultiplier}) / Giờ</Label>
+                <Label className="text-muted-foreground h-5">Lương CN (x{settings.sundayMultiplier}) / Giờ</Label>
                 <div className="relative">
                   <Input 
                     readOnly
@@ -219,9 +223,9 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* OT 3.0 (Holiday) */}
+              {/* OT 3.0 (Holiday) Pair */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-1.5 text-red-500">
+                <Label className="flex items-center gap-1.5 text-red-500 h-5">
                   <Star className="w-3.5 h-3.5" /> Hệ số Ngày Lễ
                 </Label>
                 <Input 
@@ -234,7 +238,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Lương Lễ (x{settings.holidayMultiplier}) / Giờ</Label>
+                <Label className="text-muted-foreground h-5">Lương Lễ (x{settings.holidayMultiplier}) / Giờ</Label>
                 <div className="relative">
                   <Input 
                     readOnly
@@ -250,6 +254,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Bảo Hiểm & Thuế */}
       <Card className="border-none shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
@@ -267,14 +272,14 @@ export default function SettingsPage() {
                 placeholder="0"
                 value={formatMoneyDisplay(settings.insuranceSalary)} 
                 onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} 
-                className="pr-8 font-medium"
+                className="pr-8 font-medium h-11"
               />
-              <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Tỷ lệ đóng Bảo hiểm</Label>
+              <Label className="h-5">Tỷ lệ đóng Bảo hiểm</Label>
               <div className="relative">
                 <Input 
                   type="text" 
@@ -282,22 +287,22 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatPercentDisplay(settings.insuranceRate)} 
                   onChange={(e) => handlePercentInput('insuranceRate', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">%</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">%</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-primary font-bold">Tiền BH phải đóng (10.5%)</Label>
-              <div className="h-10 flex items-center px-3 bg-muted/50 rounded-md border font-bold text-primary">
+              <Label className="text-primary font-bold h-5">Tiền BH phải đóng (10.5%)</Label>
+              <div className="h-11 flex items-center px-3 bg-muted/50 rounded-md border font-bold text-primary">
                 {calculatedInsuranceMoney.toLocaleString('vi-VN')} đ
               </div>
             </div>
           </div>
           
-          <div className="pt-2 border-t mt-4">
-            <div className="space-y-2 max-w-[50%]">
-              <Label className="text-green-600 font-bold">Tỷ lệ Thuế TNCN (%)</Label>
+          <div className="pt-2 border-t mt-4 grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-green-600 font-bold h-5">Tỷ lệ Thuế TNCN (%)</Label>
               <div className="relative">
                 <Input 
                   type="text" 
@@ -305,16 +310,13 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatPercentDisplay(settings.incomeTaxRate)} 
                   onChange={(e) => handlePercentInput('incomeTaxRate', e.target.value)} 
-                  className="pr-8 font-medium border-green-200 focus-visible:ring-green-500"
+                  className="pr-8 font-medium border-green-200 focus-visible:ring-green-500 h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">%</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">%</span>
               </div>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Đoàn phí (Cố định)</Label>
+              <Label className="h-5">Đoàn phí (Cố định)</Label>
               <div className="relative">
                 <Input 
                   type="text" 
@@ -322,15 +324,16 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.unionFee)} 
                   onChange={(e) => handleMoneyInput('unionFee', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Chuyên Cần & Nghỉ Không Phép */}
       <Card className={cn("border-none shadow-sm border-l-4 transition-all duration-300", absenceColors.border)}>
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
@@ -341,7 +344,7 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Tiền chuyên cần gốc</Label>
+              <Label className="h-5">Tiền chuyên cần gốc</Label>
               <div className="relative">
                 <Input 
                   type="text" 
@@ -349,17 +352,17 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowanceAttendanceBase)} 
                   onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label className={cn("font-bold transition-colors", absenceColors.text)}>Số ngày nghỉ K.Phép</Label>
+              <Label className={cn("font-bold transition-colors h-5", absenceColors.text)}>Số ngày nghỉ K.Phép</Label>
               <Input 
                 type="number" 
                 placeholder="0"
-                className={cn("h-10 font-bold border-2 transition-all", absenceColors.input)}
+                className={cn("h-11 font-bold border-2 transition-all", absenceColors.input)}
                 value={getNumberValue(settings.unexcusedAbsences)} 
                 onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} 
               />
@@ -371,6 +374,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Phụ Cấp & Tiền Cơm */}
       <Card className="border-none shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
@@ -381,7 +385,7 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-primary font-bold">
+              <Label className="flex items-center gap-1 text-primary font-bold h-5">
                 <Briefcase className="w-3 h-3" /> Kỹ thuật (Trừ KP)
               </Label>
               <div className="relative">
@@ -391,13 +395,13 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowanceTechnical)} 
                   onChange={(e) => handleMoneyInput('allowanceTechnical', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-primary font-bold">
+              <Label className="flex items-center gap-1 text-primary font-bold h-5">
                 <Shield className="w-3 h-3" /> Trách nhiệm (Trừ KP)
               </Label>
               <div className="relative">
@@ -407,13 +411,13 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowanceResponsibility)} 
                   onChange={(e) => handleMoneyInput('allowanceResponsibility', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-primary font-bold">
+              <Label className="flex items-center gap-1 text-primary font-bold h-5">
                 <Award className="w-3 h-3" /> Chức vụ (Trừ KP)
               </Label>
               <div className="relative">
@@ -423,13 +427,13 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowancePosition)} 
                   onChange={(e) => handleMoneyInput('allowancePosition', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-primary font-bold">
+              <Label className="flex items-center gap-1 text-primary font-bold h-5">
                 <Star className="w-3 h-3" /> Hiệu suất (Trừ KP)
               </Label>
               <div className="relative">
@@ -439,13 +443,13 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowancePerformance)} 
                   onChange={(e) => handleMoneyInput('allowancePerformance', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-primary font-bold">
+              <Label className="flex items-center gap-1 text-primary font-bold h-5">
                 <Package className="w-3 h-3" /> Tiền sản phẩm
               </Label>
               <div className="relative">
@@ -455,13 +459,13 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowanceProduct)} 
                   onChange={(e) => handleMoneyInput('allowanceProduct', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Tiền cơm/ca</Label>
+              <Label className="h-5">Tiền cơm/ca</Label>
               <div className="relative">
                 <Input 
                   type="text" 
@@ -469,13 +473,13 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowanceLunchPerShift)} 
                   onChange={(e) => handleMoneyInput('allowanceLunchPerShift', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Cơm thêm (OT &ge; 2h)</Label>
+              <Label className="h-5">Cơm thêm (OT &ge; 2h)</Label>
               <div className="relative">
                 <Input 
                   type="text" 
@@ -483,13 +487,13 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowanceLunchOT)} 
                   onChange={(e) => handleMoneyInput('allowanceLunchOT', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Nhà ở</Label>
+              <Label className="h-5">Nhà ở</Label>
               <div className="relative">
                 <Input 
                   type="text" 
@@ -497,13 +501,13 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowanceHousing)} 
                   onChange={(e) => handleMoneyInput('allowanceHousing', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-orange-600 font-bold">
+              <Label className="flex items-center gap-1 text-orange-600 font-bold h-5">
                 <Skull className="w-3 h-3" /> Độc hại
               </Label>
               <div className="relative">
@@ -513,13 +517,13 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowanceToxic)} 
                   onChange={(e) => handleMoneyInput('allowanceToxic', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-1 text-green-600 font-bold">
+              <Label className="flex items-center gap-1 text-green-600 font-bold h-5">
                 <TrendingUp className="w-3 h-3" /> Doanh thu
               </Label>
               <div className="relative">
@@ -529,13 +533,13 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowanceBonus)} 
                   onChange={(e) => handleMoneyInput('allowanceBonus', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Xăng xe</Label>
+              <Label className="h-5">Xăng xe</Label>
               <div className="relative">
                 <Input 
                   type="text" 
@@ -543,9 +547,9 @@ export default function SettingsPage() {
                   placeholder="0"
                   value={formatMoneyDisplay(settings.allowanceFuel)} 
                   onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} 
-                  className="pr-8 font-medium"
+                  className="pr-8 font-medium h-11"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+                <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
               </div>
             </div>
           </div>
