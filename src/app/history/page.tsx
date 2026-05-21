@@ -25,6 +25,7 @@ import {
   Calendar as CalendarIcon, 
   StickyNote, 
   Download, 
+  Upload,
   Zap, 
   PlusCircle, 
   Layers, 
@@ -33,9 +34,11 @@ import {
   X,
   RotateCcw,
   AlertTriangle,
-  Save
+  Save,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { WorkSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -60,6 +63,7 @@ export default function HistoryPage() {
     updateSession, 
     batchAddSessions, 
     multiAddSessions, 
+    importFromCSV,
     clearAllHistory,
     restoreHistory,
     canUndo,
@@ -70,6 +74,12 @@ export default function HistoryPage() {
   
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Filter states
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   
   const formatToLocalDatetime = (isoString: string | Date) => {
     if (!isoString) return "";
@@ -98,7 +108,13 @@ export default function HistoryPage() {
 
   if (!isLoaded) return null;
 
-  const completedSessions = sessions.filter(s => s.checkOut).sort((a, b) => 
+  // Lọc dữ liệu theo tháng và năm đã chọn
+  const filteredSessions = sessions.filter(s => {
+    const d = new Date(s.checkIn);
+    return (d.getMonth() + 1) === selectedMonth && d.getFullYear() === selectedYear;
+  });
+
+  const completedSessions = filteredSessions.filter(s => s.checkOut).sort((a, b) => 
     new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime()
   );
 
@@ -124,7 +140,7 @@ export default function HistoryPage() {
         totalMinutes: diffMinutes,
       });
       setEditingSession(null);
-      toast({ title: "Đã cập nhật", description: "Dữ liệu phiên làm việc đã được lưu." });
+      toast({ title: "Đã lưu", description: "Thay đổi đã được cập nhật." });
     }
   };
 
@@ -165,6 +181,20 @@ export default function HistoryPage() {
     }
   };
 
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const content = event.target?.result as string;
+      await importFromCSV(content);
+      toast({ title: "Đã nhập", description: "Dữ liệu CSV đã được khôi phục thành công." });
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleClearAll = async () => {
     await clearAllHistory();
     toast({ 
@@ -177,6 +207,20 @@ export default function HistoryPage() {
   const handleRestore = async () => {
     await restoreHistory();
     toast({ title: "Đã khôi phục", description: "Dữ liệu của bạn đã quay trở lại." });
+  };
+
+  const changeMonth = (dir: number) => {
+    let nextMonth = selectedMonth + dir;
+    let nextYear = selectedYear;
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear++;
+    } else if (nextMonth < 1) {
+      nextMonth = 12;
+      nextYear--;
+    }
+    setSelectedMonth(nextMonth);
+    setSelectedYear(nextYear);
   };
 
   const showExcludeSundays = (batchData.multiplier === -1 || batchData.multiplier === 1.0);
@@ -221,7 +265,7 @@ export default function HistoryPage() {
                   XÁC NHẬN XÓA TOÀN BỘ
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-zinc-400 font-bold">
-                  Hành động này sẽ xóa tất cả {completedSessions.length} phiên làm việc. Bạn sẽ có 10 giây để nhấn nút KHÔI PHỤC trước khi dữ liệu bị xóa vĩnh viễn.
+                  Hành động này sẽ xóa tất cả {completedSessions.length} phiên làm việc của tháng hiện tại. Bạn sẽ có 10 giây để nhấn nút KHÔI PHỤC trước khi dữ liệu bị xóa vĩnh viễn.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -404,8 +448,41 @@ export default function HistoryPage() {
             <Download className="w-3.5 h-3.5" />
             Xuất CSV
           </Button>
+
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="w-3.5 h-3.5" />
+            Nhập CSV
+          </Button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept=".csv"
+            onChange={handleImportCSV} 
+          />
         </div>
       </header>
+
+      {/* Bộ lọc tháng/năm */}
+      <div className="flex items-center justify-between bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+        <Button variant="ghost" size="icon" onClick={() => changeMonth(-1)} className="rounded-xl text-zinc-400">
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
+        <div className="text-center">
+          <p className="text-[10px] font-black uppercase text-primary tracking-widest">ĐANG XEM THÁNG</p>
+          <p className="text-xl font-black text-white uppercase tracking-tighter">
+            Tháng {selectedMonth} <span className="text-zinc-500">/</span> {selectedYear}
+          </p>
+        </div>
+        <Button variant="ghost" size="icon" onClick={() => changeMonth(1)} className="rounded-xl text-zinc-400">
+          <ChevronRight className="w-5 h-5" />
+        </Button>
+      </div>
 
       {completedSessions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
@@ -413,8 +490,8 @@ export default function HistoryPage() {
             <History className="w-16 h-16 text-zinc-800" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-xl font-black uppercase tracking-tighter">Chưa có lịch sử</h3>
-            <p className="text-zinc-500 text-xs font-medium uppercase tracking-widest">Dữ liệu chấm công sẽ xuất hiện tại đây.</p>
+            <h3 className="text-xl font-black uppercase tracking-tighter">Tháng này chưa có dữ liệu</h3>
+            <p className="text-zinc-500 text-xs font-medium uppercase tracking-widest">Sử dụng các công cụ ở trên để thêm giờ công.</p>
           </div>
         </div>
       ) : (
@@ -519,7 +596,7 @@ export default function HistoryPage() {
                             <Button variant="outline" onClick={() => setEditingSession(null)} className="border-zinc-800 rounded-xl h-12 font-bold flex-1">Hủy</Button>
                             <Button onClick={handleUpdate} className="bg-primary rounded-xl h-12 font-black shadow-xl flex-1 gap-2">
                               <Save className="w-4 h-4" />
-                              CẬP NHẬT
+                              LƯU THAY ĐỔI
                             </Button>
                           </DialogFooter>
                         </DialogContent>

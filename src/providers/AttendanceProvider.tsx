@@ -43,6 +43,7 @@ export interface AttendanceContextType {
     endTime: string,
     multiplier: number
   }) => Promise<void>;
+  importFromCSV: (csvContent: string) => Promise<void>;
   updateSettings: (newSettings: AppSettings) => Promise<void>;
   deleteSession: (id: string) => void;
   updateSession: (updated: WorkSession) => void;
@@ -189,6 +190,60 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       salary,
       createdAt: new Date().toISOString()
     });
+  }, [db, user, calculateSessionSalary]);
+
+  const importFromCSV = useCallback(async (csvContent: string) => {
+    if (!db || !user) return;
+    const lines = csvContent.split('\n');
+    if (lines.length < 2) return;
+
+    const batch = writeBatch(db);
+    const headers = lines[0].split(',');
+
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      const values = lines[i].split(',');
+      
+      // Định dạng xuất: "ID, Vào làm, Ra làm, Hệ số, Phút, Lương, Ghi chú"
+      // index: 0:id, 1:checkIn, 2:checkOut, 3:multiplier, 4:mins, 5:salary, 6:note
+      
+      const checkInStr = values[1]?.replace(/"/g, '');
+      const checkOutStr = values[2]?.replace(/"/g, '');
+      const multiplier = parseFloat(values[3]);
+      const note = values[6]?.replace(/"/g, '') || '';
+
+      if (checkInStr && checkOutStr) {
+        // Chuyển "dd/mm/yyyy, hh:mm:ss" thành định dạng ISO có thể parse
+        // Ở đây giả định định dạng là vi-VN chuẩn từ hàm export
+        const parseDate = (str: string) => {
+          try {
+            const [datePart, timePart] = str.split(' ');
+            const [d, m, y] = datePart.split('/').map(Number);
+            const [h, min, s] = timePart.split(':').map(Number);
+            return new Date(y, m - 1, d, h, min, s).toISOString();
+          } catch {
+            return new Date(str).toISOString();
+          }
+        };
+
+        const checkIn = parseDate(checkInStr);
+        const checkOut = parseDate(checkOutStr);
+        const diffMinutes = Math.floor((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 60000);
+        const salary = calculateSessionSalary(diffMinutes, multiplier);
+
+        const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
+        batch.set(newDocRef, {
+          checkIn,
+          checkOut,
+          multiplier,
+          totalMinutes: diffMinutes,
+          salary,
+          note,
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+    await batch.commit();
   }, [db, user, calculateSessionSalary]);
 
   const multiAddSessions = useCallback(async (data: {
@@ -407,7 +462,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       s.multiplier,
       s.totalMinutes,
       s.salary,
-      s.note
+      `"${s.note || ''}"`
     ]);
     const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -430,6 +485,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     addManualSession,
     batchAddSessions,
     multiAddSessions,
+    importFromCSV,
     updateSettings,
     deleteSession,
     updateSession,
@@ -443,7 +499,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     isHoliday: isVietnameseHoliday(new Date())
   }), [
     sessions, activeSession, settings, isLoaded, punchIn, punchOut, 
-    addManualSession, batchAddSessions, multiAddSessions, updateSettings, deleteSession, updateSession, 
+    addManualSession, batchAddSessions, multiAddSessions, importFromCSV, updateSettings, deleteSession, updateSession, 
     clearAllHistory, restoreHistory, canUndo, undoCountdown,
     exportToCSV, calculateFullSalary, getAutoMultiplier
   ]);
