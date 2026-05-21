@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle, CalendarCheck, PlusCircle, MinusCircle } from 'lucide-react';
+import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle, CalendarCheck, PlusCircle, MinusCircle, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
@@ -44,7 +44,6 @@ export default function SettingsPage() {
         <p className="text-muted-foreground text-sm">Thiết lập chi tiết dựa trên hợp đồng lao động</p>
       </header>
 
-      {/* Quản lý phép năm - Tích lũy hàng tháng */}
       <Card className="border-none shadow-sm border-l-4 border-l-green-500">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center space-x-2">
@@ -221,6 +220,17 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1 text-primary font-bold">
+                <Package className="w-3 h-3" /> Tiền sản phẩm
+              </Label>
+              <Input 
+                type="number" 
+                placeholder="2.300.000 - 3.000.000"
+                value={getInputValue(settings.allowanceProduct)} 
+                onChange={(e) => handleNumberInput('allowanceProduct', e.target.value)} 
+              />
+            </div>
             <div className="space-y-2">
               <Label>Tiền cơm/ca</Label>
               <Input type="number" value={getInputValue(settings.allowanceLunchPerShift)} onChange={(e) => handleNumberInput('allowanceLunchPerShift', e.target.value)} />

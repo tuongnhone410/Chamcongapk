@@ -22,9 +22,10 @@ const defaultSettings: AppSettings = {
   allowancePhone: 0,
   allowanceAttendanceBase: 600000,
   unexcusedAbsences: 0,
-  annualLeaveBalance: 11, // Giả sử đã dùng 1 ngày trong tháng này (còn 11 ngày cho năm)
+  annualLeaveBalance: 11,
   allowanceToxic: 287000,
   allowanceBonus: 213000,
+  allowanceProduct: 2500000, // Mặc định ở giữa khoảng 2.3-3.0tr
   insuranceRate: 10.5,
   unionFee: 40000,
   incomeTax: 0,
@@ -133,8 +134,6 @@ export function useAttendance() {
     }, 0);
 
     let attendanceBonus = settings.allowanceAttendanceBase;
-    // Chỉ trừ chuyên cần nếu là "Nghỉ không phép" (unexcusedAbsences)
-    // Phép năm không tính vào đây.
     if (settings.unexcusedAbsences === 1) {
       attendanceBonus -= 200000;
     } else if (settings.unexcusedAbsences >= 2) {
@@ -146,13 +145,13 @@ export function useAttendance() {
                            (settings.allowanceFuel || 0) + 
                            (settings.allowancePhone || 0) + 
                            (settings.allowanceToxic || 0) +
-                           (settings.allowanceBonus || 0);
+                           (settings.allowanceBonus || 0) +
+                           (settings.allowanceProduct || 0);
     
     const totalAllowances = otherAllowances + lunchAllowance + attendanceBonus;
     
     const grossIncome = (settings.baseMonthlySalary || 0) + sessionSalary + totalAllowances;
     
-    // Bảo hiểm tính trên Lương đóng bảo hiểm (SI Wage)
     const insSalary = settings.insuranceSalary || settings.baseMonthlySalary || 0;
     const insuranceAmount = (insSalary * (settings.insuranceRate || 0)) / 100;
     
@@ -162,7 +161,8 @@ export function useAttendance() {
       sessionSalary,
       lunchAllowance,
       attendanceBonus,
-      otherAllowances,
+      productSalary: settings.allowanceProduct || 0,
+      otherAllowances: otherAllowances - (settings.allowanceProduct || 0),
       totalAllowances,
       grossIncome,
       insuranceAmount,

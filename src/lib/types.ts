@@ -29,6 +29,7 @@ export interface AppSettings {
   unexcusedAbsences: number;       // Số ngày nghỉ không phép
   allowanceToxic: number;      // Phụ cấp độc hại
   allowanceBonus: number;      // Thưởng doanh thu/năng suất
+  allowanceProduct: number;    // Tiền sản phẩm (tự nhập 2.3 - 3.0tr)
   
   // Quản lý phép
   annualLeaveBalance: number;  // Số ngày phép năm còn lại

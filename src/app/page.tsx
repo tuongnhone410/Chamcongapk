@@ -113,6 +113,10 @@ export default function Home() {
                     <span className="font-medium">{formatCurrency(settings.baseMonthlySalary)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground font-bold">Tiền sản phẩm:</span> 
+                    <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.productSalary)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Lương tăng ca (Giờ):</span> 
                     <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.sessionSalary)}</span>
                   </div>
