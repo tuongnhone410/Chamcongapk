@@ -17,11 +17,12 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
-import { History, Trash2, Edit3, Clock, Calendar as CalendarIcon, StickyNote, Download, Zap, PlusCircle, Layers, Star, CheckSquare } from 'lucide-react';
+import { History, Trash2, Edit3, Clock, Calendar as CalendarIcon, StickyNote, Download, Zap, PlusCircle, Layers, Star, CheckSquare, X } from 'lucide-react';
 import { useState } from 'react';
 import { WorkSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export default function HistoryPage() {
   const { sessions, isLoaded, deleteSession, updateSession, addManualSession, batchAddSessions, multiAddSessions, settings, exportToCSV } = useAttendance();
@@ -131,6 +132,9 @@ export default function HistoryPage() {
 
   const showExcludeSundays = batchData.multiplier === -1 || batchData.multiplier === 1.0;
 
+  // Lấy danh sách ngày đã có dữ liệu để đánh dấu trên lịch
+  const sessionDates = sessions.map(s => new Date(s.checkIn).toDateString());
+
   return (
     <div className="space-y-6 pb-24">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -147,19 +151,35 @@ export default function HistoryPage() {
                 CHỌN NGÀY TĂNG CA
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
+            <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Thêm nhanh theo ngày</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="flex justify-center bg-zinc-900 rounded-2xl p-2 border border-zinc-800">
+                <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-3 border border-zinc-800">
+                  <p className="text-[10px] font-black uppercase text-zinc-500 text-center">Tích chọn các ngày trên lịch (Ngày đã chấm công sẽ bị mờ)</p>
                   <Calendar
                     mode="multiple"
                     selected={selectedDates}
                     onSelect={setSelectedDates}
-                    className="rounded-md"
+                    className="rounded-md mx-auto"
+                    disabled={(date) => sessionDates.includes(date.toDateString())}
                   />
+                  {selectedDates && selectedDates.length > 0 && (
+                    <div className="pt-3 border-t border-zinc-800">
+                      <p className="text-[10px] font-black uppercase text-primary mb-2">Ngày đã chọn ({selectedDates.length}):</p>
+                      <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                        {selectedDates.sort((a,b) => a.getTime() - b.getTime()).map((date, idx) => (
+                          <Badge key={idx} variant="secondary" className="bg-primary/20 text-primary border-primary/30 text-[9px] font-bold py-1 px-2 flex items-center gap-1">
+                            {date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
+                            <X className="w-2.5 h-2.5 cursor-pointer hover:text-white" onClick={() => setSelectedDates(selectedDates.filter(d => d.getTime() !== date.getTime()))} />
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ vào</Label>
