@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle, CalendarCheck, PlusCircle, MinusCircle, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AppSettings } from '@/lib/types';
 
 export default function SettingsPage() {
   const { settings, updateSettings, isLoaded } = useAttendance();
@@ -16,26 +17,42 @@ export default function SettingsPage() {
 
   const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
 
-  const handleMonthlySalaryChange = (val: string) => {
-    const numVal = parseFloat(val) || 0;
-    const calculatedHourly = Math.round(numVal / 208);
-    
-    updateSettings({
-      ...settings,
-      baseMonthlySalary: numVal,
-      hourlyRate: calculatedHourly,
-      insuranceSalary: settings.insuranceSalary || numVal 
-    });
+  // Định dạng số có dấu chấm và chữ đ
+  const formatMoneyDisplay = (val: number) => {
+    if (val === 0) return "";
+    return val.toLocaleString('vi-VN') + " đ";
   };
 
-  const handleNumberInput = (key: keyof typeof settings, val: string) => {
+  // Xử lý khi nhập tiền (loại bỏ ký tự không phải số)
+  const handleMoneyInput = (key: keyof AppSettings, val: string) => {
+    const numericValue = val.replace(/\D/g, "");
+    const num = numericValue === "" ? 0 : parseInt(numericValue);
+    
+    if (key === 'baseMonthlySalary') {
+      const calculatedHourly = Math.round(num / 208);
+      updateSettings({
+        ...settings,
+        baseMonthlySalary: num,
+        hourlyRate: calculatedHourly,
+        insuranceSalary: settings.insuranceSalary || num 
+      });
+    } else {
+      updateSettings({
+        ...settings,
+        [key]: num
+      });
+    }
+  };
+
+  // Đối với các số không phải tiền (phần trăm, ngày, số lần)
+  const handleNumberInput = (key: keyof AppSettings, val: string) => {
     updateSettings({
       ...settings,
       [key]: val === "" ? 0 : parseFloat(val)
     });
   };
 
-  const getInputValue = (val: number) => (val === 0 ? "" : val.toString());
+  const getNumberValue = (val: number) => (val === 0 ? "" : val.toString());
 
   return (
     <div className="space-y-6 pb-24">
@@ -94,7 +111,7 @@ export default function SettingsPage() {
             <Input 
               type="number" 
               className="h-9"
-              value={getInputValue(settings.annualLeaveBalance)}
+              value={getNumberValue(settings.annualLeaveBalance)}
               onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
             />
           </div>
@@ -113,11 +130,12 @@ export default function SettingsPage() {
             <Label>Lương cơ bản hàng tháng</Label>
             <div className="relative">
               <Input 
-                type="number" 
-                value={getInputValue(settings.baseMonthlySalary)}
-                onChange={(e) => handleMonthlySalaryChange(e.target.value)}
-                placeholder="Ví dụ: 5.730.000"
-                className="pr-10"
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.baseMonthlySalary)}
+                onChange={(e) => handleMoneyInput('baseMonthlySalary', e.target.value)}
+                placeholder="Ví dụ: 5.730.000 đ"
+                className="pr-10 font-medium"
               />
               <Calculator className="absolute right-3 top-3 w-4 h-4 text-muted-foreground opacity-50" />
             </div>
@@ -126,9 +144,11 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label>Lương / Giờ (OT)</Label>
               <Input 
-                type="number" 
-                value={getInputValue(settings.hourlyRate)}
-                onChange={(e) => handleNumberInput('hourlyRate', e.target.value)}
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.hourlyRate)}
+                onChange={(e) => handleMoneyInput('hourlyRate', e.target.value)}
+                className="font-medium"
               />
             </div>
             <div className="space-y-2">
@@ -155,10 +175,12 @@ export default function SettingsPage() {
           <div className="space-y-2">
             <Label className="text-primary font-bold">Mức lương đóng BH (SI Wage)</Label>
             <Input 
-              type="number" 
-              placeholder="Ví dụ: 6.017.000"
-              value={getInputValue(settings.insuranceSalary)} 
-              onChange={(e) => handleNumberInput('insuranceSalary', e.target.value)} 
+              type="text" 
+              inputMode="numeric"
+              placeholder="Ví dụ: 6.017.000 đ"
+              value={formatMoneyDisplay(settings.insuranceSalary)} 
+              onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} 
+              className="font-medium"
             />
             <p className="text-[10px] text-muted-foreground italic">
               * Đây là mức lương dùng để tính 10.5% bảo hiểm trong phiếu lương.
@@ -166,16 +188,28 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-2">
             <Label>Tỷ lệ đóng Bảo hiểm (BHXH, BHYT, BHTN) %</Label>
-            <Input type="number" step="0.1" value={getInputValue(settings.insuranceRate)} onChange={(e) => handleNumberInput('insuranceRate', e.target.value)} />
+            <Input type="number" step="0.1" value={getNumberValue(settings.insuranceRate)} onChange={(e) => handleNumberInput('insuranceRate', e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Đoàn phí</Label>
-              <Input type="number" value={getInputValue(settings.unionFee)} onChange={(e) => handleNumberInput('unionFee', e.target.value)} />
+              <Input 
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.unionFee)} 
+                onChange={(e) => handleMoneyInput('unionFee', e.target.value)} 
+                className="font-medium"
+              />
             </div>
             <div className="space-y-2">
               <Label>Thuế TNCN</Label>
-              <Input type="number" value={getInputValue(settings.incomeTax)} onChange={(e) => handleNumberInput('incomeTax', e.target.value)} />
+              <Input 
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.incomeTax)} 
+                onChange={(e) => handleMoneyInput('incomeTax', e.target.value)} 
+                className="font-medium"
+              />
             </div>
           </div>
         </CardContent>
@@ -192,7 +226,13 @@ export default function SettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Tiền chuyên cần gốc</Label>
-              <Input type="number" value={getInputValue(settings.allowanceAttendanceBase)} onChange={(e) => handleNumberInput('allowanceAttendanceBase', e.target.value)} />
+              <Input 
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.allowanceAttendanceBase)} 
+                onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} 
+                className="font-medium"
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-destructive font-bold">Số ngày nghỉ K.Phép</Label>
@@ -200,7 +240,7 @@ export default function SettingsPage() {
                 type="number" 
                 placeholder="0"
                 className="border-destructive/50 focus-visible:ring-destructive"
-                value={getInputValue(settings.unexcusedAbsences)} 
+                value={getNumberValue(settings.unexcusedAbsences)} 
                 onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} 
               />
             </div>
@@ -225,39 +265,77 @@ export default function SettingsPage() {
                 <Package className="w-3 h-3" /> Tiền sản phẩm
               </Label>
               <Input 
-                type="number" 
-                placeholder="2.300.000 - 3.000.000"
-                value={getInputValue(settings.allowanceProduct)} 
-                onChange={(e) => handleNumberInput('allowanceProduct', e.target.value)} 
+                type="text" 
+                inputMode="numeric"
+                placeholder="2.300.000 - 3.000.000 đ"
+                value={formatMoneyDisplay(settings.allowanceProduct)} 
+                onChange={(e) => handleMoneyInput('allowanceProduct', e.target.value)} 
+                className="font-medium"
               />
             </div>
             <div className="space-y-2">
               <Label>Tiền cơm/ca</Label>
-              <Input type="number" value={getInputValue(settings.allowanceLunchPerShift)} onChange={(e) => handleNumberInput('allowanceLunchPerShift', e.target.value)} />
+              <Input 
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.allowanceLunchPerShift)} 
+                onChange={(e) => handleMoneyInput('allowanceLunchPerShift', e.target.value)} 
+                className="font-medium"
+              />
             </div>
             <div className="space-y-2">
               <Label>Cơm thêm (OT &ge; 2h)</Label>
-              <Input type="number" value={getInputValue(settings.allowanceLunchOT)} onChange={(e) => handleNumberInput('allowanceLunchOT', e.target.value)} />
+              <Input 
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.allowanceLunchOT)} 
+                onChange={(e) => handleMoneyInput('allowanceLunchOT', e.target.value)} 
+                className="font-medium"
+              />
             </div>
             <div className="space-y-2">
               <Label>Nhà ở</Label>
-              <Input type="number" value={getInputValue(settings.allowanceHousing)} onChange={(e) => handleNumberInput('allowanceHousing', e.target.value)} />
+              <Input 
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.allowanceHousing)} 
+                onChange={(e) => handleMoneyInput('allowanceHousing', e.target.value)} 
+                className="font-medium"
+              />
             </div>
             <div className="space-y-2">
               <Label className="flex items-center gap-1 text-orange-600 font-bold">
                 <Skull className="w-3 h-3" /> Độc hại
               </Label>
-              <Input type="number" value={getInputValue(settings.allowanceToxic)} onChange={(e) => handleNumberInput('allowanceToxic', e.target.value)} />
+              <Input 
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.allowanceToxic)} 
+                onChange={(e) => handleMoneyInput('allowanceToxic', e.target.value)} 
+                className="font-medium"
+              />
             </div>
             <div className="space-y-2">
               <Label className="flex items-center gap-1 text-green-600 font-bold">
                 <TrendingUp className="w-3 h-3" /> Doanh thu
               </Label>
-              <Input type="number" value={getInputValue(settings.allowanceBonus)} onChange={(e) => handleNumberInput('allowanceBonus', e.target.value)} />
+              <Input 
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.allowanceBonus)} 
+                onChange={(e) => handleMoneyInput('allowanceBonus', e.target.value)} 
+                className="font-medium"
+              />
             </div>
             <div className="space-y-2">
               <Label>Xăng xe</Label>
-              <Input type="number" value={getInputValue(settings.allowanceFuel)} onChange={(e) => handleNumberInput('allowanceFuel', e.target.value)} />
+              <Input 
+                type="text" 
+                inputMode="numeric"
+                value={formatMoneyDisplay(settings.allowanceFuel)} 
+                onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} 
+                className="font-medium"
+              />
             </div>
           </div>
         </CardContent>
