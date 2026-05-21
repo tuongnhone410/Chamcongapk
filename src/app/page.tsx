@@ -153,9 +153,25 @@ export default function Home() {
                     </div>
                     <span>-{formatCurrency(salaryInfo.insuranceAmount)}</span>
                   </div>
+                  <div className="flex justify-between text-sm text-destructive font-medium items-center gap-1">
+                    <div className="flex items-center gap-1">
+                      <span>Thuế TNCN ({settings.incomeTaxRate}%):</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="w-3 h-3 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Tính trên Tổng thu nhập (Gross)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <span>-{formatCurrency(salaryInfo.incomeTaxAmount)}</span>
+                  </div>
                   <div className="flex justify-between text-sm text-destructive font-medium">
-                    <span>Đoàn phí & Thuế:</span> 
-                    <span>-{formatCurrency((settings.unionFee || 0) + (settings.incomeTax || 0))}</span>
+                    <span>Đoàn phí & Khác:</span> 
+                    <span>-{formatCurrency(settings.unionFee || 0)}</span>
                   </div>
                   <div className="border-t-2 border-dashed pt-2 flex justify-between font-black text-lg text-primary">
                     <span>THỰC LĨNH:</span> 

@@ -17,19 +17,16 @@ export default function SettingsPage() {
 
   const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
 
-  // Định dạng số có dấu chấm và chữ đ
   const formatMoneyDisplay = (val: number) => {
     if (val === 0) return "";
     return val.toLocaleString('vi-VN') + " đ";
   };
 
-  // Định dạng phần trăm
   const formatPercentDisplay = (val: number) => {
     if (val === 0) return "";
     return val.toString() + " %";
   };
 
-  // Xử lý khi nhập tiền (loại bỏ ký tự không phải số)
   const handleMoneyInput = (key: keyof AppSettings, val: string) => {
     const numericValue = val.replace(/\D/g, "");
     const num = numericValue === "" ? 0 : parseInt(numericValue);
@@ -50,17 +47,15 @@ export default function SettingsPage() {
     }
   };
 
-  // Xử lý khi nhập số phần trăm
-  const handlePercentInput = (val: string) => {
+  const handlePercentInput = (key: keyof AppSettings, val: string) => {
     const numericValue = val.replace(/[^0-9.]/g, "");
     const num = numericValue === "" ? 0 : parseFloat(numericValue);
     updateSettings({
       ...settings,
-      insuranceRate: num
+      [key]: num
     });
   };
 
-  // Đối với các số không phải tiền (ngày, số lần)
   const handleNumberInput = (key: keyof AppSettings, val: string) => {
     updateSettings({
       ...settings,
@@ -184,7 +179,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
             <ShieldCheck className="w-5 h-5 text-primary" />
-            <span>Bảo Hiểm & Khấu Trừ</span>
+            <span>Bảo Hiểm & Thuế</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -198,23 +193,33 @@ export default function SettingsPage() {
               onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} 
               className="font-medium"
             />
-            <p className="text-[10px] text-muted-foreground italic">
-              * Đây là mức lương dùng để tính 10.5% bảo hiểm trong phiếu lương.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label>Tỷ lệ đóng Bảo hiểm (BHXH, BHYT, BHTN)</Label>
-            <Input 
-              type="text" 
-              inputMode="decimal"
-              value={formatPercentDisplay(settings.insuranceRate)} 
-              onChange={(e) => handlePercentInput(e.target.value)} 
-              className="font-medium"
-            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Đoàn phí</Label>
+              <Label>Tỷ lệ đóng Bảo hiểm</Label>
+              <Input 
+                type="text" 
+                inputMode="decimal"
+                value={formatPercentDisplay(settings.insuranceRate)} 
+                onChange={(e) => handlePercentInput('insuranceRate', e.target.value)} 
+                className="font-medium"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-destructive font-bold">Tỷ lệ Thuế TNCN (%)</Label>
+              <Input 
+                type="text" 
+                inputMode="decimal"
+                placeholder="Ví dụ: 5 %"
+                value={formatPercentDisplay(settings.incomeTaxRate)} 
+                onChange={(e) => handlePercentInput('incomeTaxRate', e.target.value)} 
+                className="font-medium border-destructive/30"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Đoàn phí (Cố định)</Label>
               <Input 
                 type="text" 
                 inputMode="numeric"
@@ -223,17 +228,10 @@ export default function SettingsPage() {
                 className="font-medium"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Thuế TNCN</Label>
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                value={formatMoneyDisplay(settings.incomeTax)} 
-                onChange={(e) => handleMoneyInput('incomeTax', e.target.value)} 
-                className="font-medium"
-              />
-            </div>
           </div>
+          <p className="text-[10px] text-muted-foreground italic">
+            * Thuế TNCN sẽ tự động tính dựa trên % bạn nhập nhân với tổng thu nhập (Gross).
+          </p>
         </CardContent>
       </Card>
 

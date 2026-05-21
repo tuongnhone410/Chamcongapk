@@ -25,10 +25,11 @@ const defaultSettings: AppSettings = {
   annualLeaveBalance: 11,
   allowanceToxic: 287000,
   allowanceBonus: 213000,
-  allowanceProduct: 2500000, // Mặc định ở giữa khoảng 2.3-3.0tr
+  allowanceProduct: 2500000, 
   insuranceRate: 10.5,
   unionFee: 40000,
   incomeTax: 0,
+  incomeTaxRate: 0,
   defaultMultiplier: 1.0,
   sundayMultiplier: 2.0,
   holidayMultiplier: 3.0,
@@ -155,7 +156,10 @@ export function useAttendance() {
     const insSalary = settings.insuranceSalary || settings.baseMonthlySalary || 0;
     const insuranceAmount = (insSalary * (settings.insuranceRate || 0)) / 100;
     
-    const netSalary = grossIncome - insuranceAmount - (settings.unionFee || 0) - (settings.incomeTax || 0);
+    // Tính Thuế TNCN dựa trên % Thuế
+    const incomeTaxAmount = (grossIncome * (settings.incomeTaxRate || 0)) / 100;
+    
+    const netSalary = grossIncome - insuranceAmount - (settings.unionFee || 0) - incomeTaxAmount;
 
     return {
       sessionSalary,
@@ -166,6 +170,7 @@ export function useAttendance() {
       totalAllowances,
       grossIncome,
       insuranceAmount,
+      incomeTaxAmount,
       netSalary
     };
   };

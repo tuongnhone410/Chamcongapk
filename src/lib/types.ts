@@ -37,7 +37,8 @@ export interface AppSettings {
   // Khấu trừ hàng tháng
   insuranceRate: number;    // % đóng BHXH+BHYT+BHTN (mặc định 10.5%)
   unionFee: number;         // Đoàn phí
-  incomeTax: number;        // Thuế TNCN (tạm tính)
+  incomeTax: number;        // Thuế TNCN (tạm tính - hiện dùng làm kết quả tính toán hoặc ghi đè)
+  incomeTaxRate: number;    // % Thuế TNCN
   
   // Hệ số mặc định
   defaultMultiplier: number;
