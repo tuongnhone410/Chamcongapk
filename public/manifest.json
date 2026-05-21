@@ -1,7 +1,8 @@
+
 {
   "name": "TimeSnap Pro",
   "short_name": "TimeSnap",
-  "description": "Hệ thống quản lý công và lương cá nhân chuyên nghiệp",
+  "description": "Hệ thống chấm công và quản lý lương cá nhân chuyên nghiệp",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#09090b",

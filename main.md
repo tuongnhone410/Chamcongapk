@@ -20,7 +20,7 @@ git branch -M main
 git remote add origin https://github.com/tuongnhone410/Chamcongapk.git
 
 # 6. Đẩy mã nguồn lên GitHub
-git push -u origin main
+git push -u origin main7
 ```
 
 **Lưu ý:**
