@@ -19,7 +19,6 @@ import {
   query,
   orderBy,
   writeBatch,
-  getDocs
 } from 'firebase/firestore';
 
 export interface AttendanceContextType {
@@ -128,7 +127,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const isLoaded = !sessionsLoading && !settingsLoading;
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
-    const breakMinutes = settings.breakTimeDeduction * 60;
+    const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
     const effectiveMinutes = totalMinutes > breakMinutes ? totalMinutes - breakMinutes : totalMinutes;
 
     if (multiplier === 1.0) {
@@ -219,7 +218,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         multiplier: finalMultiplier,
         totalMinutes: diffMinutes,
         salary,
-        note: data.multiplier === -1 ? 'Tự động' : 'Chọn ngày',
+        note: 'Tăng ca',
         createdAt: new Date().toISOString()
       });
     }
@@ -241,7 +240,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     
     let current = new Date(start);
     while (current <= end) {
-      if (data.excludeSundays && current.getDay() === 0 && data.multiplier !== settings.sundayMultiplier) {
+      if (data.excludeSundays && current.getDay() === 0 && data.multiplier === -1) {
         current.setDate(current.getDate() + 1);
         continue;
       }
@@ -252,19 +251,20 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       if (!hasSession) {
         const checkIn = new Date(`${dateStr}T${data.startTime}`);
         const checkOut = new Date(`${dateStr}T${data.endTime}`);
-        const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+        const diffMinutes = Math.floor((checkOut.getTime() - current.getTime()) / 60000); // Note: Fix usage of 'current'
+        const actualDiff = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
         
         const finalMultiplier = data.multiplier === -1 ? getAutoMultiplier(current) : data.multiplier;
-        const salary = calculateSessionSalary(diffMinutes, finalMultiplier);
+        const salary = calculateSessionSalary(actualDiff, finalMultiplier);
         
         const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
         batch.set(newDocRef, {
           checkIn: checkIn.toISOString(),
           checkOut: checkOut.toISOString(),
           multiplier: finalMultiplier,
-          totalMinutes: diffMinutes,
+          totalMinutes: actualDiff,
           salary,
-          note: data.multiplier === -1 ? 'Tự động' : 'Hàng loạt',
+          note: 'Hàng loạt',
           createdAt: new Date().toISOString()
         });
       }
@@ -272,7 +272,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     }
     
     await batch.commit();
-  }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier, settings.sundayMultiplier]);
+  }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier]);
 
   const clearAllHistory = useCallback(async () => {
     if (!db || !user || sessions.length === 0) return;
@@ -344,7 +344,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const calculateFullSalary = useCallback((periodSessions: WorkSession[]) => {
     const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
-    const breakMinutes = settings.breakTimeDeduction * 60;
+    const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
     
     // Tổng giờ OT 1.5 của tháng
     const totalOTMinutes = periodSessions.reduce((acc, s) => {
@@ -356,12 +356,12 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     }, 0);
 
     const lunchAllowance = periodSessions.reduce((acc, s) => {
-      let dailyLunch = settings.allowanceLunchPerShift;
-      if (s.totalMinutes >= 600) dailyLunch += settings.allowanceLunchOT;
+      let dailyLunch = settings.allowanceLunchPerShift || 0;
+      if (s.totalMinutes >= 600) dailyLunch += (settings.allowanceLunchOT || 0);
       return acc + dailyLunch;
     }, 0);
 
-    let attendanceBonus = settings.allowanceAttendanceBase;
+    let attendanceBonus = settings.allowanceAttendanceBase || 0;
     if (settings.unexcusedAbsences === 1) attendanceBonus -= 200000;
     else if (settings.unexcusedAbsences >= 2) attendanceBonus = 0;
     attendanceBonus = Math.max(0, attendanceBonus);
@@ -371,8 +371,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
                                   (settings.allowancePosition || 0) + 
                                   (settings.allowancePerformance || 0);
     const deductionForAbsence = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
-    const netSubjectToAbsence = Math.max(0, baseSubjectToAbsence - deductionForAbsence);
-
+    
     const otherAllowances = (settings.allowanceHousing || 0) + 
                            (settings.allowanceFuel || 0) + 
                            (settings.allowancePhone || 0) + 

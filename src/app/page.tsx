@@ -8,15 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   LogOut, 
   Calculator, 
-  CalendarCheck, 
-  AlertTriangle, 
-  Award,
-  Zap,
-  Clock,
   PlayCircle,
   BarChart3,
   CalendarDays,
-  Timer
+  Timer,
+  Zap
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -132,7 +128,7 @@ export default function Home() {
   const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
   
   // Logic hiển thị tiền OT "nhảy" theo thời gian thực (đã trừ giờ nghỉ)
-  const breakMinutes = settings.breakTimeDeduction * 60;
+  const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
   const effectiveSessionMinutes = sessionMinutes > breakMinutes ? sessionMinutes - breakMinutes : sessionMinutes;
 
   const currentOTSalary = activeSession 
@@ -169,7 +165,9 @@ export default function Home() {
               <p className="text-base font-black text-primary uppercase">
                 {isHoliday ? `Ngày Lễ (x${settings.holidayMultiplier.toFixed(1)})` : new Date().getDay() === 0 ? `Chủ Nhật (x${settings.sundayMultiplier.toFixed(1)})` : `Ngày Thường (Tự động OT x${settings.overtimeMultiplier.toFixed(1)} sau 8h30p làm việc)`}
               </p>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Đã trừ {settings.breakTimeDeduction}h nghỉ hàng ngày</p>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                {settings.breakTimeDeduction > 0 ? `Đã trừ ${settings.breakTimeDeduction}h nghỉ hàng ngày` : 'Không khấu trừ giờ nghỉ'}
+              </p>
             </div>
             <Button 
               onClick={() => punchIn()} 
@@ -210,7 +208,9 @@ export default function Home() {
                         : "TRẠNG THÁI: TĂNG CA ĐẶC BIỆT"}
                     </span>
                     {((activeSession.multiplier === 1.0 && effectiveSessionMinutes > 510) || activeSession.multiplier !== 1.0) && (
-                      <p className="text-xs font-bold text-orange-500 animate-bounce">+{currentOTHours}h OT (Đã trừ {settings.breakTimeDeduction}h nghỉ)</p>
+                      <p className="text-xs font-bold text-orange-500 animate-bounce">
+                        +{currentOTHours}h OT {settings.breakTimeDeduction > 0 ? `(Đã trừ ${settings.breakTimeDeduction}h nghỉ)` : ''}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -332,13 +332,13 @@ export default function Home() {
                       <span>Lương cơ bản:</span> <span className="text-white">{formatCurrency(settings.baseMonthlySalary)}</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-zinc-400">
-                      <span>Lương OT (Đã trừ nghỉ):</span> <span className="text-green-500">+{formatCurrency(salaryInfo.sessionSalary)}</span>
+                      <span>Lương OT {settings.breakTimeDeduction > 0 ? `(Đã trừ ${settings.breakTimeDeduction}h)` : ''}:</span> <span className="text-green-500">+{formatCurrency(salaryInfo.sessionSalary)}</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-orange-400">
                       <span>Tổng giờ OT 1.5:</span> <span>{(salaryInfo.totalOTMinutes / 60).toFixed(2)}h</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-zinc-400">
-                      <span>Phụ cấp/Cơm:</span> <span className="text-green-500">+{formatCurrency(salaryInfo.lunchAllowance + salaryInfo.otherAllowances)}</span>
+                      <span>Phụ cấp/Cơm:</span> <span className="text-green-500">+{formatCurrency(salaryInfo.lunchAllowance + (salaryInfo.otherAllowances || 0))}</span>
                     </div>
                     <div className="border-t border-zinc-800 pt-2.5 flex justify-between text-sm font-black">
                       <span className="text-zinc-300">Tổng thu nhập:</span> <span className="text-primary">{formatCurrency(salaryInfo.grossIncome)}</span>

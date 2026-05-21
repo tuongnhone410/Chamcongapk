@@ -34,7 +34,7 @@ import {
   RotateCcw,
   AlertTriangle
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { WorkSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -77,14 +77,6 @@ export default function HistoryPage() {
     const offset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - offset).toISOString().slice(0, 16);
   };
-
-  const [showManualDialog, setShowManualDialog] = useState(false);
-  const [manualData, setManualData] = useState({
-    checkIn: formatToLocalDatetime(new Date()).slice(0, 11) + "07:00",
-    checkOut: formatToLocalDatetime(new Date()).slice(0, 11) + "20:00",
-    multiplier: 1.0,
-    note: ''
-  });
 
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [batchData, setBatchData] = useState({
@@ -133,17 +125,6 @@ export default function HistoryPage() {
       });
       setEditingSession(null);
     }
-  };
-
-  const handleManualAdd = () => {
-    addManualSession({
-      checkIn: new Date(manualData.checkIn).toISOString(),
-      checkOut: new Date(manualData.checkOut).toISOString(),
-      multiplier: manualData.multiplier,
-      note: manualData.note
-    });
-    setShowManualDialog(false);
-    toast({ title: "Thành công", description: "Đã thêm phiên làm việc mới." });
   };
 
   const handleBatchAdd = async () => {
@@ -255,7 +236,7 @@ export default function HistoryPage() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-3 border border-zinc-800">
-                  <p className="text-[10px] font-black uppercase text-zinc-500 text-center">Tích chọn các ngày trên lịch (Ngày đã chấm công sẽ bị mờ)</p>
+                  <p className="text-[10px] font-black uppercase text-zinc-500 text-center">Tích chọn các ngày trên lịch</p>
                   <Calendar
                     mode="multiple"
                     selected={selectedDates}
@@ -378,7 +359,7 @@ export default function HistoryPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="-1">Tự động (Nhận diện OT 2.0/3.0)</SelectItem>
+                      <SelectItem value="-1">Tự động (Nhận diện CN/Lễ)</SelectItem>
                       <SelectItem value="1.0">Ngày thường (x1.0)</SelectItem>
                       <SelectItem value={settings.sundayMultiplier.toString()}>OT {settings.sundayMultiplier.toFixed(1)} (Chủ Nhật)</SelectItem>
                       <SelectItem value={settings.holidayMultiplier.toString()}>OT {settings.holidayMultiplier.toFixed(1)} (Ngày Lễ)</SelectItem>
@@ -429,7 +410,7 @@ export default function HistoryPage() {
       ) : (
         <div className="space-y-4">
           {completedSessions.map((session) => {
-            const breakMinutes = settings.breakTimeDeduction * 60;
+            const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
             const effectiveMinutes = session.totalMinutes > breakMinutes ? session.totalMinutes - breakMinutes : session.totalMinutes;
             
             const otMinutes = session.multiplier === 1.0 
