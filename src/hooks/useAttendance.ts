@@ -8,6 +8,7 @@ const STORAGE_KEY_SESSIONS = 'timesnap_sessions';
 const STORAGE_KEY_SETTINGS = 'timesnap_settings';
 
 const defaultSettings: AppSettings = {
+  baseMonthlySalary: 5000000,
   hourlyRate: 30000,
   currency: '₫',
   darkMode: false,
@@ -120,7 +121,7 @@ export function useAttendance() {
                            settings.allowanceLunch + settings.allowancePhone + 
                            settings.allowanceAttendance;
     
-    const grossIncome = sessionSalary + totalAllowances;
+    const grossIncome = settings.baseMonthlySalary + sessionSalary + totalAllowances;
     const insuranceAmount = (grossIncome * settings.insuranceRate) / 100;
     const netSalary = grossIncome - insuranceAmount - settings.unionFee - settings.incomeTax;
 

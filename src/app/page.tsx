@@ -4,11 +4,10 @@
 import { DigitalClock } from '@/components/attendance/DigitalClock';
 import { useAttendance } from '@/hooks/useAttendance';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogIn, LogOut, TrendingUp, Target, Info, Wallet, Calculator } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { LogOut, TrendingUp, Wallet, Calculator } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useMemo } from 'react';
 
 export default function Home() {
   const { 
@@ -67,18 +66,18 @@ export default function Home() {
       <DigitalClock />
 
       <div className="flex flex-col items-center justify-center py-4 gap-6">
-        <div className="flex gap-4">
+        <div className="flex flex-wrap justify-center gap-3">
           {!activeSession ? (
             <>
-              <Button onClick={() => punchIn(1.0)} className="rounded-full px-6">Ngày thường</Button>
-              <Button onClick={() => punchIn(settings.sundayMultiplier)} variant="outline" className="rounded-full px-6">Chủ Nhật</Button>
-              <Button onClick={() => punchIn(settings.holidayMultiplier)} variant="secondary" className="rounded-full px-6">Ngày Lễ</Button>
+              <Button onClick={() => punchIn(1.0)} className="rounded-full px-6 shadow-sm">Ngày thường</Button>
+              <Button onClick={() => punchIn(settings.sundayMultiplier)} variant="outline" className="rounded-full px-6 shadow-sm">Chủ Nhật</Button>
+              <Button onClick={() => punchIn(settings.holidayMultiplier)} variant="secondary" className="rounded-full px-6 shadow-sm">Ngày Lễ</Button>
             </>
           ) : (
             <Button 
               onClick={punchOut} 
               variant="destructive" 
-              className="w-40 h-40 rounded-full border-8 border-background shadow-xl flex flex-col gap-2"
+              className="w-40 h-40 rounded-full border-8 border-background shadow-xl flex flex-col gap-2 animate-pulse"
             >
               <LogOut className="w-8 h-8" />
               <span className="font-bold">KẾT THÚC</span>
@@ -93,7 +92,7 @@ export default function Home() {
         <CardContent className="p-6 space-y-4">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs uppercase font-bold opacity-70">Thực lĩnh dự kiến</p>
+              <p className="text-xs uppercase font-bold opacity-70">Thực lĩnh dự kiến kỳ này</p>
               <p className="text-3xl font-black">{formatCurrency(salaryInfo.netSalary)}</p>
             </div>
             <Popover>
@@ -102,21 +101,44 @@ export default function Home() {
                   <Calculator className="w-5 h-5" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80">
+              <PopoverContent className="w-80 shadow-2xl border-none">
                 <div className="space-y-2">
-                  <h4 className="font-bold border-b pb-1">Chi tiết lương</h4>
-                  <div className="flex justify-between text-sm"><span>Lương giờ (OT):</span> <span>{formatCurrency(salaryInfo.sessionSalary)}</span></div>
-                  <div className="flex justify-between text-sm"><span>Tổng phụ cấp (+):</span> <span>{formatCurrency(salaryInfo.totalAllowances)}</span></div>
-                  <div className="flex justify-between text-sm text-destructive font-medium"><span>Bảo hiểm (-{settings.insuranceRate}%):</span> <span>-{formatCurrency(salaryInfo.insuranceAmount)}</span></div>
-                  <div className="flex justify-between text-sm text-destructive font-medium"><span>Đoàn phí & Thuế (-):</span> <span>-{formatCurrency(settings.unionFee + settings.incomeTax)}</span></div>
-                  <div className="border-t pt-1 flex justify-between font-black"><span>THỰC LĨNH:</span> <span>{formatCurrency(salaryInfo.netSalary)}</span></div>
+                  <h4 className="font-bold border-b pb-1 text-primary">Chi tiết bảng tính lương</h4>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Lương cơ bản (Tháng):</span> 
+                    <span className="font-medium">{formatCurrency(settings.baseMonthlySalary)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Lương tăng ca (Giờ):</span> 
+                    <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.sessionSalary)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Tổng phụ cấp:</span> 
+                    <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.totalAllowances)}</span>
+                  </div>
+                  <div className="border-t pt-1 flex justify-between text-sm font-bold">
+                    <span>Tổng thu nhập (Gross):</span>
+                    <span>{formatCurrency(salaryInfo.grossIncome)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-destructive font-medium">
+                    <span>Bảo hiểm (-{settings.insuranceRate}%):</span> 
+                    <span>-{formatCurrency(salaryInfo.insuranceAmount)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-destructive font-medium">
+                    <span>Đoàn phí & Thuế:</span> 
+                    <span>-{formatCurrency(settings.unionFee + settings.incomeTax)}</span>
+                  </div>
+                  <div className="border-t-2 border-dashed pt-2 flex justify-between font-black text-lg text-primary">
+                    <span>THỰC LĨNH:</span> 
+                    <span>{formatCurrency(salaryInfo.netSalary)}</span>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
           </div>
           <div className="space-y-1">
             <div className="flex justify-between text-[10px] uppercase font-bold">
-              <span>Tiến độ mục tiêu</span>
+              <span>Tiến độ mục tiêu ({formatCurrency(settings.monthlyTarget)})</span>
               <span>{targetPercent}%</span>
             </div>
             <Progress value={targetPercent} className="h-2 bg-white/20" />
@@ -129,16 +151,16 @@ export default function Home() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <Wallet className="w-3 h-3 text-primary" />
-              <p className="text-[10px] text-muted-foreground uppercase font-bold">Tổng phụ cấp</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold">Lương cơ bản</p>
             </div>
-            <p className="text-sm font-black">{formatCurrency(salaryInfo.totalAllowances)}</p>
+            <p className="text-sm font-black">{formatCurrency(settings.baseMonthlySalary)}</p>
           </CardContent>
         </Card>
         <Card className="border-none shadow-sm bg-muted/30">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="w-3 h-3 text-primary" />
-              <p className="text-[10px] text-muted-foreground uppercase font-bold">Lương giờ cơ bản</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold">Lương OT / Giờ</p>
             </div>
             <p className="text-sm font-black">{formatCurrency(settings.hourlyRate)}/h</p>
           </CardContent>

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, ShieldCheck, Gift, Clock, Target, CreditCard } from 'lucide-react';
+import { ShieldCheck, Gift, Clock, Target } from 'lucide-react';
 
 export default function SettingsPage() {
   const { settings, updateSettings, isLoaded } = useAttendance();
@@ -27,13 +27,23 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
             <Clock className="w-5 h-5 text-primary" />
-            <span>Lương Giờ & Hệ Số</span>
+            <span>Lương Cơ Bản & Hệ Số</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Lương cơ bản hàng tháng</Label>
+            <Input 
+              type="number" 
+              value={settings.baseMonthlySalary}
+              onChange={(e) => updateSettings({...settings, baseMonthlySalary: parseFloat(e.target.value) || 0})}
+              placeholder="Nhập lương cơ bản theo tháng..."
+            />
+            <p className="text-[10px] text-muted-foreground italic">Đây là phần lương cố định bạn nhận được mỗi tháng (chưa tính OT).</p>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Lương cơ bản / Giờ</Label>
+              <Label>Lương cơ bản / Giờ (OT)</Label>
               <Input 
                 type="number" 
                 value={settings.hourlyRate}
@@ -67,6 +77,26 @@ export default function SettingsPage() {
                 onChange={(e) => updateSettings({...settings, holidayMultiplier: parseFloat(e.target.value) || 3.0})}
               />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Mục tiêu thu nhập */}
+      <Card className="border-none shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center space-x-2">
+            <Target className="w-5 h-5 text-primary" />
+            <span>Mục Tiêu Thu Nhập</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Mục tiêu thực lĩnh hàng tháng</Label>
+            <Input 
+              type="number" 
+              value={settings.monthlyTarget}
+              onChange={(e) => updateSettings({...settings, monthlyTarget: parseFloat(e.target.value) || 0})}
+            />
           </div>
         </CardContent>
       </Card>
@@ -117,7 +147,7 @@ export default function SettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Đoàn phí</Label>
-              <Input type="number" value={settings.deductionUnionFee || settings.unionFee} onChange={(e) => updateSettings({...settings, unionFee: parseFloat(e.target.value) || 0})} />
+              <Input type="number" value={settings.unionFee} onChange={(e) => updateSettings({...settings, unionFee: parseFloat(e.target.value) || 0})} />
             </div>
             <div className="space-y-2">
               <Label>Thuế TNCN</Label>

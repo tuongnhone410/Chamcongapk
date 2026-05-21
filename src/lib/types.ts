@@ -11,7 +11,8 @@ export interface WorkSession {
 }
 
 export interface AppSettings {
-  hourlyRate: number;
+  baseMonthlySalary: number; // Lương cơ bản hàng tháng
+  hourlyRate: number; // Lương làm thêm / OT mỗi giờ
   currency: string;
   darkMode: boolean;
   payday: number; // Ngày chốt lương (1-31)
