@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle, CalendarCheck, PlusCircle, MinusCircle, Package, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap } from 'lucide-react';
 import { AppSettings } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -20,12 +19,12 @@ export default function SettingsPage() {
 
   const formatMoneyDisplay = (val: number) => {
     if (val === 0) return "";
-    return val.toLocaleString('vi-VN') + " đ";
+    return val.toLocaleString('vi-VN');
   };
 
   const formatPercentDisplay = (val: number) => {
     if (val === 0) return "";
-    return val.toString() + " %";
+    return val.toString();
   };
 
   const handleMoneyInput = (key: keyof AppSettings, val: string) => {
@@ -68,7 +67,6 @@ export default function SettingsPage() {
 
   const calculatedInsuranceMoney = Math.round((settings.insuranceSalary * settings.insuranceRate) / 100);
 
-  // Logic màu sắc cho nghỉ không phép
   const getAbsenceColorClasses = (count: number) => {
     if (count === 0) return { text: "text-green-600", border: "border-l-green-500", input: "border-green-200 focus-visible:ring-green-500", bg: "bg-green-50" };
     if (count === 1) return { text: "text-orange-600", border: "border-l-orange-500", input: "border-orange-200 focus-visible:ring-orange-500", bg: "bg-orange-50" };
@@ -130,23 +128,26 @@ export default function SettingsPage() {
                 inputMode="numeric"
                 value={formatMoneyDisplay(settings.baseMonthlySalary)}
                 onChange={(e) => handleMoneyInput('baseMonthlySalary', e.target.value)}
-                placeholder="0 đ"
+                placeholder="0"
                 className="pr-10 font-medium"
               />
-              <Calculator className="absolute right-3 top-3 w-4 h-4 text-muted-foreground opacity-50" />
+              <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Lương / Giờ (OT gốc)</Label>
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="0 đ"
-                value={formatMoneyDisplay(settings.hourlyRate)}
-                onChange={(e) => handleMoneyInput('hourlyRate', e.target.value)}
-                className="font-medium"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.hourlyRate)}
+                  onChange={(e) => handleMoneyInput('hourlyRate', e.target.value)}
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Ngày chốt lương</Label>
@@ -209,26 +210,32 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label className="text-primary font-bold">Mức lương đóng BH (SI Wage)</Label>
-            <Input 
-              type="text" 
-              inputMode="numeric"
-              placeholder="0 đ"
-              value={formatMoneyDisplay(settings.insuranceSalary)} 
-              onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} 
-              className="font-medium"
-            />
+            <div className="relative">
+              <Input 
+                type="text" 
+                inputMode="numeric"
+                placeholder="0"
+                value={formatMoneyDisplay(settings.insuranceSalary)} 
+                onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} 
+                className="pr-8 font-medium"
+              />
+              <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Tỷ lệ đóng Bảo hiểm</Label>
-              <Input 
-                type="text" 
-                inputMode="decimal"
-                placeholder="0 %"
-                value={formatPercentDisplay(settings.insuranceRate)} 
-                onChange={(e) => handlePercentInput('insuranceRate', e.target.value)} 
-                className="font-medium"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={formatPercentDisplay(settings.insuranceRate)} 
+                  onChange={(e) => handlePercentInput('insuranceRate', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">%</span>
+              </div>
             </div>
             <div className="space-y-2">
               <Label className="text-primary font-bold">Tiền BH phải đóng (10.5%)</Label>
@@ -241,28 +248,34 @@ export default function SettingsPage() {
           <div className="pt-2 border-t mt-4">
             <div className="space-y-2 max-w-[50%]">
               <Label className="text-destructive font-bold">Tỷ lệ Thuế TNCN (%)</Label>
-              <Input 
-                type="text" 
-                inputMode="decimal"
-                placeholder="0 %"
-                value={formatPercentDisplay(settings.incomeTaxRate)} 
-                onChange={(e) => handlePercentInput('incomeTaxRate', e.target.value)} 
-                className="font-medium border-destructive/30"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={formatPercentDisplay(settings.incomeTaxRate)} 
+                  onChange={(e) => handlePercentInput('incomeTaxRate', e.target.value)} 
+                  className="pr-8 font-medium border-destructive/30"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">%</span>
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Đoàn phí (Cố định)</Label>
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="0 đ"
-                value={formatMoneyDisplay(settings.unionFee)} 
-                onChange={(e) => handleMoneyInput('unionFee', e.target.value)} 
-                className="font-medium"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.unionFee)} 
+                  onChange={(e) => handleMoneyInput('unionFee', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -279,14 +292,17 @@ export default function SettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Tiền chuyên cần gốc</Label>
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="0 đ"
-                value={formatMoneyDisplay(settings.allowanceAttendanceBase)} 
-                onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} 
-                className="font-medium"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowanceAttendanceBase)} 
+                  onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
             </div>
             <div className="space-y-2">
               <Label className={cn("font-bold transition-colors", absenceColors.text)}>Số ngày nghỉ K.Phép</Label>
@@ -315,84 +331,105 @@ export default function SettingsPage() {
               <Label className="flex items-center gap-1 text-primary font-bold">
                 <Package className="w-3 h-3" /> Tiền sản phẩm
               </Label>
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="0 đ"
-                value={formatMoneyDisplay(settings.allowanceProduct)} 
-                onChange={(e) => handleMoneyInput('allowanceProduct', e.target.value)} 
-                className="font-medium"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowanceProduct)} 
+                  onChange={(e) => handleMoneyInput('allowanceProduct', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Tiền cơm/ca</Label>
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="0 đ"
-                value={formatMoneyDisplay(settings.allowanceLunchPerShift)} 
-                onChange={(e) => handleMoneyInput('allowanceLunchPerShift', e.target.value)} 
-                className="font-medium"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowanceLunchPerShift)} 
+                  onChange={(e) => handleMoneyInput('allowanceLunchPerShift', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Cơm thêm (OT &ge; 2h)</Label>
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="0 đ"
-                value={formatMoneyDisplay(settings.allowanceLunchOT)} 
-                onChange={(e) => handleMoneyInput('allowanceLunchOT', e.target.value)} 
-                className="font-medium"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowanceLunchOT)} 
+                  onChange={(e) => handleMoneyInput('allowanceLunchOT', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Nhà ở</Label>
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="0 đ"
-                value={formatMoneyDisplay(settings.allowanceHousing)} 
-                onChange={(e) => handleMoneyInput('allowanceHousing', e.target.value)} 
-                className="font-medium"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowanceHousing)} 
+                  onChange={(e) => handleMoneyInput('allowanceHousing', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
             </div>
             <div className="space-y-2">
               <Label className="flex items-center gap-1 text-orange-600 font-bold">
                 <Skull className="w-3 h-3" /> Độc hại
               </Label>
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="0 đ"
-                value={formatMoneyDisplay(settings.allowanceToxic)} 
-                onChange={(e) => handleMoneyInput('allowanceToxic', e.target.value)} 
-                className="font-medium"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowanceToxic)} 
+                  onChange={(e) => handleMoneyInput('allowanceToxic', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
             </div>
             <div className="space-y-2">
               <Label className="flex items-center gap-1 text-green-600 font-bold">
                 <TrendingUp className="w-3 h-3" /> Doanh thu
               </Label>
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="0 đ"
-                value={formatMoneyDisplay(settings.allowanceBonus)} 
-                onChange={(e) => handleMoneyInput('allowanceBonus', e.target.value)} 
-                className="font-medium"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowanceBonus)} 
+                  onChange={(e) => handleMoneyInput('allowanceBonus', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Xăng xe</Label>
-              <Input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="0 đ"
-                value={formatMoneyDisplay(settings.allowanceFuel)} 
-                onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} 
-                className="font-medium"
-              />
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatMoneyDisplay(settings.allowanceFuel)} 
+                  onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} 
+                  className="pr-8 font-medium"
+                />
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -400,3 +437,23 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+const Skull = ({ className }: { className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M9 10L9.01 10" />
+    <path d="M15 10L15.01 10" />
+    <path d="M10 20v-3a2 2 0 1 1 4 0v3" />
+    <path d="M12 2a8 8 0 0 0-8 8c0 1.84.62 3.52 1.66 4.85a3 3 0 0 1 .34 3.15V20a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2a3 3 0 0 1 .34-3.15 8 8 0 0 0 1.66-4.85 8 8 0 0 0-8-8z" />
+  </svg>
+);
