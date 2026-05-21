@@ -17,7 +17,9 @@ import {
   Zap,
   Clock,
   Timer,
-  PlayCircle
+  PlayCircle,
+  BarChart3,
+  CalendarDays
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -68,7 +70,6 @@ export default function Home() {
   if (!isLoaded) return null;
 
   const now = new Date();
-  const autoMultiplier = getAutoMultiplier(now);
   
   const getPayPeriod = () => {
     const year = now.getFullYear();
@@ -95,6 +96,32 @@ export default function Home() {
 
   const salaryInfo = calculateFullSalary(periodSessions);
   const targetPercent = Math.min(Math.round((salaryInfo.netSalary / (settings.monthlyTarget || 1)) * 100), 100);
+
+  // Tính toán số giờ làm việc theo tuần và tháng
+  const getWorkHours = (period: 'week' | 'month') => {
+    const start = new Date();
+    if (period === 'week') {
+      const day = start.getDay();
+      const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+      start.setDate(diff);
+      start.setHours(0, 0, 0, 0);
+    } else {
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+    }
+
+    const filtered = sessions.filter(s => new Date(s.checkIn) >= start && s.checkOut);
+    const totalMinutes = filtered.reduce((acc, s) => acc + s.totalMinutes, 0);
+    return totalMinutes / 60;
+  };
+
+  const weekHours = getWorkHours('week');
+  const monthHours = getWorkHours('month');
+  const weekTarget = 48; // 6 ngày x 8 tiếng
+  const monthTargetHours = 208; // 26 ngày x 8 tiếng
+
+  const weekProgress = Math.min((weekHours / weekTarget) * 100, 100);
+  const monthProgress = Math.min((monthHours / monthTargetHours) * 100, 100);
 
   const formatCurrency = (val: number) => {
     return `${Math.round(val || 0).toLocaleString('vi-VN')}${settings.currency}`;
@@ -134,7 +161,7 @@ export default function Home() {
   const getDayTypeName = () => {
     if (isHoliday) return "Ngày Lễ (x3.0)";
     if (now.getDay() === 0) return "Chủ Nhật (x2.0)";
-    return "Ngày Thường (x1.0)";
+    return "Ngày Thường (Tự động OT x1.5)";
   };
 
   return (
@@ -165,12 +192,9 @@ export default function Home() {
               <PlayCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
               BẮT ĐẦU VÀO CA
             </Button>
-            <p className="text-[10px] text-center text-muted-foreground italic px-8">
-              Hệ thống tự động tính lương theo lịch làm việc thực tế.
-            </p>
           </div>
         ) : (
-          <Card className="w-full border-2 border-zinc-800 shadow-2xl overflow-hidden bg-zinc-950 text-white">
+          <Card className="w-full border-none shadow-2xl overflow-hidden bg-zinc-950 text-white">
             <CardContent className="p-0">
               <div className="bg-zinc-900 p-4 border-b border-zinc-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -178,7 +202,7 @@ export default function Home() {
                   <span className="text-xs font-bold uppercase tracking-wider text-green-500">Đang trong ca làm</span>
                 </div>
                 <div className="text-[10px] bg-primary/20 text-primary-foreground px-2 py-0.5 rounded font-bold border border-primary/30">
-                  Hệ số x{activeSession.multiplier}
+                  Hệ số tự động
                 </div>
               </div>
               
@@ -189,18 +213,12 @@ export default function Home() {
                     {elapsedTime}
                   </div>
                   <div className="flex items-center justify-center gap-2 mt-2">
-                    {activeSession.multiplier === 1.0 ? (
-                      <span className={cn(
-                        "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-                        isOvertime ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                      )}>
-                        {isOvertime ? "TRẠNG THÁI: TĂNG CA (OT)" : "TRẠNG THÁI: GIỜ HÀNH CHÍNH"}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                        TRẠNG THÁI: TĂNG CA ĐẶC BIỆT
-                      </span>
-                    )}
+                    <span className={cn(
+                      "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                      isOvertime ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                    )}>
+                      {isOvertime ? "TRẠNG THÁI: TĂNG CA (OT)" : "TRẠNG THÁI: GIỜ HÀNH CHÍNH"}
+                    </span>
                   </div>
                 </div>
 
@@ -223,7 +241,6 @@ export default function Home() {
                   <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                   KẾT THÚC CA LÀM
                 </Button>
-                <p className="text-[9px] text-zinc-500 italic">Nhấn kết thúc để lưu dữ liệu vào nhật ký chấm công</p>
               </div>
             </CardContent>
           </Card>
@@ -267,7 +284,7 @@ export default function Home() {
                       <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.lunchAllowance)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Chuyên cần (-{settings.unexcusedAbsences} ngày):</span> 
+                      <span className="text-muted-foreground">Chuyên cần:</span> 
                       <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.attendanceBonus)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
@@ -309,6 +326,38 @@ export default function Home() {
         </CardContent>
       </Card>
 
+      <Card className="border-none shadow-md bg-white dark:bg-zinc-900 overflow-hidden">
+        <CardHeader className="p-4 pb-2 border-b">
+          <CardTitle className="text-sm font-bold flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            Tiến Độ Số Giờ Làm Việc
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 space-y-5">
+          <div className="space-y-2">
+            <div className="flex justify-between items-end">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-bold uppercase tracking-wider">Tuần này</span>
+              </div>
+              <span className="text-xs font-black text-primary">{Math.round(weekHours)}h / {weekTarget}h</span>
+            </div>
+            <Progress value={weekProgress} className="h-2" />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-end">
+              <div className="flex items-center gap-2">
+                <Timer className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-bold uppercase tracking-wider">Tháng này</span>
+              </div>
+              <span className="text-xs font-black text-primary">{Math.round(monthHours)}h / {monthTargetHours}h</span>
+            </div>
+            <Progress value={monthProgress} className="h-2" />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-2 gap-4">
         <Card className="border-none shadow-sm border-l-4 border-l-green-500 overflow-hidden">
           <CardHeader className="p-3 pb-1">
@@ -325,7 +374,6 @@ export default function Home() {
               value={getNumberValue(settings.annualLeaveBalance)}
               onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
             />
-            <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Nghỉ không mất lương & chuyên cần.</p>
           </CardContent>
         </Card>
 
