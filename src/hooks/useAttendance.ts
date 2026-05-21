@@ -9,16 +9,18 @@ const STORAGE_KEY_SETTINGS = 'timesnap_settings';
 
 const defaultSettings: AppSettings = {
   baseMonthlySalary: 5730000,
-  hourlyRate: 27548, // Tự động tính: 5730000 / 208
+  hourlyRate: 27548,
   currency: '₫',
   darkMode: false,
   payday: 5,
   monthlyTarget: 10000000,
   allowanceHousing: 300000,
   allowanceFuel: 0,
-  allowanceLunch: 0,
+  allowanceLunchPerShift: 30000,
+  allowanceLunchOT: 15000,
   allowancePhone: 0,
-  allowanceAttendance: 600000,
+  allowanceAttendanceBase: 600000,
+  unexcusedAbsences: 0,
   allowanceToxic: 287000,
   allowanceBonus: 213000,
   insuranceRate: 10.5,
@@ -119,13 +121,32 @@ export function useAttendance() {
 
   const calculateFullSalary = (periodSessions: WorkSession[]) => {
     const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
-    const totalAllowances = (settings.allowanceHousing || 0) + 
+    
+    // Tính tiền cơm: 30k/ca, nếu làm > 10h (8h + 2h OT) thì thêm 15k
+    const lunchAllowance = periodSessions.reduce((acc, s) => {
+      let dailyLunch = settings.allowanceLunchPerShift;
+      if (s.totalMinutes >= 600) { // 600 phút = 10 tiếng
+        dailyLunch += settings.allowanceLunchOT;
+      }
+      return acc + dailyLunch;
+    }, 0);
+
+    // Tính tiền chuyên cần: Nghỉ 1 ngày -200k, >= 2 ngày mất hết
+    let attendanceBonus = settings.allowanceAttendanceBase;
+    if (settings.unexcusedAbsences === 1) {
+      attendanceBonus -= 200000;
+    } else if (settings.unexcusedAbsences >= 2) {
+      attendanceBonus = 0;
+    }
+    attendanceBonus = Math.max(0, attendanceBonus);
+
+    const otherAllowances = (settings.allowanceHousing || 0) + 
                            (settings.allowanceFuel || 0) + 
-                           (settings.allowanceLunch || 0) + 
                            (settings.allowancePhone || 0) + 
-                           (settings.allowanceAttendance || 0) +
                            (settings.allowanceToxic || 0) +
                            (settings.allowanceBonus || 0);
+    
+    const totalAllowances = otherAllowances + lunchAllowance + attendanceBonus;
     
     const grossIncome = (settings.baseMonthlySalary || 0) + sessionSalary + totalAllowances;
     const insuranceAmount = (grossIncome * (settings.insuranceRate || 0)) / 100;
@@ -133,6 +154,9 @@ export function useAttendance() {
 
     return {
       sessionSalary,
+      lunchAllowance,
+      attendanceBonus,
+      otherAllowances,
       totalAllowances,
       grossIncome,
       insuranceAmount,

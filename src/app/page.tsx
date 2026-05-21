@@ -112,8 +112,16 @@ export default function Home() {
                     <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.sessionSalary)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tổng phụ cấp:</span> 
-                    <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.totalAllowances)}</span>
+                    <span className="text-muted-foreground">Tiền cơm ({periodSessions.length} ca):</span> 
+                    <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.lunchAllowance)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Chuyên cần (-{settings.unexcusedAbsences} ngày):</span> 
+                    <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.attendanceBonus)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Phụ cấp khác:</span> 
+                    <span className="font-medium text-green-600">+{formatCurrency(salaryInfo.otherAllowances)}</span>
                   </div>
                   <div className="border-t pt-1 flex justify-between text-sm font-bold">
                     <span>Tổng thu nhập (Gross):</span>

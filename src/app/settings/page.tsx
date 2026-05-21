@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldCheck, Gift, Clock, Target, Calculator, Skull, TrendingUp } from 'lucide-react';
+import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle } from 'lucide-react';
 
 export default function SettingsPage() {
   const { settings, updateSettings, isLoaded } = useAttendance();
@@ -85,22 +85,56 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-none shadow-sm">
+      <Card className="border-none shadow-sm border-l-4 border-l-orange-500">
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
-            <Gift className="w-5 h-5 text-primary" />
-            <span>Phụ Cấp & Hỗ Trợ</span>
+            <AlertTriangle className="w-5 h-5 text-orange-500" />
+            <span>Chuyên Cần & Nghỉ Không Phép</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="flex items-center gap-1">Nhà ở</Label>
-              <Input type="number" value={getInputValue(settings.allowanceHousing)} onChange={(e) => handleNumberInput('allowanceHousing', e.target.value)} />
+              <Label>Tiền chuyên cần gốc</Label>
+              <Input type="number" value={getInputValue(settings.allowanceAttendanceBase)} onChange={(e) => handleNumberInput('allowanceAttendanceBase', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Chuyên cần</Label>
-              <Input type="number" value={getInputValue(settings.allowanceAttendance)} onChange={(e) => handleNumberInput('allowanceAttendance', e.target.value)} />
+              <Label className="text-destructive font-bold">Số ngày nghỉ K.Phép</Label>
+              <Input 
+                type="number" 
+                placeholder="0"
+                className="border-destructive/50 focus-visible:ring-destructive"
+                value={getInputValue(settings.unexcusedAbsences)} 
+                onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} 
+              />
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground italic">
+            * 1 ngày nghỉ K.P trừ 200k, từ 2 ngày trở lên trừ hết chuyên cần.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card className="border-none shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center space-x-2">
+            <Gift className="w-5 h-5 text-primary" />
+            <span>Phụ Cấp & Tiền Cơm</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Tiền cơm/ca</Label>
+              <Input type="number" value={getInputValue(settings.allowanceLunchPerShift)} onChange={(e) => handleNumberInput('allowanceLunchPerShift', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Cơm thêm (OT >= 2h)</Label>
+              <Input type="number" value={getInputValue(settings.allowanceLunchOT)} onChange={(e) => handleNumberInput('allowanceLunchOT', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Nhà ở</Label>
+              <Input type="number" value={getInputValue(settings.allowanceHousing)} onChange={(e) => handleNumberInput('allowanceHousing', e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label className="flex items-center gap-1 text-orange-600 font-bold">
@@ -117,10 +151,6 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label>Xăng xe</Label>
               <Input type="number" value={getInputValue(settings.allowanceFuel)} onChange={(e) => handleNumberInput('allowanceFuel', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Tiền cơm</Label>
-              <Input type="number" value={getInputValue(settings.allowanceLunch)} onChange={(e) => handleNumberInput('allowanceLunch', e.target.value)} />
             </div>
           </div>
         </CardContent>

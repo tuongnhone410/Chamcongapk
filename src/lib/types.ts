@@ -21,9 +21,11 @@ export interface AppSettings {
   // Phụ cấp hàng tháng
   allowanceHousing: number; // Tiền nhà ở
   allowanceFuel: number;    // Tiền xăng xe
-  allowanceLunch: number;   // Tiền ăn trưa
+  allowanceLunchPerShift: number; // Tiền cơm mỗi ca (30k)
+  allowanceLunchOT: number;      // Tiền cơm thêm khi OT >= 2h (15k)
   allowancePhone: number;   // Tiền điện thoại
-  allowanceAttendance: number; // Tiền chuyên cần
+  allowanceAttendanceBase: number; // Tiền chuyên cần gốc (600k)
+  unexcusedAbsences: number;       // Số ngày nghỉ không phép
   allowanceToxic: number;      // Phụ cấp độc hại
   allowanceBonus: number;      // Thưởng doanh thu/năng suất
   
