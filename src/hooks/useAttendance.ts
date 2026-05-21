@@ -85,12 +85,9 @@ export function useAttendance() {
 
   const calculateSessionSalary = (totalMinutes: number, multiplier: number) => {
     if (multiplier === 1.0) {
-      // Quy tắc: 8h = 480p. Nếu làm trễ dưới 30p (tổng <= 510p) thì không tính OT.
-      // Nếu làm trên 510p thì tính OT cho phần vượt quá 480p.
       const otMinutes = totalMinutes > 510 ? totalMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
-      // Các ngày/ca đặc biệt: Tính toàn bộ theo hệ số ngay từ phút đầu
       return (totalMinutes / 60) * settings.hourlyRate * multiplier;
     }
   };
@@ -128,6 +125,25 @@ export function useAttendance() {
     saveSessions(updatedSessions);
   };
 
+  const addManualSession = (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => {
+    const checkIn = new Date(data.checkIn);
+    const checkOut = new Date(data.checkOut);
+    const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+    const salary = calculateSessionSalary(diffMinutes, data.multiplier);
+    
+    const newSession: WorkSession = {
+      id: Math.random().toString(36).substr(2, 9),
+      checkIn: data.checkIn,
+      checkOut: data.checkOut,
+      totalMinutes: diffMinutes,
+      salary,
+      multiplier: data.multiplier,
+      note: data.note,
+      createdAt: new Date().toISOString(),
+    };
+    saveSessions([newSession, ...sessions]);
+  };
+
   const deleteSession = (id: string) => {
     saveSessions(sessions.filter(s => s.id !== id));
   };
@@ -142,7 +158,6 @@ export function useAttendance() {
     
     const lunchAllowance = periodSessions.reduce((acc, s) => {
       let dailyLunch = settings.allowanceLunchPerShift;
-      // Cơm thêm chỉ tính khi OT thực sự từ 2 tiếng trở lên (Tổng >= 10h = 600p)
       if (s.totalMinutes >= 600) { 
         dailyLunch += settings.allowanceLunchOT;
       }
@@ -219,6 +234,7 @@ export function useAttendance() {
     isLoaded,
     punchIn,
     punchOut,
+    addManualSession,
     updateSettings,
     deleteSession,
     updateSession,

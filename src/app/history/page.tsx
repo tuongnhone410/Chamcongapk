@@ -14,13 +14,23 @@ import {
   DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog';
-import { History, Trash2, Edit3, Clock, Calendar, StickyNote, Download, Zap } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { History, Trash2, Edit3, Clock, Calendar, StickyNote, Download, Zap, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 import { WorkSession } from '@/lib/types';
 
 export default function HistoryPage() {
-  const { sessions, isLoaded, deleteSession, updateSession, settings, exportToCSV } = useAttendance();
+  const { sessions, isLoaded, deleteSession, updateSession, addManualSession, settings, exportToCSV } = useAttendance();
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
+  
+  // State for manual entry
+  const [showManualDialog, setShowManualDialog] = useState(false);
+  const [manualData, setManualData] = useState({
+    checkIn: new Date().toISOString().slice(0, 16),
+    checkOut: new Date(new Date().getTime() + 8 * 60 * 60 * 1000).toISOString().slice(0, 16),
+    multiplier: 1.0,
+    note: ''
+  });
 
   if (!isLoaded) return null;
 
@@ -53,6 +63,16 @@ export default function HistoryPage() {
     }
   };
 
+  const handleManualAdd = () => {
+    addManualSession({
+      checkIn: new Date(manualData.checkIn).toISOString(),
+      checkOut: new Date(manualData.checkOut).toISOString(),
+      multiplier: manualData.multiplier,
+      note: manualData.note
+    });
+    setShowManualDialog(false);
+  };
+
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between">
@@ -60,16 +80,76 @@ export default function HistoryPage() {
           <h1 className="text-2xl font-bold font-headline">Nhật Ký Chấm Công</h1>
           <p className="text-muted-foreground text-sm">Xem và chỉnh sửa các phiên làm việc</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-2 text-xs"
-          onClick={exportToCSV}
-          disabled={completedSessions.length === 0}
-        >
-          <Download className="w-3.5 h-3.5" />
-          Xuất CSV
-        </Button>
+        <div className="flex gap-2">
+          <Dialog open={showManualDialog} onOpenChange={setShowManualDialog}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-2 text-xs">
+                <PlusCircle className="w-3.5 h-3.5" />
+                Thêm mới
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Thêm phiên thủ công</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Thời gian vào</Label>
+                  <Input 
+                    type="datetime-local" 
+                    value={manualData.checkIn}
+                    onChange={(e) => setManualData({...manualData, checkIn: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Thời gian ra</Label>
+                  <Input 
+                    type="datetime-local" 
+                    value={manualData.checkOut}
+                    onChange={(e) => setManualData({...manualData, checkOut: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Loại hình</Label>
+                  <Select value={manualData.multiplier.toString()} onValueChange={(v) => setManualData({...manualData, multiplier: parseFloat(v)})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn hệ số" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1.0">Ngày thường (x1.0)</SelectItem>
+                      <SelectItem value={settings.overtimeMultiplier.toString()}>Tăng ca (x{settings.overtimeMultiplier})</SelectItem>
+                      <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (x{settings.sundayMultiplier})</SelectItem>
+                      <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (x{settings.holidayMultiplier})</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Ghi chú</Label>
+                  <Input 
+                    placeholder="Lý do nhập thủ công..." 
+                    value={manualData.note}
+                    onChange={(e) => setManualData({...manualData, note: e.target.value})}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowManualDialog(false)}>Hủy</Button>
+                <Button onClick={handleManualAdd}>Thêm vào nhật ký</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 text-xs"
+            onClick={exportToCSV}
+            disabled={completedSessions.length === 0}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Xuất CSV
+          </Button>
+        </div>
       </header>
 
       {completedSessions.length === 0 ? (
@@ -85,7 +165,6 @@ export default function HistoryPage() {
       ) : (
         <div className="space-y-4">
           {completedSessions.map((session) => {
-            // Cập nhật hiển thị OT dựa trên quy tắc 30 phút cho ngày thường
             const otMinutes = session.multiplier === 1.0 
               ? (session.totalMinutes > 510 ? session.totalMinutes - 480 : 0) 
               : session.totalMinutes;
@@ -141,6 +220,20 @@ export default function HistoryPage() {
                                   value={editingSession.checkOut?.slice(0, 16) || ''}
                                   onChange={(e) => setEditingSession({...editingSession, checkOut: new Date(e.target.value).toISOString()})}
                                 />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Hệ số lương</Label>
+                                <Select value={editingSession.multiplier.toString()} onValueChange={(v) => setEditingSession({...editingSession, multiplier: parseFloat(v)})}>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="1.0">Ngày thường (x1.0)</SelectItem>
+                                    <SelectItem value={settings.overtimeMultiplier.toString()}>Tăng ca (x{settings.overtimeMultiplier})</SelectItem>
+                                    <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (x{settings.sundayMultiplier})</SelectItem>
+                                    <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (x{settings.holidayMultiplier})</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
                               <div className="space-y-2">
                                 <Label>Ghi chú</Label>
