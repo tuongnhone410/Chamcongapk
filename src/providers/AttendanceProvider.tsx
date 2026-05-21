@@ -89,6 +89,7 @@ const defaultSettings: AppSettings = {
   overtimeMultiplier: 1.5,
   sundayMultiplier: 2.0,
   holidayMultiplier: 3.0,
+  breakTimeDeduction: 1.5,
 };
 
 const isVietnameseHoliday = (date: Date) => {
@@ -126,13 +127,18 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const isLoaded = !sessionsLoading && !settingsLoading;
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
+    // Khấu trừ giờ nghỉ trước khi tính toán (chỉ khấu trừ nếu ca làm việc dài hơn thời gian nghỉ)
+    const breakMinutes = settings.breakTimeDeduction * 60;
+    const effectiveMinutes = totalMinutes > breakMinutes ? totalMinutes - breakMinutes : totalMinutes;
+
     if (multiplier === 1.0) {
-      const otMinutes = totalMinutes > 510 ? totalMinutes - 480 : 0;
+      // Logic OT 1.5: Sau khi trừ nghỉ, nếu giờ làm việc thực tế > 8h30p (510p) thì tính OT từ mốc 8h (480p)
+      const otMinutes = effectiveMinutes > 510 ? effectiveMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
-      return (totalMinutes / 60) * settings.hourlyRate * multiplier;
+      return (effectiveMinutes / 60) * settings.hourlyRate * multiplier;
     }
-  }, [settings.hourlyRate, settings.overtimeMultiplier]);
+  }, [settings.hourlyRate, settings.overtimeMultiplier, settings.breakTimeDeduction]);
 
   const getAutoMultiplier = useCallback((date: Date = new Date()) => {
     if (isVietnameseHoliday(date)) return settings.holidayMultiplier;
@@ -343,10 +349,12 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const calculateFullSalary = useCallback((periodSessions: WorkSession[]) => {
     const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
+    const breakMinutes = settings.breakTimeDeduction * 60;
     
     const totalOTMinutes = periodSessions.reduce((acc, s) => {
+      const effectiveMinutes = s.totalMinutes > breakMinutes ? s.totalMinutes - breakMinutes : s.totalMinutes;
       if (s.multiplier === 1.0) {
-        return acc + (s.totalMinutes > 510 ? s.totalMinutes - 480 : 0);
+        return acc + (effectiveMinutes > 510 ? effectiveMinutes - 480 : 0);
       }
       return acc;
     }, 0);

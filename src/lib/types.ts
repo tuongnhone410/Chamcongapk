@@ -50,4 +50,7 @@ export interface AppSettings {
   overtimeMultiplier: number;
   sundayMultiplier: number;
   holidayMultiplier: number;
+
+  // Cấu hình thời gian nghỉ
+  breakTimeDeduction: number; // Số giờ nghỉ khấu trừ (vd: 1.5)
 }

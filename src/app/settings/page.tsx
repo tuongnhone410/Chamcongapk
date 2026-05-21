@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap, Skull, Briefcase, Star, Award, Shield, ShieldCheck } from 'lucide-react';
+import { Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap, Skull, Briefcase, Star, Award, Shield, ShieldCheck, HomeIcon, Coffee } from 'lucide-react';
 import { AppSettings } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -163,73 +162,91 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-zinc-800 grid grid-cols-2 gap-x-4 gap-y-4">
-            {/* OT 1.5 */}
+          <div className="pt-4 border-t border-zinc-800 space-y-4">
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-orange-500")}><Zap className="w-3.5 h-3.5" /> Hệ số Tăng ca</Label>
-              <Input 
-                type="number" 
-                step="0.1"
-                className={cn(inputClass, "border-orange-500/20")}
-                value={getNumberValue(settings.overtimeMultiplier)}
-                onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className={cn(labelClass, "text-zinc-500")}>Lương OT 1.5 / Giờ</Label>
+              <Label className={cn(labelClass, "text-orange-500")}><Coffee className="w-3.5 h-3.5" /> Khấu trừ thời gian nghỉ (Giờ)</Label>
               <div className="relative">
                 <Input 
-                  readOnly disabled
-                  value={formatMoneyDisplay(settings.hourlyRate * settings.overtimeMultiplier)}
-                  className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-orange-500/70")}
+                  type="number" 
+                  step="0.1"
+                  placeholder="1.5"
+                  className={cn(inputClass, "border-orange-500/20 pr-12")}
+                  value={getNumberValue(settings.breakTimeDeduction)}
+                  onChange={(e) => handleNumberInput('breakTimeDeduction', e.target.value)}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-xs uppercase">Giờ</span>
               </div>
+              <p className="text-[10px] text-zinc-500 italic mt-1 font-medium">VD: Nghỉ trưa 1h + Nghỉ chiều 0.5h = 1.5 giờ khấu trừ.</p>
             </div>
 
-            {/* OT 2.0 */}
-            <div className="space-y-1">
-              <Label className={cn(labelClass, "text-blue-500")}><Calculator className="w-3.5 h-3.5" /> Hệ số Chủ Nhật</Label>
-              <Input 
-                type="number" 
-                step="0.1"
-                className={cn(inputClass, "border-blue-500/20")}
-                value={getNumberValue(settings.sundayMultiplier)}
-                onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className={cn(labelClass, "text-zinc-500")}>Lương CN (x2.0) / Giờ</Label>
-              <div className="relative">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4 pt-2">
+              {/* OT 1.5 */}
+              <div className="space-y-1">
+                <Label className={cn(labelClass, "text-orange-500")}><Zap className="w-3.5 h-3.5" /> Hệ số Tăng ca</Label>
                 <Input 
-                  readOnly disabled
-                  value={formatMoneyDisplay(settings.hourlyRate * settings.sundayMultiplier)}
-                  className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-blue-500/70")}
+                  type="number" 
+                  step="0.1"
+                  className={cn(inputClass, "border-orange-500/20")}
+                  value={getNumberValue(settings.overtimeMultiplier)}
+                  onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
               </div>
-            </div>
+              <div className="space-y-1">
+                <Label className={cn(labelClass, "text-zinc-500")}>Lương OT 1.5 / Giờ</Label>
+                <div className="relative">
+                  <Input 
+                    readOnly disabled
+                    value={formatMoneyDisplay(settings.hourlyRate * settings.overtimeMultiplier)}
+                    className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-orange-500/70")}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
+                </div>
+              </div>
 
-            {/* OT 3.0 */}
-            <div className="space-y-1">
-              <Label className={cn(labelClass, "text-red-500")}><Star className="w-3.5 h-3.5" /> Hệ số Ngày Lễ</Label>
-              <Input 
-                type="number" 
-                step="0.1"
-                className={cn(inputClass, "border-red-500/20")}
-                value={getNumberValue(settings.holidayMultiplier)}
-                onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className={cn(labelClass, "text-zinc-500")}>Lương Lễ (x3.0) / Giờ</Label>
-              <div className="relative">
+              {/* OT 2.0 */}
+              <div className="space-y-1">
+                <Label className={cn(labelClass, "text-blue-500")}><Calculator className="w-3.5 h-3.5" /> Hệ số Chủ Nhật</Label>
                 <Input 
-                  readOnly disabled
-                  value={formatMoneyDisplay(settings.hourlyRate * settings.holidayMultiplier)}
-                  className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-red-500/70")}
+                  type="number" 
+                  step="0.1"
+                  className={cn(inputClass, "border-blue-500/20")}
+                  value={getNumberValue(settings.sundayMultiplier)}
+                  onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
+              </div>
+              <div className="space-y-1">
+                <Label className={cn(labelClass, "text-zinc-500")}>Lương CN (x2.0) / Giờ</Label>
+                <div className="relative">
+                  <Input 
+                    readOnly disabled
+                    value={formatMoneyDisplay(settings.hourlyRate * settings.sundayMultiplier)}
+                    className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-blue-500/70")}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
+                </div>
+              </div>
+
+              {/* OT 3.0 */}
+              <div className="space-y-1">
+                <Label className={cn(labelClass, "text-red-500")}><Star className="w-3.5 h-3.5" /> Hệ số Ngày Lễ</Label>
+                <Input 
+                  type="number" 
+                  step="0.1"
+                  className={cn(inputClass, "border-red-500/20")}
+                  value={getNumberValue(settings.holidayMultiplier)}
+                  onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className={cn(labelClass, "text-zinc-500")}>Lương Lễ (x3.0) / Giờ</Label>
+                <div className="relative">
+                  <Input 
+                    readOnly disabled
+                    value={formatMoneyDisplay(settings.hourlyRate * settings.holidayMultiplier)}
+                    className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-red-500/70")}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
+                </div>
               </div>
             </div>
           </div>
@@ -397,25 +414,5 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function HomeIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
-    </svg>
   );
 }

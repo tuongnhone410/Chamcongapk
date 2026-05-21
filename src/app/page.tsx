@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DigitalClock } from '@/components/attendance/DigitalClock';
@@ -131,14 +130,18 @@ export default function Home() {
 
   const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
   
+  // Logic hiển thị tiền OT "nhảy" theo thời gian thực (có trừ giờ nghỉ)
+  const breakMinutes = settings.breakTimeDeduction * 60;
+  const effectiveSessionMinutes = sessionMinutes > breakMinutes ? sessionMinutes - breakMinutes : sessionMinutes;
+
   const currentOTSalary = activeSession 
     ? (activeSession.multiplier === 1.0 
-      ? (sessionMinutes > 510 ? ((sessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier : 0)
-      : (sessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier)
+      ? (effectiveSessionMinutes > 510 ? ((effectiveSessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier : 0)
+      : (effectiveSessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier)
     : 0;
 
-  const currentOTHours = activeSession && activeSession.multiplier === 1.0 && sessionMinutes > 510
-    ? ((sessionMinutes - 480) / 60).toFixed(2)
+  const currentOTHours = activeSession && activeSession.multiplier === 1.0 && effectiveSessionMinutes > 510
+    ? ((effectiveSessionMinutes - 480) / 60).toFixed(2)
     : "0.00";
 
   return (
@@ -161,8 +164,9 @@ export default function Home() {
           <div className="w-full space-y-4">
             <div className="text-center space-y-1">
               <p className="text-base font-black text-primary uppercase">
-                {isHoliday ? "Ngày Lễ (x3.0)" : new Date().getDay() === 0 ? "Chủ Nhật (x2.0)" : "Ngày Thường (Tự động OT x1.5 sau 8h30)"}
+                {isHoliday ? `Ngày Lễ (x${settings.holidayMultiplier.toFixed(1)})` : new Date().getDay() === 0 ? `Chủ Nhật (x${settings.sundayMultiplier.toFixed(1)})` : `Ngày Thường (Tự động OT x${settings.overtimeMultiplier.toFixed(1)} sau 8h30p làm việc)`}
               </p>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Đã trừ {settings.breakTimeDeduction}h nghỉ hàng ngày</p>
             </div>
             <Button 
               onClick={() => punchIn()} 
@@ -181,7 +185,7 @@ export default function Home() {
                   <span className="text-xs font-black uppercase tracking-widest text-green-500">LIVE: ĐANG LÀM VIỆC</span>
                 </div>
                 <div className="text-[10px] bg-zinc-800 text-zinc-400 px-3 py-1 rounded-full font-black">
-                  x{activeSession.multiplier.toFixed(1)}
+                  Hệ số: x{activeSession.multiplier.toFixed(1)}
                 </div>
               </div>
               
@@ -194,12 +198,12 @@ export default function Home() {
                   <div className="pt-4 flex flex-col gap-2 items-center">
                     <span className={cn(
                       "text-[10px] font-black px-4 py-2 rounded-full border uppercase tracking-widest",
-                      sessionMinutes > 510 ? "bg-orange-500/10 text-orange-500 border-orange-500/20" : "bg-primary/10 text-primary border-primary/20"
+                      effectiveSessionMinutes > 510 ? "bg-orange-500/10 text-orange-500 border-orange-500/20" : "bg-primary/10 text-primary border-primary/20"
                     )}>
-                      {sessionMinutes > 510 ? "TRẠNG THÁI: ĐANG TÍNH OT 1.5" : "TRẠNG THÁI: GIỜ HÀNH CHÍNH"}
+                      {effectiveSessionMinutes > 510 ? `TRẠNG THÁI: ĐANG TÍNH OT ${settings.overtimeMultiplier}` : "TRẠNG THÁI: GIỜ HÀNH CHÍNH"}
                     </span>
-                    {sessionMinutes > 510 && (
-                      <p className="text-xs font-bold text-orange-500 animate-bounce">+{currentOTHours}h OT</p>
+                    {effectiveSessionMinutes > 510 && (
+                      <p className="text-xs font-bold text-orange-500 animate-bounce">+{currentOTHours}h OT (Đã trừ {settings.breakTimeDeduction}h nghỉ)</p>
                     )}
                   </div>
                 </div>
@@ -210,7 +214,7 @@ export default function Home() {
                     <p className="text-xl font-black text-white">{new Date(activeSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-zinc-500 uppercase font-black mb-1">TIỀN OT TỰ NHẢY</p>
+                    <p className="text-[10px] text-zinc-500 uppercase font-black mb-1">TIỀN OT DỰ KIẾN</p>
                     <p className="text-xl font-black text-green-500">+{formatCurrency(currentOTSalary)}</p>
                   </div>
                 </div>
@@ -321,7 +325,7 @@ export default function Home() {
                       <span>Lương cơ bản:</span> <span className="text-white">{formatCurrency(settings.baseMonthlySalary)}</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-zinc-400">
-                      <span>Lương OT (1.5/2.0/3.0):</span> <span className="text-green-500">+{formatCurrency(salaryInfo.sessionSalary)}</span>
+                      <span>Lương OT (Đã trừ nghỉ):</span> <span className="text-green-500">+{formatCurrency(salaryInfo.sessionSalary)}</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-orange-400">
                       <span>Tổng giờ OT 1.5:</span> <span>{(salaryInfo.totalOTMinutes / 60).toFixed(2)}h</span>
