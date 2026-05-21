@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle, CalendarCheck, PlusCircle, MinusCircle, Package } from 'lucide-react';
+import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle, CalendarCheck, PlusCircle, MinusCircle, Package, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppSettings } from '@/lib/types';
 
@@ -155,7 +155,7 @@ export default function SettingsPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Lương / Giờ (OT)</Label>
+              <Label>Lương / Giờ (OT gốc)</Label>
               <Input 
                 type="text" 
                 inputMode="numeric"
@@ -172,6 +172,41 @@ export default function SettingsPage() {
                   {daysInMonth.map(day => <SelectItem key={day} value={day.toString()}>Ngày {day}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <Label className="text-xs text-muted-foreground mb-3 block font-bold uppercase tracking-wider">Hệ số nhân lương</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-primary" /> Tăng ca (OT)
+                </Label>
+                <Input 
+                  type="number" 
+                  step="0.1"
+                  value={getNumberValue(settings.overtimeMultiplier)}
+                  onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Chủ Nhật</Label>
+                <Input 
+                  type="number" 
+                  step="0.1"
+                  value={getNumberValue(settings.sundayMultiplier)}
+                  onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Ngày Lễ</Label>
+                <Input 
+                  type="number" 
+                  step="0.1"
+                  value={getNumberValue(settings.holidayMultiplier)}
+                  onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)}
+                />
+              </div>
             </div>
           </div>
         </CardContent>

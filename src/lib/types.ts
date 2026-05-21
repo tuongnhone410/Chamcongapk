@@ -42,6 +42,7 @@ export interface AppSettings {
   
   // Hệ số mặc định
   defaultMultiplier: number;
+  overtimeMultiplier: number;
   sundayMultiplier: number;
   holidayMultiplier: number;
 }

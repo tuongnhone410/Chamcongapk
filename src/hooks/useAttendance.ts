@@ -31,6 +31,7 @@ const defaultSettings: AppSettings = {
   incomeTax: 0,
   incomeTaxRate: 0,
   defaultMultiplier: 1.0,
+  overtimeMultiplier: 1.5,
   sundayMultiplier: 2.0,
   holidayMultiplier: 3.0,
 };
@@ -156,7 +157,6 @@ export function useAttendance() {
     const insSalary = settings.insuranceSalary || settings.baseMonthlySalary || 0;
     const insuranceAmount = (insSalary * (settings.insuranceRate || 0)) / 100;
     
-    // Tính Thuế TNCN dựa trên % Thuế
     const incomeTaxAmount = (grossIncome * (settings.incomeTaxRate || 0)) / 100;
     
     const netSalary = grossIncome - insuranceAmount - (settings.unionFee || 0) - incomeTaxAmount;

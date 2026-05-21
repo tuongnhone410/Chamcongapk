@@ -10,16 +10,15 @@ import {
   TrendingUp, 
   Wallet, 
   Calculator, 
-  Info, 
   CalendarCheck, 
   AlertTriangle, 
   PlusCircle, 
   MinusCircle,
-  Award
+  Award,
+  Zap
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Home() {
   const { 
@@ -86,6 +85,10 @@ export default function Home() {
           {!activeSession ? (
             <>
               <Button onClick={() => punchIn(1.0)} className="rounded-full px-6 shadow-sm h-12 text-base font-bold">Ngày thường</Button>
+              <Button onClick={() => punchIn(settings.overtimeMultiplier)} variant="outline" className="rounded-full px-6 shadow-sm h-12 text-base font-bold border-2 border-primary/30">
+                <Zap className="w-4 h-4 mr-1 text-primary" />
+                Tăng ca x{settings.overtimeMultiplier}
+              </Button>
               <Button onClick={() => punchIn(settings.sundayMultiplier)} variant="outline" className="rounded-full px-6 shadow-sm h-12 text-base font-bold border-2">Chủ Nhật</Button>
               <Button onClick={() => punchIn(settings.holidayMultiplier)} variant="secondary" className="rounded-full px-6 shadow-sm h-12 text-base font-bold">Ngày Lễ</Button>
             </>
