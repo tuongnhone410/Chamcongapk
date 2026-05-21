@@ -14,24 +14,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
-import { LogIn, Chrome, ShieldCheck, Info, LockKeyhole } from 'lucide-react';
+import { LogIn, Chrome } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showAdminDialog, setShowAdminDialog] = useState(false);
-  const [adminPin, setAdminPin] = useState('');
   
   const auth = useAuth();
   const router = useRouter();
@@ -54,10 +43,15 @@ export default function AuthPage() {
       }
       router.push('/');
     } catch (error: any) {
+      let errorMessage = 'Đã có lỗi xảy ra';
+      if (error.code === 'auth/invalid-credential') errorMessage = 'Sai email hoặc mật khẩu';
+      if (error.code === 'auth/user-not-found') errorMessage = 'Tài khoản không tồn tại';
+      if (error.code === 'auth/email-already-in-use') errorMessage = 'Email này đã được đăng ký';
+      
       toast({
         variant: 'destructive',
         title: 'Lỗi xác thực',
-        description: error.message,
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -76,50 +70,6 @@ export default function AuthPage() {
         title: 'Lỗi đăng nhập Google',
         description: error.message,
       });
-    }
-  };
-
-  const processAdminLogin = async () => {
-    if (!auth) return;
-
-    if (adminPin !== "2024") {
-      toast({
-        variant: 'destructive',
-        title: 'Sai mã PIN',
-        description: 'Vui lòng kiểm tra lại mã PIN truy cập Admin.',
-      });
-      return;
-    }
-
-    setShowAdminDialog(false);
-    setLoading(true);
-    const adminEmail = 'admin@timesnap.com';
-    const adminPass = 'admin123456';
-    
-    try {
-      await signInWithEmailAndPassword(auth, adminEmail, adminPass);
-      router.push('/');
-    } catch (error: any) {
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        try {
-          await createUserWithEmailAndPassword(auth, adminEmail, adminPass);
-          router.push('/');
-        } catch (signupError: any) {
-          toast({
-            variant: 'destructive',
-            title: 'Lỗi Admin',
-            description: 'Không thể khởi tạo tài khoản Admin demo.',
-          });
-        }
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Lỗi Admin',
-          description: error.message,
-        });
-      }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -188,83 +138,22 @@ export default function AuthPage() {
                   <span className="w-full border-t border-zinc-800" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-zinc-900 px-2 text-zinc-500">Hoặc truy cập nhanh</span>
+                  <span className="bg-zinc-900 px-2 text-zinc-500">Hoặc</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Button 
-                  variant="outline" 
-                  className="h-12 gap-2 font-bold border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-xl text-white"
-                  onClick={handleGoogleLogin}
-                >
-                  <Chrome className="w-4 h-4" />
-                  Google
-                </Button>
-                <Button 
-                  variant="secondary" 
-                  className="h-12 gap-2 font-black border-primary/20 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl"
-                  onClick={() => setShowAdminDialog(true)}
-                  disabled={loading}
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  ADMIN
-                </Button>
-              </div>
-
-              <Alert className="bg-primary/5 border-primary/20 mt-4">
-                <Info className="h-4 w-4 text-primary" />
-                <AlertDescription className="text-[10px] text-zinc-400 leading-tight">
-                  Tài khoản ADMIN là tài khoản dùng chung để trải nghiệm. Để bảo mật dữ liệu cá nhân, vui lòng sử dụng Google hoặc Email riêng.
-                </AlertDescription>
-              </Alert>
+              <Button 
+                variant="outline" 
+                className="w-full h-12 gap-2 font-bold border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-xl text-white"
+                onClick={handleGoogleLogin}
+              >
+                <Chrome className="w-4 h-4" />
+                Đăng nhập với Google
+              </Button>
             </div>
           </Tabs>
         </CardContent>
       </Card>
-
-      {/* Admin PIN Dialog */}
-      <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <LockKeyhole className="w-5 h-5 text-primary" />
-              Xác thực quyền Admin
-            </DialogTitle>
-            <DialogDescription className="text-zinc-400">
-              Vui lòng nhập mã PIN bảo mật để truy cập tài khoản dùng chung.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="pin" className="text-zinc-300 block mb-2">Mã PIN (Mặc định: 2024)</Label>
-            <Input 
-              id="pin"
-              type="password"
-              placeholder="••••"
-              value={adminPin}
-              onChange={(e) => setAdminPin(e.target.value)}
-              className="bg-zinc-800 border-zinc-700 text-white h-12 text-center text-2xl tracking-[1em]"
-              autoFocus
-              onKeyDown={(e) => e.key === 'Enter' && processAdminLogin()}
-            />
-          </div>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowAdminDialog(false)}
-              className="border-zinc-700 hover:bg-zinc-800 text-white"
-            >
-              Hủy
-            </Button>
-            <Button 
-              onClick={processAdminLogin}
-              className="font-bold"
-            >
-              Xác nhận
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
