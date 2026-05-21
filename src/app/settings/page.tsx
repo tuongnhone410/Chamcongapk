@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle, CalendarCheck } from 'lucide-react';
+import { ShieldCheck, Gift, Clock, Calculator, Skull, TrendingUp, AlertTriangle, CalendarCheck, PlusCircle, MinusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
@@ -44,49 +44,60 @@ export default function SettingsPage() {
         <p className="text-muted-foreground text-sm">Thiết lập chi tiết dựa trên hợp đồng lao động</p>
       </header>
 
-      {/* Quản lý phép năm */}
+      {/* Quản lý phép năm - Tích lũy hàng tháng */}
       <Card className="border-none shadow-sm border-l-4 border-l-green-500">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center space-x-2">
             <CalendarCheck className="w-5 h-5 text-green-500" />
-            <span>Quản Lý Phép Năm</span>
+            <span>Quản Lý Phép Năm (Tích Lũy)</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between bg-green-50 dark:bg-green-900/10 p-4 rounded-lg">
-            <div>
-              <p className="text-xs text-muted-foreground uppercase font-bold">Số ngày phép còn lại</p>
-              <p className="text-2xl font-black text-green-600">{settings.annualLeaveBalance} ngày</p>
+          <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-lg flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Số ngày phép hiện có</p>
+                <p className="text-3xl font-black text-green-600">{settings.annualLeaveBalance} <span className="text-sm font-normal">ngày</span></p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  className="h-9 bg-green-600 hover:bg-green-700 gap-2 shadow-sm"
+                  onClick={() => updateSettings({...settings, annualLeaveBalance: settings.annualLeaveBalance + 1})}
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  Tháng mới (+1)
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-9 border-destructive text-destructive hover:bg-destructive/5 gap-2"
+                  onClick={() => updateSettings({...settings, annualLeaveBalance: Math.max(0, settings.annualLeaveBalance - 1)})}
+                >
+                  <MinusCircle className="w-4 h-4" />
+                  Đã dùng (-1)
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="h-8"
-                onClick={() => updateSettings({...settings, annualLeaveBalance: settings.annualLeaveBalance + 1})}
-              >
-                +1 ngày
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="h-8 text-destructive"
-                onClick={() => updateSettings({...settings, annualLeaveBalance: Math.max(0, settings.annualLeaveBalance - 1)})}
-              >
-                Dùng 1 ngày
-              </Button>
+            <div className="text-[10px] text-muted-foreground bg-white/50 dark:bg-black/20 p-2 rounded border border-green-100 dark:border-green-900/30">
+              <p className="font-bold text-green-700 dark:text-green-400 mb-1 underline">Quy tắc hợp đồng:</p>
+              <ul className="list-disc pl-3 space-y-0.5">
+                <li>Tích lũy 1 ngày phép cho mỗi tháng làm việc.</li>
+                <li>Nghỉ phép năm <strong>không mất chuyên cần</strong>.</li>
+                <li>Nghỉ phép năm <strong>không bị trừ lương</strong> cơ bản.</li>
+              </ul>
             </div>
           </div>
+          
           <div className="space-y-2">
-            <Label>Điều chỉnh trực tiếp số phép</Label>
+            <Label className="text-xs">Điều chỉnh trực tiếp số dư</Label>
             <Input 
               type="number" 
+              className="h-9"
               value={getInputValue(settings.annualLeaveBalance)}
               onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
             />
-            <p className="text-[10px] text-muted-foreground italic">
-              * Nghỉ phép năm không mất chuyên cần và không mất lương cơ bản.
-            </p>
           </div>
         </CardContent>
       </Card>
