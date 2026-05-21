@@ -68,46 +68,48 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md shadow-2xl border-none">
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-2">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-950">
+      <Card className="w-full max-w-md shadow-2xl border-zinc-800 bg-zinc-900 text-white overflow-hidden">
+        <CardHeader className="text-center space-y-2 pb-2">
+          <div className="mx-auto w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-2 border border-primary/30">
             <LogIn className="w-8 h-8 text-primary" />
           </div>
-          <CardTitle className="text-3xl font-black tracking-tighter">TimeSnap</CardTitle>
-          <CardDescription>Đăng nhập để đồng bộ dữ liệu đám mây</CardDescription>
+          <CardTitle className="text-3xl font-black tracking-tighter text-white">TimeSnap</CardTitle>
+          <CardDescription className="text-zinc-400">Đăng nhập để đồng bộ dữ liệu đám mây</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login">Đăng nhập</TabsTrigger>
-              <TabsTrigger value="signup">Đăng ký</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-zinc-800 p-1">
+              <TabsTrigger value="login" className="data-[state=active]:bg-zinc-700 data-[state=active]:text-white">Đăng nhập</TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:bg-zinc-700 data-[state=active]:text-white">Đăng ký</TabsTrigger>
             </TabsList>
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-zinc-300">Email</Label>
                 <Input 
                   id="email" 
                   type="email" 
                   placeholder="name@example.com" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-primary h-12"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Mật khẩu</Label>
+                <Label htmlFor="password" className="text-zinc-300">Mật khẩu</Label>
                 <Input 
                   id="password" 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="bg-zinc-800 border-zinc-700 text-white focus-visible:ring-primary h-12"
                 />
               </div>
 
               <TabsContent value="login">
                 <Button 
-                  className="w-full h-12 font-bold" 
+                  className="w-full h-12 font-bold text-lg rounded-xl" 
                   onClick={() => handleEmailAuth('login')}
                   disabled={loading}
                 >
@@ -117,7 +119,7 @@ export default function AuthPage() {
               
               <TabsContent value="signup">
                 <Button 
-                  className="w-full h-12 font-bold" 
+                  className="w-full h-12 font-bold text-lg rounded-xl" 
                   onClick={() => handleEmailAuth('signup')}
                   disabled={loading}
                 >
@@ -127,16 +129,16 @@ export default function AuthPage() {
 
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
+                  <span className="w-full border-t border-zinc-800" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Hoặc tiếp tục với</span>
+                  <span className="bg-zinc-900 px-2 text-zinc-500">Hoặc tiếp tục với</span>
                 </div>
               </div>
 
               <Button 
                 variant="outline" 
-                className="w-full h-12 gap-3 font-bold border-2"
+                className="w-full h-12 gap-3 font-bold border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-xl"
                 onClick={handleGoogleLogin}
               >
                 <Chrome className="w-5 h-5" />
