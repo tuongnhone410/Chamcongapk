@@ -81,8 +81,8 @@ export default function SettingsPage() {
   };
 
   const labelClass = "text-[10px] font-black uppercase tracking-widest mb-1.5 block";
-  const inputClass = "h-11 font-bold bg-zinc-900 border-zinc-800 rounded-xl text-white text-sm";
-  const suffixClass = "absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-sm";
+  const inputClass = "h-11 font-bold bg-zinc-900 border-zinc-800 rounded-xl text-white text-sm focus:ring-primary";
+  const suffixClass = "absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-sm pointer-events-none";
 
   return (
     <div className="space-y-6 pb-24">
@@ -131,7 +131,7 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-zinc-500")}>Tỷ lệ BH (%)</Label>
+              <Label className={cn(labelClass, "text-zinc-500")}>Tỷ lệ bảo hiểm (%)</Label>
               <div className="relative">
                 <Input 
                   type="number" step="0.1"
@@ -171,7 +171,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-1">
-            <Label className={cn(labelClass, "text-zinc-500")}>Khấu trừ giờ nghỉ (giờ)</Label>
+            <Label className={cn(labelClass, "text-zinc-500")}>Khấu trừ giờ nghỉ hàng ngày (giờ)</Label>
             <Input 
               type="number" step="0.1"
               className={inputClass}
@@ -231,7 +231,7 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-green-500")}>Ngày nghỉ K.Phép</Label>
+              <Label className={cn(labelClass, "text-green-500")}>Ngày nghỉ không phép</Label>
               <Input type="number" className={cn(inputClass, "border-green-500/30")} value={localSettings.unexcusedAbsences === 0 ? "0" : localSettings.unexcusedAbsences.toString()} onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} />
             </div>
           </div>
@@ -247,22 +247,44 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            {['allowanceTechnical', 'allowanceResponsibility', 'allowancePosition', 'allowancePerformance'].map((key) => (
-              <div key={key} className="space-y-1">
-                <Label className={cn(labelClass, "text-zinc-500")}>{key === 'allowanceTechnical' ? 'Kỹ thuật' : key === 'allowanceResponsibility' ? 'Trách nhiệm' : key === 'allowancePosition' ? 'Chức vụ' : 'Hiệu suất'}</Label>
+            {[
+              { key: 'allowanceTechnical', label: 'Kỹ thuật' },
+              { key: 'allowanceResponsibility', label: 'Trách nhiệm' },
+              { key: 'allowancePosition', label: 'Chức vụ' },
+              { key: 'allowancePerformance', label: 'Hiệu suất' }
+            ].map((item) => (
+              <div key={item.key} className="space-y-1">
+                <Label className={cn(labelClass, "text-zinc-500")}>{item.label}</Label>
                 <div className="relative">
-                  <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings[key as keyof AppSettings] as number)} onChange={(e) => handleMoneyInput(key as keyof AppSettings, e.target.value)} />
+                  <Input 
+                    type="text" 
+                    className={cn(inputClass, "pr-10")} 
+                    value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} 
+                    onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} 
+                  />
                   <span className={suffixClass}>đ</span>
                 </div>
               </div>
             ))}
-            {['allowanceProduct', 'allowanceLunchPerShift', 'allowanceLunchOT', 'allowanceHousing', 'allowanceToxic', 'allowanceBonus', 'allowanceFuel'].map((key) => (
-              <div key={key} className="space-y-1">
-                <Label className={cn(labelClass, "text-zinc-500")}>
-                  {key === 'allowanceProduct' ? 'Sản phẩm' : key === 'allowanceLunchPerShift' ? 'Cơm/ca' : key === 'allowanceLunchOT' ? 'Cơm OT' : key === 'allowanceHousing' ? 'Nhà ở' : key === 'allowanceToxic' ? 'Độc hại' : key === 'allowanceBonus' ? 'Doanh thu' : 'Xăng xe'}
-                </Label>
+            
+            {[
+              { key: 'allowanceProduct', label: 'Tiền sản phẩm' },
+              { key: 'allowanceLunchPerShift', label: 'Cơm/ca' },
+              { key: 'allowanceLunchOT', label: 'Cơm OT (≥2h)' },
+              { key: 'allowanceHousing', label: 'Nhà ở' },
+              { key: 'allowanceToxic', label: 'Độc hại' },
+              { key: 'allowanceBonus', label: 'Thưởng/Doanh thu' },
+              { key: 'allowanceFuel', label: 'Xăng xe' }
+            ].map((item) => (
+              <div key={item.key} className="space-y-1">
+                <Label className={cn(labelClass, "text-zinc-500")}>{item.label}</Label>
                 <div className="relative">
-                  <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings[key as keyof AppSettings] as number)} onChange={(e) => handleMoneyInput(key as keyof AppSettings, e.target.value)} />
+                  <Input 
+                    type="text" 
+                    className={cn(inputClass, "pr-10")} 
+                    value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} 
+                    onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} 
+                  />
                   <span className={suffixClass}>đ</span>
                 </div>
               </div>

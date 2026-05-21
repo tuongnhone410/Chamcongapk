@@ -11,7 +11,8 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -144,11 +145,10 @@ export default function HistoryPage() {
 
   const handleBatchAdd = async () => {
     setIsProcessing(true);
-    // Đóng dialog ngay lập tức để tránh cảm giác bị treo
     setShowBatchDialog(false);
     try {
-      await batchAddSessions(batchData);
-      toast({ title: "Thành công", description: "Đang đồng bộ dữ liệu hàng loạt..." });
+      batchAddSessions(batchData);
+      toast({ title: "Thành công", description: "Đang xử lý dải ngày hàng loạt..." });
     } catch (error) {
       toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm hàng loạt." });
     } finally {
@@ -162,17 +162,16 @@ export default function HistoryPage() {
       return;
     }
     setIsProcessing(true);
-    // Đóng dialog ngay lập tức
     setShowMultiDialog(false);
     try {
-      await multiAddSessions({
+      multiAddSessions({
         dates: selectedDates,
         startTime: multiData.startTime,
         endTime: multiData.endTime,
         multiplier: multiData.multiplier
       });
       setSelectedDates([]);
-      toast({ title: "Thành công", description: `Đã thêm ${selectedDates.length} phiên làm việc.` });
+      toast({ title: "Thành công", description: `Đã xử lý ${selectedDates.length} phiên OT.` });
     } catch (error) {
       toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm dữ liệu." });
     } finally {
@@ -275,10 +274,10 @@ export default function HistoryPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle className="font-black text-xl text-red-500 flex items-center gap-2">
                   <AlertTriangle className="w-6 h-6" />
-                  XÁC NHẬN XÓA
+                  XÁC NHẬN XÓA TOÀN BỘ
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-zinc-400 font-bold">
-                  Hành động này sẽ xóa tất cả {completedSessions.length} phiên làm việc của tháng này. Có 10 giây để khôi phục.
+                  Hành động này sẽ xóa tất cả {completedSessions.length} phiên làm việc của tháng hiện tại. Bạn sẽ có 10 giây để nhấn nút KHÔI PHỤC trước khi dữ liệu bị xóa vĩnh viễn.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -298,6 +297,7 @@ export default function HistoryPage() {
             <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto z-[100]">
               <DialogHeader>
                 <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Thêm nhanh theo ngày</DialogTitle>
+                <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Lưu ý: Chỉ áp dụng cho những ngày chưa có dữ liệu</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-3 border border-zinc-800">
@@ -366,6 +366,7 @@ export default function HistoryPage() {
             <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[100]">
               <DialogHeader>
                 <DialogTitle className="font-black text-xl uppercase tracking-tighter">Đồng bộ hàng loạt</DialogTitle>
+                <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Nhập nhanh dải ngày liên tiếp</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
