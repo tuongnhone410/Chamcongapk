@@ -43,6 +43,9 @@
   }
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30;
+    /* Tối ưu hóa render trên mobile */
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
   }
 }
 
@@ -50,6 +53,18 @@
   letter-spacing: -0.04em;
 }
 
+/* Tối ưu shadow và giảm blur cho mobile */
 .card-shadow {
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Giảm cường độ blur để tăng FPS trên APK */
+.backdrop-blur-md {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.backdrop-blur-xl {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }

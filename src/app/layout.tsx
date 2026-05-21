@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Inter } from 'next/font/google';
@@ -8,7 +9,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { AttendanceProvider } from '@/providers/AttendanceProvider';
 import { useUser } from '@/firebase';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const inter = Inter({ subsets: ['latin', 'vietnamese'], variable: '--font-inter' });
 
@@ -16,23 +17,29 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
   const pathname = usePathname();
   const router = useRouter();
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user && pathname !== '/auth') {
-      router.push('/auth');
+    if (!loading) {
+      if (!user && pathname !== '/auth') {
+        router.push('/auth');
+      } else {
+        setIsReady(true);
+      }
     }
   }, [user, loading, pathname, router]);
 
-  if (loading) {
+  if (loading || (!user && pathname !== '/auth') || !isReady) {
+    if (pathname === '/auth') return <>{children}</>;
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950">
+        <div className="relative w-12 h-12">
+          <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+        </div>
+        <p className="mt-4 text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">TimeSnap Pro Loading...</p>
       </div>
     );
-  }
-
-  if (!user && pathname !== '/auth') {
-    return null;
   }
 
   return <>{children}</>;
@@ -53,13 +60,6 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="theme-color" content="#09090b" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="https://picsum.photos/seed/timesnap/192/192" />
-        
-        {/* OpenGraph for sharing */}
-        <meta property="og:title" content="TimeSnap Pro" />
-        <meta property="og:description" content="Hệ thống quản lý công và lương cá nhân chuyên nghiệp." />
-        <meta property="og:image" content="https://picsum.photos/seed/timesnap/1200/630" />
-        <meta property="og:type" content="website" />
       </head>
       <body className="font-body antialiased min-h-screen bg-background text-foreground pb-20 selection:bg-primary/30">
         <FirebaseClientProvider>

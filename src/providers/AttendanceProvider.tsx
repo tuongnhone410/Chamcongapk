@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { createContext, useMemo, useCallback, useState, useRef } from 'react';
+import React, { createContext, useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { WorkSession, AppSettings } from '@/lib/types';
 import { 
   useUser, 
@@ -93,11 +93,12 @@ const defaultSettings: AppSettings = {
   breakTimeDeduction: 1.5,
 };
 
+const VIETNAMESE_HOLIDAYS = ['1-1', '30-4', '1-5', '2-9', '3-9'];
+
 const isVietnameseHoliday = (date: Date) => {
   const d = date.getDate();
   const m = date.getMonth() + 1;
-  const fixedHolidays = ['1-1', '30-4', '1-5', '2-9', '3-9'];
-  return fixedHolidays.includes(`${d}-${m}`);
+  return VIETNAMESE_HOLIDAYS.includes(`${d}-${m}`);
 };
 
 export function AttendanceProvider({ children }: { children: React.ReactNode }) {
@@ -110,22 +111,23 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const sessionsRef = useMemo(() => {
+  // Memoize refs to stabilize Firebase queries
+  const sessionsQuery = useMemo(() => {
     if (!db || !user) return null;
     return query(collection(db, 'users', user.uid, 'sessions'), orderBy('checkIn', 'desc'));
-  }, [db, user]);
+  }, [db, user?.uid]);
 
-  const settingsRef = useMemo(() => {
+  const settingsDocRef = useMemo(() => {
     if (!db || !user) return null;
     return doc(db, 'users', user.uid, 'settings', 'current');
-  }, [db, user]);
+  }, [db, user?.uid]);
 
-  const { data: sessionsData, loading: sessionsLoading } = useCollection<WorkSession>(sessionsRef);
-  const { data: settingsData, loading: settingsLoading } = useDoc<AppSettings>(settingsRef);
+  const { data: sessionsData, loading: sessionsLoading } = useCollection<WorkSession>(sessionsQuery);
+  const { data: settingsData, loading: settingsLoading } = useDoc<AppSettings>(settingsDocRef);
 
   const sessions = useMemo(() => sessionsData || [], [sessionsData]);
   const settings = useMemo(() => ({ ...defaultSettings, ...settingsData }), [settingsData]);
-  const isLoaded = !sessionsLoading && !settingsLoading;
+  const isLoaded = useMemo(() => !sessionsLoading && !settingsLoading, [sessionsLoading, settingsLoading]);
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
@@ -198,23 +200,15 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     if (lines.length < 2) return;
 
     const batch = writeBatch(db);
-    const headers = lines[0].split(',');
-
     for (let i = 1; i < lines.length; i++) {
       if (!lines[i].trim()) continue;
       const values = lines[i].split(',');
-      
-      // Định dạng xuất: "ID, Vào làm, Ra làm, Hệ số, Phút, Lương, Ghi chú"
-      // index: 0:id, 1:checkIn, 2:checkOut, 3:multiplier, 4:mins, 5:salary, 6:note
-      
       const checkInStr = values[1]?.replace(/"/g, '');
       const checkOutStr = values[2]?.replace(/"/g, '');
       const multiplier = parseFloat(values[3]);
       const note = values[6]?.replace(/"/g, '') || '';
 
       if (checkInStr && checkOutStr) {
-        // Chuyển "dd/mm/yyyy, hh:mm:ss" thành định dạng ISO có thể parse
-        // Ở đây giả định định dạng là vi-VN chuẩn từ hàm export
         const parseDate = (str: string) => {
           try {
             const [datePart, timePart] = str.split(' ');
@@ -254,16 +248,13 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   }) => {
     if (!db || !user) return;
     const batch = writeBatch(db);
-    
     for (const date of data.dates) {
       const dateStr = date.toISOString().split('T')[0];
       const checkIn = new Date(`${dateStr}T${data.startTime}`);
       const checkOut = new Date(`${dateStr}T${data.endTime}`);
       const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-      
       const finalMultiplier = data.multiplier === -1 ? getAutoMultiplier(date) : data.multiplier;
       const salary = calculateSessionSalary(diffMinutes, finalMultiplier);
-      
       const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
       batch.set(newDocRef, {
         checkIn: checkIn.toISOString(),
@@ -290,25 +281,20 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const batch = writeBatch(db);
     const start = new Date(data.startDate);
     const end = new Date(data.endDate);
-    
     let current = new Date(start);
     while (current <= end) {
       if (data.excludeSundays && current.getDay() === 0 && data.multiplier === -1) {
         current.setDate(current.getDate() + 1);
         continue;
       }
-
       const dateStr = current.toISOString().split('T')[0];
       const hasSession = sessions.some(s => s.checkIn.startsWith(dateStr));
-
       if (!hasSession) {
         const checkIn = new Date(`${dateStr}T${data.startTime}`);
         const checkOut = new Date(`${dateStr}T${data.endTime}`);
         const actualDiff = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-        
         const finalMultiplier = data.multiplier === -1 ? getAutoMultiplier(current) : data.multiplier;
         const salary = calculateSessionSalary(actualDiff, finalMultiplier);
-        
         const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
         batch.set(newDocRef, {
           checkIn: checkIn.toISOString(),
@@ -322,48 +308,33 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       }
       current.setDate(current.getDate() + 1);
     }
-    
     await batch.commit();
   }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier]);
 
   const clearAllHistory = useCallback(async () => {
     if (!db || !user || sessions.length === 0) return;
-
     setDeletedSessionsCache([...sessions]);
     setCanUndo(true);
     setUndoCountdown(10);
-
     const batch = writeBatch(db);
     sessions.forEach(s => {
       const sRef = doc(db, 'users', user.uid, 'sessions', s.id);
       batch.delete(sRef);
     });
     await batch.commit();
-
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-
     countdownIntervalRef.current = setInterval(() => {
-      setUndoCountdown(prev => {
-        if (prev <= 1) {
-          if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setUndoCountdown(prev => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
-
     undoTimerRef.current = setTimeout(() => {
       setCanUndo(false);
       setDeletedSessionsCache([]);
-      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     }, 10000);
-
   }, [db, user, sessions]);
 
   const restoreHistory = useCallback(async () => {
     if (!db || !user || !canUndo || deletedSessionsCache.length === 0) return;
-
     const batch = writeBatch(db);
     deletedSessionsCache.forEach(s => {
       const sRef = doc(db, 'users', user.uid, 'sessions', s.id);
@@ -371,7 +342,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       batch.set(sRef, data);
     });
     await batch.commit();
-
     setCanUndo(false);
     setDeletedSessionsCache([]);
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
@@ -415,7 +385,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     let attendanceBonus = settings.allowanceAttendanceBase || 0;
     if (settings.unexcusedAbsences === 1) attendanceBonus -= 200000;
     else if (settings.unexcusedAbsences >= 2) attendanceBonus = 0;
-    attendanceBonus = Math.max(0, attendanceBonus);
 
     const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + 
                                   (settings.allowanceResponsibility || 0) + 
@@ -429,10 +398,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
                            (settings.allowanceToxic || 0) +
                            (settings.allowanceBonus || 0) +
                            (settings.allowanceProduct || 0) +
-                           (settings.allowanceTechnical || 0) +
-                           (settings.allowanceResponsibility || 0) +
-                           (settings.allowancePosition || 0) +
-                           (settings.allowancePerformance || 0) - deductionForAbsence;
+                           baseSubjectToAbsence - deductionForAbsence;
     
     const grossIncome = (settings.baseMonthlySalary || 0) + sessionSalary + otherAllowances + lunchAllowance + attendanceBonus;
     const insuranceAmount = ((settings.insuranceSalary || 0) * (settings.insuranceRate || 0)) / 100;
@@ -444,8 +410,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       totalOTMinutes,
       lunchAllowance,
       attendanceBonus,
-      productSalary: settings.allowanceProduct || 0,
-      otherAllowances: otherAllowances - (settings.allowanceProduct || 0),
       grossIncome,
       insuranceAmount,
       incomeTaxAmount,
@@ -475,6 +439,8 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     document.body.removeChild(link);
   }, [sessions]);
 
+  const isHoliday = useMemo(() => isVietnameseHoliday(new Date()), []);
+
   const contextValue = useMemo(() => ({
     sessions,
     activeSession,
@@ -496,12 +462,12 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     exportToCSV,
     calculateFullSalary,
     getAutoMultiplier,
-    isHoliday: isVietnameseHoliday(new Date())
+    isHoliday
   }), [
     sessions, activeSession, settings, isLoaded, punchIn, punchOut, 
     addManualSession, batchAddSessions, multiAddSessions, importFromCSV, updateSettings, deleteSession, updateSession, 
     clearAllHistory, restoreHistory, canUndo, undoCountdown,
-    exportToCSV, calculateFullSalary, getAutoMultiplier
+    exportToCSV, calculateFullSalary, getAutoMultiplier, isHoliday
   ]);
 
   return (
