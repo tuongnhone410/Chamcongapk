@@ -11,7 +11,7 @@ const defaultSettings: AppSettings = {
   hourlyRate: 50000,
   currency: '₫',
   darkMode: false,
-  payday: 1, // Mặc định là ngày 1 hàng tháng
+  payday: 1,
 };
 
 export function useAttendance() {
@@ -23,16 +23,35 @@ export function useAttendance() {
     const storedSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
     const storedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
 
-    if (storedSessions) setSessions(JSON.parse(storedSessions));
+    if (storedSessions) {
+      try {
+        setSessions(JSON.parse(storedSessions));
+      } catch (e) {
+        console.error("Failed to parse sessions", e);
+      }
+    }
+    
     if (storedSettings) {
-      const parsed = JSON.parse(storedSettings);
-      // Ensure payday exists for old data
-      if (parsed.payday === undefined) parsed.payday = 1;
-      setSettings(parsed);
+      try {
+        const parsed = JSON.parse(storedSettings);
+        if (parsed.payday === undefined) parsed.payday = 1;
+        setSettings(parsed);
+      } catch (e) {
+        console.error("Failed to parse settings", e);
+      }
     }
     
     setIsLoaded(true);
   }, []);
+
+  // Apply dark mode whenever settings change
+  useEffect(() => {
+    if (settings.darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [settings.darkMode]);
 
   const saveSessions = (newSessions: WorkSession[]) => {
     setSessions(newSessions);
@@ -42,11 +61,6 @@ export function useAttendance() {
   const updateSettings = (newSettings: AppSettings) => {
     setSettings(newSettings);
     localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(newSettings));
-    if (newSettings.darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
   };
 
   const activeSession = sessions.find(s => !s.checkOut);
