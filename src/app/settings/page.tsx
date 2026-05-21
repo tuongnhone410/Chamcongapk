@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -5,14 +6,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap, Skull, Briefcase, Star, Award, Shield, ShieldCheck, HomeIcon, Coffee } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Gift, Clock, Calculator, TrendingUp, AlertTriangle, CalendarCheck, Package, Zap, Skull, Briefcase, Star, Award, Shield, ShieldCheck, HomeIcon, Coffee, Save } from 'lucide-react';
 import { AppSettings } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
   const { settings, updateSettings, isLoaded } = useAttendance();
+  const [localSettings, setLocalSettings] = useState<AppSettings | null>(null);
+  const { toast } = useToast();
 
-  if (!isLoaded) return null;
+  useEffect(() => {
+    if (isLoaded && settings) {
+      setLocalSettings(settings);
+    }
+  }, [isLoaded, settings]);
+
+  if (!isLoaded || !localSettings) return null;
 
   const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
 
@@ -32,15 +44,15 @@ export default function SettingsPage() {
     
     if (key === 'baseMonthlySalary') {
       const calculatedHourly = Math.round(num / 208);
-      updateSettings({
-        ...settings,
+      setLocalSettings({
+        ...localSettings,
         baseMonthlySalary: num,
         hourlyRate: calculatedHourly,
-        insuranceSalary: settings.insuranceSalary || num 
+        insuranceSalary: localSettings.insuranceSalary || num 
       });
     } else {
-      updateSettings({
-        ...settings,
+      setLocalSettings({
+        ...localSettings,
         [key]: num
       });
     }
@@ -49,22 +61,45 @@ export default function SettingsPage() {
   const handlePercentInput = (key: keyof AppSettings, val: string) => {
     const numericValue = val.replace(/[^0-9.]/g, "");
     const num = numericValue === "" ? 0 : parseFloat(numericValue);
-    updateSettings({
-      ...settings,
+    setLocalSettings({
+      ...localSettings,
       [key]: num
     });
   };
 
   const handleNumberInput = (key: keyof AppSettings, val: string) => {
-    updateSettings({
-      ...settings,
+    setLocalSettings({
+      ...localSettings,
       [key]: val === "" ? 0 : parseFloat(val)
     });
   };
 
+  const handleSave = async () => {
+    try {
+      await updateSettings(localSettings);
+      toast({
+        title: "Thành công",
+        description: "Thông số lương đã được cập nhật an toàn.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể lưu cài đặt. Vui lòng thử lại.",
+      });
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave();
+      (e.target as HTMLElement).blur();
+    }
+  };
+
   const getNumberValue = (val: number) => val === 0 ? "" : val.toString();
 
-  const calculatedInsuranceMoney = Math.round(((settings.insuranceSalary || 0) * (settings.insuranceRate || 0)) / 100);
+  const calculatedInsuranceMoney = Math.round(((localSettings.insuranceSalary || 0) * (localSettings.insuranceRate || 0)) / 100);
 
   const getAbsenceColorClasses = (count: number) => {
     if (count === 0) return { text: "text-green-600", border: "border-l-green-500", input: "border-green-200 focus-visible:ring-green-500", bg: "bg-green-50" };
@@ -72,16 +107,25 @@ export default function SettingsPage() {
     return { text: "text-red-600", border: "border-l-red-600", input: "border-red-200 focus-visible:ring-red-500", bg: "bg-red-50" };
   };
 
-  const absenceColors = getAbsenceColorClasses(settings.unexcusedAbsences);
+  const absenceColors = getAbsenceColorClasses(localSettings.unexcusedAbsences);
 
   const labelClass = "flex items-center gap-1.5 h-6 font-bold text-xs uppercase tracking-wider mb-1.5";
   const inputClass = "h-11 font-bold";
 
   return (
-    <div className="space-y-6 pb-24">
-      <header>
-        <h1 className="text-2xl font-black font-headline tracking-tighter">CÀI ĐẶT LƯƠNG</h1>
-        <p className="text-zinc-500 text-sm font-medium">Thiết lập chi tiết dựa trên hợp đồng lao động</p>
+    <div className="space-y-6 pb-32">
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black font-headline tracking-tighter">CÀI ĐẶT LƯƠNG</h1>
+          <p className="text-zinc-500 text-sm font-medium">Thiết lập chi tiết dựa trên hợp đồng</p>
+        </div>
+        <Button 
+          onClick={handleSave} 
+          className="bg-primary hover:bg-primary/90 rounded-xl px-4 py-2 font-black gap-2 shadow-lg h-12"
+        >
+          <Save className="w-4 h-4" />
+          LƯU
+        </Button>
       </header>
 
       {/* Quản Lý Phép Năm */}
@@ -96,7 +140,7 @@ export default function SettingsPage() {
           <div className="bg-green-500/10 p-4 rounded-2xl flex items-center justify-between border border-green-500/20">
             <div>
               <p className="text-[10px] text-green-500/70 uppercase font-black tracking-widest">Số ngày phép hiện có</p>
-              <p className="text-3xl font-black text-green-500">{settings.annualLeaveBalance} <span className="text-xs font-normal opacity-70">ngày</span></p>
+              <p className="text-3xl font-black text-green-500">{localSettings.annualLeaveBalance} <span className="text-xs font-normal opacity-70">ngày</span></p>
             </div>
           </div>
           <div className="space-y-1">
@@ -105,8 +149,9 @@ export default function SettingsPage() {
               type="number" 
               className={cn(inputClass, "border-green-500/20 focus-visible:ring-green-500")}
               placeholder="0"
-              value={getNumberValue(settings.annualLeaveBalance)}
+              value={getNumberValue(localSettings.annualLeaveBalance)}
               onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
+              onKeyDown={handleKeyDown}
             />
           </div>
         </CardContent>
@@ -127,8 +172,9 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
-                value={formatMoneyDisplay(settings.baseMonthlySalary)}
+                value={formatMoneyDisplay(localSettings.baseMonthlySalary)}
                 onChange={(e) => handleMoneyInput('baseMonthlySalary', e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="0"
                 className={cn(inputClass, "pr-10 text-lg h-12 border-primary/20")}
               />
@@ -143,7 +189,7 @@ export default function SettingsPage() {
                 <Input 
                   readOnly
                   disabled
-                  value={formatMoneyDisplay(settings.hourlyRate)}
+                  value={formatMoneyDisplay(localSettings.hourlyRate)}
                   className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 cursor-not-allowed")}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
@@ -151,7 +197,7 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-1">
               <Label className={labelClass}>Ngày chốt lương</Label>
-              <Select value={settings.payday.toString()} onValueChange={(val) => updateSettings({...settings, payday: parseInt(val)})}>
+              <Select value={localSettings.payday.toString()} onValueChange={(val) => setLocalSettings({...localSettings, payday: parseInt(val)})}>
                 <SelectTrigger className={cn(inputClass, "border-zinc-800")}>
                   <SelectValue />
                 </SelectTrigger>
@@ -171,24 +217,24 @@ export default function SettingsPage() {
                   step="0.1"
                   placeholder="1.5"
                   className={cn(inputClass, "border-orange-500/20 pr-12")}
-                  value={getNumberValue(settings.breakTimeDeduction)}
+                  value={getNumberValue(localSettings.breakTimeDeduction)}
                   onChange={(e) => handleNumberInput('breakTimeDeduction', e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-xs uppercase">Giờ</span>
               </div>
-              <p className="text-[10px] text-zinc-500 italic mt-1 font-medium">VD: Nghỉ trưa 1h + Nghỉ chiều 0.5h = 1.5 giờ khấu trừ.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-4 pt-2">
-              {/* OT 1.5 */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-6 pt-2">
               <div className="space-y-1">
                 <Label className={cn(labelClass, "text-orange-500")}><Zap className="w-3.5 h-3.5" /> Hệ số Tăng ca</Label>
                 <Input 
                   type="number" 
                   step="0.1"
                   className={cn(inputClass, "border-orange-500/20")}
-                  value={getNumberValue(settings.overtimeMultiplier)}
+                  value={getNumberValue(localSettings.overtimeMultiplier)}
                   onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
               <div className="space-y-1">
@@ -196,53 +242,53 @@ export default function SettingsPage() {
                 <div className="relative">
                   <Input 
                     readOnly disabled
-                    value={formatMoneyDisplay(settings.hourlyRate * settings.overtimeMultiplier)}
+                    value={formatMoneyDisplay(localSettings.hourlyRate * localSettings.overtimeMultiplier)}
                     className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-orange-500/70")}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
                 </div>
               </div>
 
-              {/* OT 2.0 */}
               <div className="space-y-1">
                 <Label className={cn(labelClass, "text-blue-500")}><Calculator className="w-3.5 h-3.5" /> Hệ số Chủ Nhật</Label>
                 <Input 
                   type="number" 
                   step="0.1"
                   className={cn(inputClass, "border-blue-500/20")}
-                  value={getNumberValue(settings.sundayMultiplier)}
+                  value={getNumberValue(localSettings.sundayMultiplier)}
                   onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
               <div className="space-y-1">
-                <Label className={cn(labelClass, "text-zinc-500")}>Lương CN (x2.0) / Giờ</Label>
+                <Label className={cn(labelClass, "text-zinc-500")}>Lương CN / Giờ</Label>
                 <div className="relative">
                   <Input 
                     readOnly disabled
-                    value={formatMoneyDisplay(settings.hourlyRate * settings.sundayMultiplier)}
+                    value={formatMoneyDisplay(localSettings.hourlyRate * localSettings.sundayMultiplier)}
                     className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-blue-500/70")}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
                 </div>
               </div>
 
-              {/* OT 3.0 */}
               <div className="space-y-1">
                 <Label className={cn(labelClass, "text-red-500")}><Star className="w-3.5 h-3.5" /> Hệ số Ngày Lễ</Label>
                 <Input 
                   type="number" 
                   step="0.1"
                   className={cn(inputClass, "border-red-500/20")}
-                  value={getNumberValue(settings.holidayMultiplier)}
+                  value={getNumberValue(localSettings.holidayMultiplier)}
                   onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
               <div className="space-y-1">
-                <Label className={cn(labelClass, "text-zinc-500")}>Lương Lễ (x3.0) / Giờ</Label>
+                <Label className={cn(labelClass, "text-zinc-500")}>Lương Lễ / Giờ</Label>
                 <div className="relative">
                   <Input 
                     readOnly disabled
-                    value={formatMoneyDisplay(settings.hourlyRate * settings.holidayMultiplier)}
+                    value={formatMoneyDisplay(localSettings.hourlyRate * localSettings.holidayMultiplier)}
                     className={cn(inputClass, "bg-zinc-950/50 border-zinc-800 text-red-500/70")}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
@@ -268,8 +314,9 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
-                value={formatMoneyDisplay(settings.insuranceSalary)} 
+                value={formatMoneyDisplay(localSettings.insuranceSalary)} 
                 onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} 
+                onKeyDown={handleKeyDown}
                 className={inputClass}
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
@@ -277,22 +324,17 @@ export default function SettingsPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label className={labelClass}>Tỷ lệ đóng Bảo hiểm</Label>
+              <Label className={labelClass}>Tỷ lệ Bảo hiểm (%)</Label>
               <div className="relative">
                 <Input 
                   type="text" 
                   inputMode="decimal"
-                  value={formatPercentDisplay(settings.insuranceRate)} 
+                  value={formatPercentDisplay(localSettings.insuranceRate)} 
                   onChange={(e) => handlePercentInput('insuranceRate', e.target.value)} 
+                  onKeyDown={handleKeyDown}
                   className={inputClass}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">%</span>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label className={cn(labelClass, "text-primary")}>Tiền BH (10.5%)</Label>
-              <div className="h-11 flex items-center px-3 bg-zinc-950 border border-zinc-800 rounded-md font-black text-primary text-sm">
-                {calculatedInsuranceMoney.toLocaleString('vi-VN')} đ
               </div>
             </div>
             <div className="space-y-1">
@@ -301,8 +343,9 @@ export default function SettingsPage() {
                 <Input 
                   type="text" 
                   inputMode="decimal"
-                  value={formatPercentDisplay(settings.incomeTaxRate)} 
+                  value={formatPercentDisplay(localSettings.incomeTaxRate)} 
                   onChange={(e) => handlePercentInput('incomeTaxRate', e.target.value)} 
+                  onKeyDown={handleKeyDown}
                   className={cn(inputClass, "border-green-500/20")}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">%</span>
@@ -314,8 +357,9 @@ export default function SettingsPage() {
                 <Input 
                   type="text" 
                   inputMode="numeric"
-                  value={formatMoneyDisplay(settings.unionFee)} 
+                  value={formatMoneyDisplay(localSettings.unionFee)} 
                   onChange={(e) => handleMoneyInput('unionFee', e.target.value)} 
+                  onKeyDown={handleKeyDown}
                   className={inputClass}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
@@ -341,8 +385,9 @@ export default function SettingsPage() {
                 <Input 
                   type="text" 
                   inputMode="numeric"
-                  value={formatMoneyDisplay(settings.allowanceAttendanceBase)} 
+                  value={formatMoneyDisplay(localSettings.allowanceAttendanceBase)} 
                   onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} 
+                  onKeyDown={handleKeyDown}
                   className={inputClass}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
@@ -353,8 +398,9 @@ export default function SettingsPage() {
               <Input 
                 type="number" 
                 className={cn(inputClass, "border-2", absenceColors.input)}
-                value={getNumberValue(settings.unexcusedAbsences)} 
+                value={getNumberValue(localSettings.unexcusedAbsences)} 
                 onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} 
+                onKeyDown={handleKeyDown}
               />
             </div>
           </div>
@@ -369,7 +415,7 @@ export default function SettingsPage() {
             <span>Phụ Cấp & Tiền Cơm</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-x-4 gap-y-4">
+        <CardContent className="grid grid-cols-2 gap-x-4 gap-y-6">
           {[
             { key: 'allowanceTechnical', label: 'Kỹ thuật', icon: Briefcase },
             { key: 'allowanceResponsibility', label: 'Trách nhiệm', icon: Shield },
@@ -390,8 +436,9 @@ export default function SettingsPage() {
                 <Input 
                   type="text" 
                   inputMode="numeric"
-                  value={formatMoneyDisplay(settings[item.key as keyof AppSettings] as number)} 
+                  value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} 
                   onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} 
+                  onKeyDown={handleKeyDown}
                   className={inputClass}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">đ</span>
@@ -404,8 +451,9 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
-                value={formatMoneyDisplay(settings.allowanceFuel)} 
+                value={formatMoneyDisplay(localSettings.allowanceFuel)} 
                 onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} 
+                onKeyDown={handleKeyDown}
                 className={inputClass}
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-sm">đ</span>
@@ -413,6 +461,17 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Floating Save Button on Mobile */}
+      <div className="fixed bottom-20 left-0 right-0 px-4 py-3 flex justify-center pointer-events-none sm:hidden">
+        <Button 
+          onClick={handleSave} 
+          className="pointer-events-auto bg-primary hover:bg-primary/90 w-full max-w-sm h-14 rounded-2xl font-black text-lg gap-3 shadow-2xl border-b-4 border-black/20"
+        >
+          <Save className="w-6 h-6" />
+          LƯU TẤT CẢ THAY ĐỔI
+        </Button>
+      </div>
     </div>
   );
 }

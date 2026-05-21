@@ -43,7 +43,7 @@ export interface AttendanceContextType {
     endTime: string,
     multiplier: number
   }) => Promise<void>;
-  updateSettings: (newSettings: AppSettings) => void;
+  updateSettings: (newSettings: AppSettings) => Promise<void>;
   deleteSession: (id: string) => void;
   updateSession: (updated: WorkSession) => void;
   clearAllHistory: () => Promise<void>;
@@ -131,11 +131,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const effectiveMinutes = totalMinutes > breakMinutes ? totalMinutes - breakMinutes : totalMinutes;
 
     if (multiplier === 1.0) {
-      // Logic OT 1.5: Từ 8h30p (510p) trở đi mới tính OT, nhưng tính bắt đầu từ mốc 8h (480p)
       const otMinutes = effectiveMinutes > 510 ? effectiveMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
-      // Đối với OT 2.0, 3.0: Tính trên toàn bộ thời gian sau khi trừ nghỉ
       return (effectiveMinutes / 60) * settings.hourlyRate * multiplier;
     }
   }, [settings.hourlyRate, settings.overtimeMultiplier, settings.breakTimeDeduction]);
@@ -218,7 +216,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         multiplier: finalMultiplier,
         totalMinutes: diffMinutes,
         salary,
-        note: 'Tăng ca',
+        note: '',
         createdAt: new Date().toISOString()
       });
     }
@@ -251,7 +249,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       if (!hasSession) {
         const checkIn = new Date(`${dateStr}T${data.startTime}`);
         const checkOut = new Date(`${dateStr}T${data.endTime}`);
-        const diffMinutes = Math.floor((checkOut.getTime() - current.getTime()) / 60000); // Note: Fix usage of 'current'
         const actualDiff = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
         
         const finalMultiplier = data.multiplier === -1 ? getAutoMultiplier(current) : data.multiplier;
@@ -264,7 +261,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
           multiplier: finalMultiplier,
           totalMinutes: actualDiff,
           salary,
-          note: 'Hàng loạt',
+          note: '',
           createdAt: new Date().toISOString()
         });
       }
@@ -326,9 +323,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
   }, [db, user, canUndo, deletedSessionsCache]);
 
-  const updateSettings = useCallback((newSettings: AppSettings) => {
+  const updateSettings = useCallback(async (newSettings: AppSettings) => {
     if (!db || !user) return;
-    setDoc(doc(db, 'users', user.uid, 'settings', 'current'), newSettings, { merge: true });
+    await setDoc(doc(db, 'users', user.uid, 'settings', 'current'), newSettings, { merge: true });
   }, [db, user]);
 
   const deleteSession = useCallback((id: string) => {
@@ -346,7 +343,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
     
-    // Tổng giờ OT 1.5 của tháng
     const totalOTMinutes = periodSessions.reduce((acc, s) => {
       const effectiveMinutes = s.totalMinutes > breakMinutes ? s.totalMinutes - breakMinutes : s.totalMinutes;
       if (s.multiplier === 1.0) {

@@ -32,7 +32,8 @@ import {
   CheckSquare, 
   X,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
+  Save
 } from 'lucide-react';
 import { useState } from 'react';
 import { WorkSession } from '@/lib/types';
@@ -57,7 +58,6 @@ export default function HistoryPage() {
     isLoaded, 
     deleteSession, 
     updateSession, 
-    addManualSession, 
     batchAddSessions, 
     multiAddSessions, 
     clearAllHistory,
@@ -124,6 +124,14 @@ export default function HistoryPage() {
         totalMinutes: diffMinutes,
       });
       setEditingSession(null);
+      toast({ title: "Đã cập nhật", description: "Dữ liệu phiên làm việc đã được lưu." });
+    }
+  };
+
+  const handleKeyDownUpdate = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleUpdate();
+      (e.target as HTMLElement).blur();
     }
   };
 
@@ -264,18 +272,20 @@ export default function HistoryPage() {
                     <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ vào</Label>
                     <input 
                       type="time" 
-                      className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 outline-none focus:border-primary transition-colors text-white"
+                      className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 outline-none focus:border-primary transition-colors text-white w-full"
                       value={multiData.startTime}
                       onChange={(e) => setMultiData({...multiData, startTime: e.target.value})}
+                      onKeyDown={(e) => e.key === 'Enter' && handleMultiAdd()}
                     />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ ra</Label>
                     <input 
                       type="time" 
-                      className="bg-zinc-900 border border-orange-500/30 h-11 font-bold rounded-xl px-3 outline-none focus:border-orange-500 transition-colors text-orange-500"
+                      className="bg-zinc-900 border border-orange-500/30 h-11 font-bold rounded-xl px-3 outline-none focus:border-orange-500 transition-colors text-orange-500 w-full"
                       value={multiData.endTime}
                       onChange={(e) => setMultiData({...multiData, endTime: e.target.value})}
+                      onKeyDown={(e) => e.key === 'Enter' && handleMultiAdd()}
                     />
                   </div>
                 </div>
@@ -468,6 +478,7 @@ export default function HistoryPage() {
                                   className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white"
                                   value={formatToLocalDatetime(editingSession.checkIn)}
                                   onChange={(e) => setEditingSession({...editingSession, checkIn: new Date(e.target.value).toISOString()})}
+                                  onKeyDown={handleKeyDownUpdate}
                                 />
                               </div>
                               <div className="space-y-1.5">
@@ -477,6 +488,7 @@ export default function HistoryPage() {
                                   className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white"
                                   value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""}
                                   onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})}
+                                  onKeyDown={handleKeyDownUpdate}
                                 />
                               </div>
                               <div className="space-y-1.5">
@@ -498,13 +510,17 @@ export default function HistoryPage() {
                                   className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold"
                                   value={editingSession.note}
                                   onChange={(e) => setEditingSession({...editingSession, note: e.target.value})}
+                                  onKeyDown={handleKeyDownUpdate}
                                 />
                               </div>
                             </div>
                           )}
                           <DialogFooter className="gap-2">
                             <Button variant="outline" onClick={() => setEditingSession(null)} className="border-zinc-800 rounded-xl h-12 font-bold flex-1">Hủy</Button>
-                            <Button onClick={handleUpdate} className="bg-primary rounded-xl h-12 font-black shadow-xl flex-1">CẬP NHẬT</Button>
+                            <Button onClick={handleUpdate} className="bg-primary rounded-xl h-12 font-black shadow-xl flex-1 gap-2">
+                              <Save className="w-4 h-4" />
+                              CẬP NHẬT
+                            </Button>
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
