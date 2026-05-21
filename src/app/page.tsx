@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DigitalClock } from '@/components/attendance/DigitalClock';
@@ -130,7 +131,7 @@ export default function Home() {
 
   const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
   
-  // Logic hiển thị tiền OT "nhảy" theo thời gian thực (có trừ giờ nghỉ)
+  // Logic hiển thị tiền OT "nhảy" theo thời gian thực (đã trừ giờ nghỉ)
   const breakMinutes = settings.breakTimeDeduction * 60;
   const effectiveSessionMinutes = sessionMinutes > breakMinutes ? sessionMinutes - breakMinutes : sessionMinutes;
 
@@ -140,8 +141,10 @@ export default function Home() {
       : (effectiveSessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier)
     : 0;
 
-  const currentOTHours = activeSession && activeSession.multiplier === 1.0 && effectiveSessionMinutes > 510
-    ? ((effectiveSessionMinutes - 480) / 60).toFixed(2)
+  const currentOTHours = activeSession 
+    ? (activeSession.multiplier === 1.0 
+        ? (effectiveSessionMinutes > 510 ? ((effectiveSessionMinutes - 480) / 60).toFixed(2) : "0.00")
+        : (effectiveSessionMinutes / 60).toFixed(2))
     : "0.00";
 
   return (
@@ -198,11 +201,15 @@ export default function Home() {
                   <div className="pt-4 flex flex-col gap-2 items-center">
                     <span className={cn(
                       "text-[10px] font-black px-4 py-2 rounded-full border uppercase tracking-widest",
-                      effectiveSessionMinutes > 510 ? "bg-orange-500/10 text-orange-500 border-orange-500/20" : "bg-primary/10 text-primary border-primary/20"
+                      (activeSession.multiplier === 1.0 && effectiveSessionMinutes > 510) || activeSession.multiplier !== 1.0 
+                        ? "bg-orange-500/10 text-orange-500 border-orange-500/20" 
+                        : "bg-primary/10 text-primary border-primary/20"
                     )}>
-                      {effectiveSessionMinutes > 510 ? `TRẠNG THÁI: ĐANG TÍNH OT ${settings.overtimeMultiplier}` : "TRẠNG THÁI: GIỜ HÀNH CHÍNH"}
+                      {activeSession.multiplier === 1.0 
+                        ? (effectiveSessionMinutes > 510 ? `TRẠNG THÁI: ĐANG TÍNH OT ${settings.overtimeMultiplier}` : "TRẠNG THÁI: GIỜ HÀNH CHÍNH")
+                        : "TRẠNG THÁI: TĂNG CA ĐẶC BIỆT"}
                     </span>
-                    {effectiveSessionMinutes > 510 && (
+                    {((activeSession.multiplier === 1.0 && effectiveSessionMinutes > 510) || activeSession.multiplier !== 1.0) && (
                       <p className="text-xs font-bold text-orange-500 animate-bounce">+{currentOTHours}h OT (Đã trừ {settings.breakTimeDeduction}h nghỉ)</p>
                     )}
                   </div>

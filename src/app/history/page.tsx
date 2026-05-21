@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -70,15 +71,13 @@ export default function HistoryPage() {
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
   const { toast } = useToast();
   
-  // Helper to format date for datetime-local input correctly taking timezone into account
   const formatToLocalDatetime = (isoString: string | Date) => {
     if (!isoString) return "";
     const date = new Date(isoString);
-    const offset = date.getTimezoneOffset() * 60000; // offset in milliseconds
+    const offset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - offset).toISOString().slice(0, 16);
   };
 
-  // Trạng thái Thêm lẻ
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [manualData, setManualData] = useState({
     checkIn: formatToLocalDatetime(new Date()).slice(0, 11) + "07:00",
@@ -87,7 +86,6 @@ export default function HistoryPage() {
     note: ''
   });
 
-  // Trạng thái Thêm hàng loạt (Khoảng ngày)
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [batchData, setBatchData] = useState({
     startDate: new Date().toISOString().slice(0, 10),
@@ -98,7 +96,6 @@ export default function HistoryPage() {
     excludeSundays: true
   });
 
-  // Trạng thái Thêm theo ngày chọn (Lịch chọn nhiều ngày)
   const [showMultiDialog, setShowMultiDialog] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
   const [multiData, setMultiData] = useState({
@@ -115,7 +112,7 @@ export default function HistoryPage() {
 
   const formatHours = (mins: number) => {
     const h = Math.floor(mins / 60);
-    const m = mins % 60;
+    const m = Math.round(mins % 60);
     return `${h}h ${m}m`;
   };
 
@@ -204,7 +201,6 @@ export default function HistoryPage() {
           <p className="text-muted-foreground text-xs font-medium uppercase tracking-widest">Quản lý phiên làm việc</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {/* Nút Undo - Chỉ hiện khi có thể khôi phục */}
           {canUndo && (
             <Button 
               size="sm" 
@@ -217,7 +213,6 @@ export default function HistoryPage() {
             </Button>
           )}
 
-          {/* Nút Xóa tất cả */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button 
@@ -434,9 +429,12 @@ export default function HistoryPage() {
       ) : (
         <div className="space-y-4">
           {completedSessions.map((session) => {
+            const breakMinutes = settings.breakTimeDeduction * 60;
+            const effectiveMinutes = session.totalMinutes > breakMinutes ? session.totalMinutes - breakMinutes : session.totalMinutes;
+            
             const otMinutes = session.multiplier === 1.0 
-              ? (session.totalMinutes > 510 ? session.totalMinutes - 480 : 0) 
-              : session.totalMinutes;
+              ? (effectiveMinutes > 510 ? effectiveMinutes - 480 : 0) 
+              : effectiveMinutes;
             
             return (
               <Card key={session.id} className="border-none shadow-xl overflow-hidden group bg-zinc-900 rounded-[1.5rem] border border-zinc-800">

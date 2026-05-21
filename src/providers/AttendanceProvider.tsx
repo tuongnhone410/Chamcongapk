@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useMemo, useCallback, useState, useRef } from 'react';
@@ -127,15 +128,15 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const isLoaded = !sessionsLoading && !settingsLoading;
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
-    // Khấu trừ giờ nghỉ trước khi tính toán (chỉ khấu trừ nếu ca làm việc dài hơn thời gian nghỉ)
     const breakMinutes = settings.breakTimeDeduction * 60;
     const effectiveMinutes = totalMinutes > breakMinutes ? totalMinutes - breakMinutes : totalMinutes;
 
     if (multiplier === 1.0) {
-      // Logic OT 1.5: Sau khi trừ nghỉ, nếu giờ làm việc thực tế > 8h30p (510p) thì tính OT từ mốc 8h (480p)
+      // Logic OT 1.5: Từ 8h30p (510p) trở đi mới tính OT, nhưng tính bắt đầu từ mốc 8h (480p)
       const otMinutes = effectiveMinutes > 510 ? effectiveMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
+      // Đối với OT 2.0, 3.0: Tính trên toàn bộ thời gian sau khi trừ nghỉ
       return (effectiveMinutes / 60) * settings.hourlyRate * multiplier;
     }
   }, [settings.hourlyRate, settings.overtimeMultiplier, settings.breakTimeDeduction]);
@@ -276,12 +277,10 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const clearAllHistory = useCallback(async () => {
     if (!db || !user || sessions.length === 0) return;
 
-    // Lưu lại cache
     setDeletedSessionsCache([...sessions]);
     setCanUndo(true);
     setUndoCountdown(10);
 
-    // Xóa trong Firestore
     const batch = writeBatch(db);
     sessions.forEach(s => {
       const sRef = doc(db, 'users', user.uid, 'sessions', s.id);
@@ -289,11 +288,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     });
     await batch.commit();
 
-    // Hủy timer cũ nếu có
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
 
-    // Bắt đầu đếm ngược
     countdownIntervalRef.current = setInterval(() => {
       setUndoCountdown(prev => {
         if (prev <= 1) {
@@ -304,7 +301,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       });
     }, 1000);
 
-    // Sau 10s xóa cache vĩnh viễn
     undoTimerRef.current = setTimeout(() => {
       setCanUndo(false);
       setDeletedSessionsCache([]);
@@ -319,12 +315,11 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const batch = writeBatch(db);
     deletedSessionsCache.forEach(s => {
       const sRef = doc(db, 'users', user.uid, 'sessions', s.id);
-      const { id, ...data } = s; // Không lưu id vào nội dung doc vì id là tên file
+      const { id, ...data } = s;
       batch.set(sRef, data);
     });
     await batch.commit();
 
-    // Xóa trạng thái undo
     setCanUndo(false);
     setDeletedSessionsCache([]);
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
@@ -351,6 +346,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
     const breakMinutes = settings.breakTimeDeduction * 60;
     
+    // Tổng giờ OT 1.5 của tháng
     const totalOTMinutes = periodSessions.reduce((acc, s) => {
       const effectiveMinutes = s.totalMinutes > breakMinutes ? s.totalMinutes - breakMinutes : s.totalMinutes;
       if (s.multiplier === 1.0) {
