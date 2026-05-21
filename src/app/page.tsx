@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from '@/lib/utils';
 
 export default function Home() {
   const { 
@@ -65,6 +66,15 @@ export default function Home() {
   const formatCurrency = (val: number) => {
     return `${(val || 0).toLocaleString('vi-VN')}${settings.currency}`;
   };
+
+  // Logic màu sắc cho nghỉ không phép
+  const getAbsenceColorClasses = (count: number) => {
+    if (count === 0) return { text: "text-green-600", border: "border-l-green-500", icon: "text-green-500", bg: "bg-green-200" };
+    if (count === 1) return { text: "text-orange-600", border: "border-l-orange-500", icon: "text-orange-500", bg: "bg-orange-200" };
+    return { text: "text-red-600", border: "border-l-red-600", icon: "text-red-600", bg: "bg-red-200" };
+  };
+
+  const absenceColors = getAbsenceColorClasses(settings.unexcusedAbsences);
 
   return (
     <div className="space-y-6 pb-24">
@@ -219,37 +229,39 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm border-l-4 border-l-orange-500 overflow-hidden">
+        <Card className={cn("border-none shadow-sm border-l-4 overflow-hidden transition-all duration-300", absenceColors.border)}>
           <CardHeader className="p-3 pb-1">
             <CardTitle className="text-xs font-bold flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-orange-500" />
+              <AlertTriangle className={cn("w-4 h-4", absenceColors.icon)} />
               <span>Nghỉ K.Phép</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-2 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-black text-orange-600">{settings.unexcusedAbsences}</span>
+              <span className={cn("text-2xl font-black transition-colors duration-300", absenceColors.text)}>
+                {settings.unexcusedAbsences}
+              </span>
               <div className="flex gap-1">
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className="h-7 w-7 rounded-full border-orange-200"
+                  className={cn("h-7 w-7 rounded-full border-opacity-30", absenceColors.bg.replace('bg-', 'border-'))}
                   onClick={() => updateSettings({...settings, unexcusedAbsences: Math.max(0, settings.unexcusedAbsences - 1)})}
                 >
-                  <MinusCircle className="w-4 h-4 text-orange-600" />
+                  <MinusCircle className={cn("w-4 h-4", absenceColors.text)} />
                 </Button>
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className="h-7 w-7 rounded-full border-orange-200"
+                  className={cn("h-7 w-7 rounded-full border-opacity-30", absenceColors.bg.replace('bg-', 'border-'))}
                   onClick={() => updateSettings({...settings, unexcusedAbsences: settings.unexcusedAbsences + 1})}
                 >
-                  <PlusCircle className="w-4 h-4 text-orange-600" />
+                  <PlusCircle className={cn("w-4 h-4", absenceColors.text)} />
                 </Button>
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <Award className={salaryInfo.attendanceBonus > 0 ? "w-3.5 h-3.5 text-green-500" : "w-3.5 h-3.5 text-muted-foreground"} />
+              <Award className={cn("w-3.5 h-3.5", salaryInfo.attendanceBonus > 0 ? "text-green-500" : "text-muted-foreground")} />
               <span className="text-[10px] font-bold">Chuyên cần: {formatCurrency(salaryInfo.attendanceBonus)}</span>
             </div>
           </CardContent>
