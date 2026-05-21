@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -14,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
-import { LogIn, Chrome, AlertCircle } from 'lucide-react';
+import { LogIn, Chrome, AlertCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AuthPage() {
@@ -75,9 +76,6 @@ export default function AuthPage() {
         case 'auth/network-request-failed':
           errorMessage = 'Lỗi kết nối mạng, vui lòng kiểm tra lại';
           break;
-        case 'auth/operation-not-allowed':
-          errorMessage = 'Phương thức đăng nhập này chưa được bật trong Firebase';
-          break;
         default:
           errorMessage = `Lỗi: ${error.message} (${error.code})`;
       }
@@ -114,48 +112,47 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-950">
-      <Card className="w-full max-w-md shadow-2xl border-zinc-800 bg-zinc-900 text-white overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-950 text-white">
+      <Card className="w-full max-w-md shadow-2xl border-zinc-800 bg-zinc-900 text-white overflow-hidden rounded-2xl">
         <CardHeader className="text-center space-y-2 pb-2">
           <div className="mx-auto w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-2 border border-primary/30">
-            <LogIn className="w-8 h-8 text-primary" />
+            <Clock className="w-8 h-8 text-primary" />
           </div>
-          <CardTitle className="text-3xl font-black tracking-tighter text-white">TimeSnap</CardTitle>
-          <CardDescription className="text-zinc-400">Đăng nhập để đồng bộ dữ liệu đám mây</CardDescription>
+          <CardTitle className="text-3xl font-black tracking-tighter">TimeSnap</CardTitle>
+          <CardDescription className="text-zinc-400 font-medium">Đồng bộ ca làm việc lên đám mây</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 bg-zinc-800 p-1">
-              <TabsTrigger value="login" className="data-[state=active]:bg-zinc-700 data-[state=active]:text-white">Đăng nhập</TabsTrigger>
-              <TabsTrigger value="signup" className="data-[state=active]:bg-zinc-700 data-[state=active]:text-white">Đăng ký</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-zinc-800 p-1 rounded-xl">
+              <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-zinc-700 data-[state=active]:text-white font-bold">Đăng nhập</TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-zinc-700 data-[state=active]:text-white font-bold">Đăng ký</TabsTrigger>
             </TabsList>
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-zinc-300">Email</Label>
+                <Label htmlFor="email" className="text-zinc-300 font-bold ml-1 uppercase text-[10px] tracking-wider">Email công việc</Label>
                 <Input 
                   id="email" 
                   type="email" 
                   placeholder="admin@example.com" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-primary h-12"
+                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-primary h-12 rounded-xl"
                   disabled={loading}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-zinc-300">Mật khẩu</Label>
+                <Label htmlFor="password" className="text-zinc-300 font-bold ml-1 uppercase text-[10px] tracking-wider">Mật khẩu</Label>
                 <Input 
                   id="password" 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-zinc-800 border-zinc-700 text-white focus-visible:ring-primary h-12"
+                  className="bg-zinc-800 border-zinc-700 text-white focus-visible:ring-primary h-12 rounded-xl"
                   disabled={loading}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      const mode = document.querySelector('[data-state="active"]')?.getAttribute('data-value') as any || 'login';
-                      handleEmailAuth(mode);
+                      handleEmailAuth('login');
                     }
                   }}
                 />
@@ -163,47 +160,47 @@ export default function AuthPage() {
 
               <TabsContent value="login" className="mt-0">
                 <Button 
-                  className="w-full h-12 font-bold text-lg rounded-xl" 
+                  className="w-full h-14 font-black text-lg rounded-xl shadow-lg hover:scale-[1.02] transition-transform active:scale-95" 
                   onClick={() => handleEmailAuth('login')}
                   disabled={loading}
                 >
-                  {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+                  {loading ? 'Đang xác thực...' : 'VÀO HỆ THỐNG'}
                 </Button>
               </TabsContent>
               
               <TabsContent value="signup" className="mt-0">
                 <Button 
-                  className="w-full h-12 font-bold text-lg rounded-xl" 
+                  className="w-full h-14 font-black text-lg rounded-xl shadow-lg hover:scale-[1.02] transition-transform active:scale-95 bg-emerald-600 hover:bg-emerald-500" 
                   onClick={() => handleEmailAuth('signup')}
                   disabled={loading}
                 >
-                  {loading ? 'Đang xử lý...' : 'Tạo tài khoản'}
+                  {loading ? 'Đang khởi tạo...' : 'TẠO TÀI KHOẢN'}
                 </Button>
               </TabsContent>
 
-              <div className="relative my-6">
+              <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-zinc-800" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-zinc-900 px-2 text-zinc-500">Hoặc</span>
+                <div className="relative flex justify-center text-xs uppercase font-bold tracking-widest">
+                  <span className="bg-zinc-900 px-4 text-zinc-500">Hoặc tiếp tục với</span>
                 </div>
               </div>
 
               <Button 
                 variant="outline" 
-                className="w-full h-12 gap-2 font-bold border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-xl text-white"
+                className="w-full h-12 gap-3 font-bold border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-xl text-white transition-all"
                 onClick={handleGoogleLogin}
                 disabled={loading}
               >
-                <Chrome className="w-4 h-4" />
-                Đăng nhập với Google
+                <Chrome className="w-5 h-5" />
+                Google Account
               </Button>
               
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10 mt-4">
-                <AlertCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <p className="text-[10px] text-zinc-400 leading-tight">
-                  Lưu ý: Bạn cần tạo tài khoản (Signup) lần đầu trước khi có thể Đăng nhập. Dữ liệu của mỗi tài khoản là riêng biệt và bảo mật.
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10 mt-6">
+                <AlertCircle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  Lưu ý: Bạn cần <span className="text-white font-bold">Đăng ký (Signup)</span> lần đầu trước khi có thể đăng nhập. Tài khoản của bạn sẽ lưu trữ dữ liệu chấm công an toàn trên đám mây.
                 </p>
               </div>
             </div>
