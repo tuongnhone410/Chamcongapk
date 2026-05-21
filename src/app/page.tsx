@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { 
   LogOut, 
-  TrendingUp, 
   Wallet, 
   Calculator, 
   CalendarCheck, 
@@ -37,7 +36,6 @@ export default function Home() {
     isLoaded,
     updateSettings,
     calculateFullSalary,
-    getAutoMultiplier,
     isHoliday
   } = useAttendance();
 
@@ -97,7 +95,6 @@ export default function Home() {
   const salaryInfo = calculateFullSalary(periodSessions);
   const targetPercent = Math.min(Math.round((salaryInfo.netSalary / (settings.monthlyTarget || 1)) * 100), 100);
 
-  // Tính toán số giờ làm việc theo tuần và tháng
   const getWorkHours = (period: 'week' | 'month') => {
     const start = new Date();
     if (period === 'week') {
@@ -117,8 +114,8 @@ export default function Home() {
 
   const weekHours = getWorkHours('week');
   const monthHours = getWorkHours('month');
-  const weekTarget = 48; // 6 ngày x 8 tiếng
-  const monthTargetHours = 208; // 26 ngày x 8 tiếng
+  const weekTarget = 48; 
+  const monthTargetHours = 208; 
 
   const weekProgress = Math.min((weekHours / weekTarget) * 100, 100);
   const monthProgress = Math.min((monthHours / monthTargetHours) * 100, 100);
@@ -190,7 +187,7 @@ export default function Home() {
               className="w-full rounded-2xl h-20 text-xl font-black shadow-xl gap-3 group bg-primary hover:bg-primary/90 transition-all active:scale-95"
             >
               <PlayCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
-              BẮT ĐẦU VÀO CA
+              VÀO CA
             </Button>
           </div>
         ) : (
@@ -239,7 +236,7 @@ export default function Home() {
                   className="w-full h-16 rounded-xl shadow-lg flex items-center justify-center gap-3 text-lg font-black group"
                 >
                   <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                  KẾT THÚC CA LÀM
+                  RA CA
                 </Button>
               </div>
             </CardContent>
