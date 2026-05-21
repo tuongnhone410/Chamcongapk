@@ -1,28 +1,33 @@
 # Hướng dẫn đẩy code lên GitHub - TimeSnap Pro
 
-Dưới đây là các lệnh bạn cần chạy trong Terminal để đẩy mã nguồn lên GitHub. Hãy copy và chạy **từng dòng một**:
+Nếu bạn gặp lỗi khi push, hãy chạy các lệnh sau **theo đúng thứ tự, từng dòng một**:
 
+### 1. Xóa cấu hình cũ (để làm sạch)
 ```bash
-# 1. Khởi tạo Git
-git init
-
-# 2. Thêm tất cả các tệp vào hàng chờ
-git add .
-
-# 3. Tạo bản lưu đầu tiên
-git commit -m "Hoàn thiện app TimeSnap Pro"
-
-# 4. Đổi tên nhánh chính thành main
-git branch -M main
-
-# 5. Kết nối với kho lưu trữ GitHub (Nếu đã tồn tại thì chạy lệnh remove trước)
-# git remote remove origin
-git remote add origin https://github.com/tuongnhone410/Chamcongapk.git
-
-# 6. Đẩy mã nguồn lên GitHub
-git push -u origin main7
+git remote remove origin
 ```
 
-**Lưu ý:**
-- Nếu bước 5 báo lỗi "remote origin already exists", hãy chạy `git remote remove origin` rồi thử lại bước 5.
-- Đảm bảo bạn đã đăng nhập Git trên máy tính.
+### 2. Khởi tạo và Commit lại
+```bash
+git init
+git add .
+git commit -m "Hoàn thiện app TimeSnap Pro"
+git branch -M main
+```
+
+### 3. Kết nối với GitHub của bạn
+*Lưu ý: Đảm bảo bạn đã tạo Repository tên là "Chamcongapk" trên GitHub trước.*
+```bash
+git remote add origin https://github.com/tuongnhone410/Chamcongapk.git
+```
+
+### 4. Đẩy code lên
+```bash
+git push -u origin main
+```
+
+---
+**Mẹo nhỏ:**
+- Nếu nó hỏi Username/Password, hãy nhập tài khoản GitHub của bạn.
+- Nếu bạn dùng xác thực 2 lớp, hãy dùng **Personal Access Token** thay cho mật khẩu.
+- Để cài app vào máy: Mở link web -> Chọn "Thêm vào màn hình chính" (Add to Home Screen).
