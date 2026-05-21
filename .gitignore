@@ -31,6 +31,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
-# Capacitor
+# next.js config
+next-env.d.ts
+
+# capacitor
 /android
 /ios

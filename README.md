@@ -1,24 +1,21 @@
-
 # TimeSnap Pro - Hệ thống Chấm công & Quản lý Lương Cá nhân
 
-TimeSnap Pro là một ứng dụng web hiện đại (PWA) được thiết kế đặc biệt để giúp người lao động theo dõi giờ làm việc, tính toán lương tăng ca (OT) và quản lý thu nhập một cách chính xác.
+TimeSnap Pro là ứng dụng web hiện đại giúp người lao động theo dõi giờ làm việc và tính toán lương tăng ca (OT) chính xác.
 
-## 📱 Tại sao không có file .apk?
-Đây là ứng dụng công nghệ **PWA (Progressive Web App)**. Ưu điểm là:
-- Không tốn dung lượng máy để cài đặt file .apk.
-- Cập nhật tính năng mới tự động, không cần tải lại app.
-- Chạy được trên cả iPhone và Android.
+## 🚀 Tính năng
+- Chấm công thời gian thực.
+- Tính lương OT tự động (x1.5, x2.0, x3.0).
+- Biểu đồ giờ công trực quan.
+- Xuất báo cáo CSV.
 
-## 🚀 Hướng dẫn "Cài đặt" ứng dụng (Thay thế APK)
-1. **Bước 1**: Triển khai code này lên một dịch vụ hosting (như Firebase Hosting) để có đường link web.
-2. **Bước 2 (Trên Android)**: Mở link bằng Chrome -> Nhấn 3 chấm -> Chọn **"Cài đặt ứng dụng"** hoặc **"Thêm vào màn hình chính"**.
-3. **Bước 3 (Trên iPhone)**: Mở link bằng Safari -> Nhấn biểu tượng **Chia sẻ** -> Chọn **"Thêm vào màn hình chính"**.
+## 📱 Cách cài đặt vào điện thoại (PWA - Khuyên dùng)
+Đây là cách nhanh nhất để có "app" mà không cần file .apk:
+1. Mở link web trên trình duyệt điện thoại.
+2. Chọn **"Thêm vào màn hình chính"**.
+3. Icon app sẽ xuất hiện và dùng mượt như ứng dụng tải từ Store.
 
-## ✨ Tính năng nổi bật
-- **Chấm công thời gian thực**: Vào ca/Ra ca chỉ với một nút bấm.
-- **Tính toán OT thông minh**: Tự động nhận diện Ngày thường, Chủ nhật, Ngày lễ.
-- **Quản lý lịch sử**: Xem lại nhật ký theo Tháng/Năm, hỗ trợ lọc dữ liệu cũ.
-- **Nhập/Xuất dữ liệu**: Hỗ trợ xuất báo cáo ra file CSV và nhập lại dữ liệu dễ dàng.
+## 🛠 Cách tạo file .apk (Dành cho Android)
+Nếu bạn vẫn muốn file cài đặt truyền thống, hãy xem hướng dẫn chi tiết trong file `main.md`.
 
 ---
 **Thiết kế bởi TruongVanKhoa**
