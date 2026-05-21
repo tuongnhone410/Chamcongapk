@@ -83,6 +83,18 @@ export function useAttendance() {
     localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(newSettings));
   };
 
+  const calculateSessionSalary = (totalMinutes: number, multiplier: number) => {
+    if (multiplier === 1.0) {
+      // Ngày thường: 8h đầu (480p) không tính thêm tiền vì đã có lương cơ bản
+      // Sau 8h tính tăng ca x1.5
+      const otMinutes = Math.max(0, totalMinutes - 480);
+      return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
+    } else {
+      // Các ngày/ca đặc biệt: Tính toàn bộ theo hệ số (x1.5, x2.0, x3.0)
+      return (totalMinutes / 60) * settings.hourlyRate * multiplier;
+    }
+  };
+
   const activeSession = sessions.find(s => !s.checkOut);
 
   const punchIn = (multiplier: number = 1.0) => {
@@ -106,7 +118,7 @@ export function useAttendance() {
     const checkOut = new Date();
     const checkIn = new Date(activeSession.checkIn);
     const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-    const salary = (diffMinutes / 60) * settings.hourlyRate * activeSession.multiplier;
+    const salary = calculateSessionSalary(diffMinutes, activeSession.multiplier);
 
     const updatedSessions = sessions.map(s => 
       s.id === activeSession.id 
@@ -121,7 +133,9 @@ export function useAttendance() {
   };
 
   const updateSession = (updated: WorkSession) => {
-    saveSessions(sessions.map(s => s.id === updated.id ? updated : s));
+    // Khi cập nhật thủ công, cũng cần tính toán lại lương dựa trên logic 8h
+    const salary = calculateSessionSalary(updated.totalMinutes, updated.multiplier);
+    saveSessions(sessions.map(s => s.id === updated.id ? { ...updated, salary } : s));
   };
 
   const calculateFullSalary = (periodSessions: WorkSession[]) => {
