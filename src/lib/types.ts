@@ -13,4 +13,5 @@ export interface AppSettings {
   hourlyRate: number;
   currency: string;
   darkMode: boolean;
+  payday: number; // Ngày chốt lương (1-31)
 }

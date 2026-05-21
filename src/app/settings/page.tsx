@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Moon, Sun, Info } from 'lucide-react';
+import { DollarSign, Moon, Sun, Info, CalendarClock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function SettingsPage() {
@@ -15,8 +15,10 @@ export default function SettingsPage() {
 
   if (!isLoaded) return null;
 
+  const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       <header>
         <h1 className="text-2xl font-bold font-headline">Cài Đặt</h1>
         <p className="text-muted-foreground text-sm">Cá nhân hóa trải nghiệm theo dõi của bạn</p>
@@ -26,7 +28,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
             <DollarSign className="w-5 h-5 text-primary" />
-            <span>Thù Lao</span>
+            <span>Thù Lao & Chu Kỳ</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -44,9 +46,6 @@ export default function SettingsPage() {
                 {settings.currency}
               </span>
             </div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
-              Mức lương cơ bản dùng để tự động tính toán thu nhập
-            </p>
           </div>
 
           <div className="space-y-2">
@@ -62,10 +61,31 @@ export default function SettingsPage() {
                 <SelectItem value="₫">VND (₫)</SelectItem>
                 <SelectItem value="$">USD ($)</SelectItem>
                 <SelectItem value="€">EUR (€)</SelectItem>
-                <SelectItem value="£">GBP (£)</SelectItem>
-                <SelectItem value="¥">JPY (¥)</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center space-x-2">
+              <CalendarClock className="w-4 h-4" />
+              <span>Ngày Chốt Lương Hàng Tháng</span>
+            </Label>
+            <Select 
+              value={settings.payday.toString()} 
+              onValueChange={(val) => updateSettings({...settings, payday: parseInt(val)})}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Chọn ngày" />
+              </SelectTrigger>
+              <SelectContent>
+                {daysInMonth.map(day => (
+                  <SelectItem key={day} value={day.toString()}>Ngày {day}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
+              Kỳ lương sẽ được tính từ ngày này tháng trước đến trước ngày này tháng sau.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -104,7 +124,7 @@ export default function SettingsPage() {
 
       <div className="pt-10 text-center">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30">
-          TimeSnap v1.0.0
+          TimeSnap v1.1.0
         </p>
       </div>
     </div>

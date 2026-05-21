@@ -11,6 +11,7 @@ const defaultSettings: AppSettings = {
   hourlyRate: 50000,
   currency: '₫',
   darkMode: false,
+  payday: 1, // Mặc định là ngày 1 hàng tháng
 };
 
 export function useAttendance() {
@@ -23,7 +24,12 @@ export function useAttendance() {
     const storedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
 
     if (storedSessions) setSessions(JSON.parse(storedSessions));
-    if (storedSettings) setSettings(JSON.parse(storedSettings));
+    if (storedSettings) {
+      const parsed = JSON.parse(storedSettings);
+      // Ensure payday exists for old data
+      if (parsed.payday === undefined) parsed.payday = 1;
+      setSettings(parsed);
+    }
     
     setIsLoaded(true);
   }, []);
