@@ -84,6 +84,7 @@ export default function SettingsPage() {
 
   const labelClass = "text-[10px] font-black uppercase tracking-widest mb-1.5 block";
   const inputClass = "h-11 font-bold bg-zinc-900 border-zinc-800 rounded-xl text-white";
+  const currencyClass = "absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 font-bold text-sm";
 
   return (
     <div className="space-y-6 pb-24">
@@ -113,9 +114,9 @@ export default function SettingsPage() {
                 type="text" 
                 value={formatMoneyDisplay(localSettings.baseMonthlySalary)}
                 onChange={(e) => handleMoneyInput('baseMonthlySalary', e.target.value)}
-                className={cn(inputClass, "text-lg")}
+                className={cn(inputClass, "text-lg pr-12")}
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 font-bold">đ</span>
+              <span className={currencyClass}>đ</span>
             </div>
           </div>
           
@@ -127,9 +128,9 @@ export default function SettingsPage() {
                   type="text" 
                   value={formatMoneyDisplay(localSettings.insuranceSalary)}
                   onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)}
-                  className={inputClass}
+                  className={cn(inputClass, "pr-10")}
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
@@ -151,9 +152,9 @@ export default function SettingsPage() {
                   type="text" 
                   value={formatMoneyDisplay(localSettings.unionFee)}
                   onChange={(e) => handleMoneyInput('unionFee', e.target.value)}
-                  className={inputClass}
+                  className={cn(inputClass, "pr-10")}
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 font-bold">đ</span>
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
@@ -229,9 +230,9 @@ export default function SettingsPage() {
                   type="text" 
                   value={formatMoneyDisplay(localSettings.allowanceAttendanceBase)}
                   onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)}
-                  className={inputClass}
+                  className={cn(inputClass, "pr-10")}
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 font-bold">đ</span>
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
@@ -262,78 +263,78 @@ export default function SettingsPage() {
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-blue-500")}>Kỹ thuật (Trừ KP)</Label>
               <div className="relative">
-                <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowanceTechnical)} onChange={(e) => handleMoneyInput('allowanceTechnical', e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceTechnical)} onChange={(e) => handleMoneyInput('allowanceTechnical', e.target.value)} />
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-blue-500")}>Trách nhiệm (Trừ KP)</Label>
               <div className="relative">
-                <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowanceResponsibility)} onChange={(e) => handleMoneyInput('allowanceResponsibility', e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceResponsibility)} onChange={(e) => handleMoneyInput('allowanceResponsibility', e.target.value)} />
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-blue-500")}>Chức vụ (Trừ KP)</Label>
               <div className="relative">
-                <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowancePosition)} onChange={(e) => handleMoneyInput('allowancePosition', e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowancePosition)} onChange={(e) => handleMoneyInput('allowancePosition', e.target.value)} />
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-blue-500")}>Hiệu suất (Trừ KP)</Label>
               <div className="relative">
-                <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowancePerformance)} onChange={(e) => handleMoneyInput('allowancePerformance', e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowancePerformance)} onChange={(e) => handleMoneyInput('allowancePerformance', e.target.value)} />
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Tiền sản phẩm</Label>
               <div className="relative">
-                <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowanceProduct)} onChange={(e) => handleMoneyInput('allowanceProduct', e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceProduct)} onChange={(e) => handleMoneyInput('allowanceProduct', e.target.value)} />
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Tiền cơm/ca</Label>
               <div className="relative">
-                <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowanceLunchPerShift)} onChange={(e) => handleMoneyInput('allowanceLunchPerShift', e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceLunchPerShift)} onChange={(e) => handleMoneyInput('allowanceLunchPerShift', e.target.value)} />
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Cơm thêm (OT ≥ 2h)</Label>
               <div className="relative">
-                <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowanceLunchOT)} onChange={(e) => handleMoneyInput('allowanceLunchOT', e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceLunchOT)} onChange={(e) => handleMoneyInput('allowanceLunchOT', e.target.value)} />
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Nhà ở</Label>
               <div className="relative">
-                <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowanceHousing)} onChange={(e) => handleMoneyInput('allowanceHousing', e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceHousing)} onChange={(e) => handleMoneyInput('allowanceHousing', e.target.value)} />
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-orange-500")}>Độc hại</Label>
               <div className="relative">
-                <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowanceToxic)} onChange={(e) => handleMoneyInput('allowanceToxic', e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceToxic)} onChange={(e) => handleMoneyInput('allowanceToxic', e.target.value)} />
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-green-500")}>Doanh thu</Label>
               <div className="relative">
-                <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowanceBonus)} onChange={(e) => handleMoneyInput('allowanceBonus', e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceBonus)} onChange={(e) => handleMoneyInput('allowanceBonus', e.target.value)} />
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Xăng xe</Label>
               <div className="relative">
-                <Input type="text" className={inputClass} value={formatMoneyDisplay(localSettings.allowanceFuel)} onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px] font-bold">đ</span>
+                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceFuel)} onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} />
+                <span className={currencyClass}>đ</span>
               </div>
             </div>
           </div>
