@@ -18,10 +18,12 @@ export default function SettingsPage() {
   const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
 
   const formatMoneyDisplay = (val: number) => {
+    if (val === 0) return "";
     return val.toLocaleString('vi-VN') + " đ";
   };
 
   const formatPercentDisplay = (val: number) => {
+    if (val === 0) return "";
     return val.toString() + " %";
   };
 
@@ -61,7 +63,7 @@ export default function SettingsPage() {
     });
   };
 
-  const getNumberValue = (val: number) => val.toString();
+  const getNumberValue = (val: number) => val === 0 ? "" : val.toString();
 
   const calculatedInsuranceMoney = Math.round((settings.insuranceSalary * settings.insuranceRate) / 100);
 
@@ -122,6 +124,7 @@ export default function SettingsPage() {
             <Input 
               type="number" 
               className="h-9"
+              placeholder="0"
               value={getNumberValue(settings.annualLeaveBalance)}
               onChange={(e) => handleNumberInput('annualLeaveBalance', e.target.value)}
             />
@@ -145,7 +148,7 @@ export default function SettingsPage() {
                 inputMode="numeric"
                 value={formatMoneyDisplay(settings.baseMonthlySalary)}
                 onChange={(e) => handleMoneyInput('baseMonthlySalary', e.target.value)}
-                placeholder="Ví dụ: 5.730.000 đ"
+                placeholder="0 đ"
                 className="pr-10 font-medium"
               />
               <Calculator className="absolute right-3 top-3 w-4 h-4 text-muted-foreground opacity-50" />
@@ -157,6 +160,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
+                placeholder="0 đ"
                 value={formatMoneyDisplay(settings.hourlyRate)}
                 onChange={(e) => handleMoneyInput('hourlyRate', e.target.value)}
                 className="font-medium"
@@ -183,6 +187,7 @@ export default function SettingsPage() {
                 <Input 
                   type="number" 
                   step="0.1"
+                  placeholder="0"
                   value={getNumberValue(settings.overtimeMultiplier)}
                   onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)}
                 />
@@ -192,6 +197,7 @@ export default function SettingsPage() {
                 <Input 
                   type="number" 
                   step="0.1"
+                  placeholder="0"
                   value={getNumberValue(settings.sundayMultiplier)}
                   onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)}
                 />
@@ -201,6 +207,7 @@ export default function SettingsPage() {
                 <Input 
                   type="number" 
                   step="0.1"
+                  placeholder="0"
                   value={getNumberValue(settings.holidayMultiplier)}
                   onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)}
                 />
@@ -223,7 +230,7 @@ export default function SettingsPage() {
             <Input 
               type="text" 
               inputMode="numeric"
-              placeholder="Ví dụ: 6.017.000 đ"
+              placeholder="0 đ"
               value={formatMoneyDisplay(settings.insuranceSalary)} 
               onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} 
               className="font-medium"
@@ -235,6 +242,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="decimal"
+                placeholder="0 %"
                 value={formatPercentDisplay(settings.insuranceRate)} 
                 onChange={(e) => handlePercentInput('insuranceRate', e.target.value)} 
                 className="font-medium"
@@ -243,7 +251,7 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label className="text-primary font-bold">Tiền BH phải đóng (10.5%)</Label>
               <div className="h-10 flex items-center px-3 bg-muted/50 rounded-md border font-bold text-primary">
-                {formatMoneyDisplay(calculatedInsuranceMoney)}
+                {calculatedInsuranceMoney.toLocaleString('vi-VN')} đ
               </div>
             </div>
           </div>
@@ -254,7 +262,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="decimal"
-                placeholder="Ví dụ: 5 %"
+                placeholder="0 %"
                 value={formatPercentDisplay(settings.incomeTaxRate)} 
                 onChange={(e) => handlePercentInput('incomeTaxRate', e.target.value)} 
                 className="font-medium border-destructive/30"
@@ -268,6 +276,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
+                placeholder="0 đ"
                 value={formatMoneyDisplay(settings.unionFee)} 
                 onChange={(e) => handleMoneyInput('unionFee', e.target.value)} 
                 className="font-medium"
@@ -294,6 +303,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
+                placeholder="0 đ"
                 value={formatMoneyDisplay(settings.allowanceAttendanceBase)} 
                 onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} 
                 className="font-medium"
@@ -332,7 +342,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
-                placeholder="2.300.000 - 3.000.000 đ"
+                placeholder="0 đ"
                 value={formatMoneyDisplay(settings.allowanceProduct)} 
                 onChange={(e) => handleMoneyInput('allowanceProduct', e.target.value)} 
                 className="font-medium"
@@ -343,6 +353,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
+                placeholder="0 đ"
                 value={formatMoneyDisplay(settings.allowanceLunchPerShift)} 
                 onChange={(e) => handleMoneyInput('allowanceLunchPerShift', e.target.value)} 
                 className="font-medium"
@@ -353,6 +364,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
+                placeholder="0 đ"
                 value={formatMoneyDisplay(settings.allowanceLunchOT)} 
                 onChange={(e) => handleMoneyInput('allowanceLunchOT', e.target.value)} 
                 className="font-medium"
@@ -363,6 +375,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
+                placeholder="0 đ"
                 value={formatMoneyDisplay(settings.allowanceHousing)} 
                 onChange={(e) => handleMoneyInput('allowanceHousing', e.target.value)} 
                 className="font-medium"
@@ -375,6 +388,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
+                placeholder="0 đ"
                 value={formatMoneyDisplay(settings.allowanceToxic)} 
                 onChange={(e) => handleMoneyInput('allowanceToxic', e.target.value)} 
                 className="font-medium"
@@ -387,6 +401,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
+                placeholder="0 đ"
                 value={formatMoneyDisplay(settings.allowanceBonus)} 
                 onChange={(e) => handleMoneyInput('allowanceBonus', e.target.value)} 
                 className="font-medium"
@@ -397,6 +412,7 @@ export default function SettingsPage() {
               <Input 
                 type="text" 
                 inputMode="numeric"
+                placeholder="0 đ"
                 value={formatMoneyDisplay(settings.allowanceFuel)} 
                 onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} 
                 className="font-medium"
