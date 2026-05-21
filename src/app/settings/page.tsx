@@ -65,6 +65,8 @@ export default function SettingsPage() {
 
   const getNumberValue = (val: number) => (val === 0 ? "" : val.toString());
 
+  const calculatedInsuranceMoney = Math.round((settings.insuranceSalary * settings.insuranceRate) / 100);
+
   return (
     <div className="space-y-6 pb-24">
       <header>
@@ -206,6 +208,15 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
+              <Label className="text-primary font-bold">Tiền BH phải đóng (10.5%)</Label>
+              <div className="h-10 flex items-center px-3 bg-muted/50 rounded-md border font-bold text-primary">
+                {formatMoneyDisplay(calculatedInsuranceMoney)}
+              </div>
+            </div>
+          </div>
+          
+          <div className="pt-2 border-t mt-4">
+            <div className="space-y-2 max-w-[50%]">
               <Label className="text-destructive font-bold">Tỷ lệ Thuế TNCN (%)</Label>
               <Input 
                 type="text" 
@@ -217,6 +228,7 @@ export default function SettingsPage() {
               />
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Đoàn phí (Cố định)</Label>
