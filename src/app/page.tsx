@@ -75,19 +75,14 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [activeSession]);
 
-  // Tính toán dữ liệu biểu đồ 1 tuần và tổng tháng
   const analyticsData = useMemo(() => {
     if (!isLoaded) return null;
-
     const now = new Date();
-    
-    // 1. Tính tổng giờ từ đầu tháng đến nay
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthSessions = sessions.filter(s => new Date(s.checkIn) >= startOfMonth && s.checkOut);
     const totalMonthMinutes = monthSessions.reduce((acc, s) => acc + (s.totalMinutes || 0), 0);
     const totalMonthHours = (totalMonthMinutes / 60).toFixed(1);
 
-    // 2. Dữ liệu biểu đồ 7 ngày gần nhất
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(now.getDate() - (6 - i));
@@ -135,7 +130,17 @@ export default function Home() {
   if (!isLoaded || !analyticsData || !salaryInfo) return null;
 
   const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
-  const currentOTSalary = activeSession ? (activeSession.multiplier !== 1.0 ? (sessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier : (sessionMinutes > 480 ? ((sessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier : 0)) : 0;
+  
+  // Tính tiền OT 1.5 đang nhảy trực tiếp
+  const currentOTSalary = activeSession 
+    ? (activeSession.multiplier === 1.0 
+      ? (sessionMinutes > 510 ? ((sessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier : 0)
+      : (sessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier)
+    : 0;
+
+  const currentOTHours = activeSession && activeSession.multiplier === 1.0 && sessionMinutes > 510
+    ? ((sessionMinutes - 480) / 60).toFixed(2)
+    : "0.00";
 
   return (
     <div className="space-y-6 pb-24">
@@ -157,7 +162,7 @@ export default function Home() {
           <div className="w-full space-y-4">
             <div className="text-center space-y-1">
               <p className="text-base font-black text-primary uppercase">
-                {isHoliday ? "Ngày Lễ (x3.0)" : new Date().getDay() === 0 ? "Chủ Nhật (x2.0)" : "Ngày Thường (Tự động OT x1.5)"}
+                {isHoliday ? "Ngày Lễ (x3.0)" : new Date().getDay() === 0 ? "Chủ Nhật (x2.0)" : "Ngày Thường (Tự động OT x1.5 sau 8h30)"}
               </p>
             </div>
             <Button 
@@ -187,13 +192,16 @@ export default function Home() {
                   <div className="text-7xl font-black text-white font-mono tracking-tighter tabular-nums leading-none">
                     {elapsedTime}
                   </div>
-                  <div className="pt-4">
+                  <div className="pt-4 flex flex-col gap-2 items-center">
                     <span className={cn(
                       "text-[10px] font-black px-4 py-2 rounded-full border uppercase tracking-widest",
-                      sessionMinutes > 480 ? "bg-orange-500/10 text-orange-500 border-orange-500/20" : "bg-primary/10 text-primary border-primary/20"
+                      sessionMinutes > 510 ? "bg-orange-500/10 text-orange-500 border-orange-500/20" : "bg-primary/10 text-primary border-primary/20"
                     )}>
-                      {sessionMinutes > 480 ? "TRẠNG THÁI: ĐANG TÍNH OT" : "TRẠNG THÁI: GIỜ HÀNH CHÍNH"}
+                      {sessionMinutes > 510 ? "TRẠNG THÁI: ĐANG TÍNH OT 1.5" : "TRẠNG THÁI: GIỜ HÀNH CHÍNH"}
                     </span>
+                    {sessionMinutes > 510 && (
+                      <p className="text-xs font-bold text-orange-500 animate-bounce">+{currentOTHours}h OT</p>
+                    )}
                   </div>
                 </div>
 
@@ -203,7 +211,7 @@ export default function Home() {
                     <p className="text-xl font-black text-white">{new Date(activeSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-zinc-500 uppercase font-black mb-1">LƯƠNG OT TẠM TÍNH</p>
+                    <p className="text-[10px] text-zinc-500 uppercase font-black mb-1">TIỀN OT TỰ NHẢY</p>
                     <p className="text-xl font-black text-green-500">+{formatCurrency(currentOTSalary)}</p>
                   </div>
                 </div>
@@ -222,26 +230,33 @@ export default function Home() {
         )}
       </div>
 
-      <Card className="border-none shadow-2xl bg-zinc-900 rounded-[2rem] overflow-hidden border border-zinc-800">
-        <CardContent className="p-6 flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-[10px] uppercase font-black text-zinc-500 tracking-widest">TỔNG GIỜ CÔNG THÁNG NÀY</p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-black text-white">{analyticsData.totalMonthHours}</span>
-              <span className="text-sm font-bold text-zinc-600 uppercase">GIỜ</span>
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="border-none shadow-2xl bg-zinc-900 rounded-[2rem] overflow-hidden border border-zinc-800">
+          <CardContent className="p-4 flex flex-col justify-between">
+            <p className="text-[9px] uppercase font-black text-zinc-500 tracking-widest mb-2">TỔNG GIỜ CÔNG THÁNG</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-black text-white">{analyticsData.totalMonthHours}</span>
+              <span className="text-[9px] font-bold text-zinc-600 uppercase">GIỜ</span>
             </div>
-          </div>
-          <div className="bg-primary/10 p-4 rounded-2xl border border-primary/20">
-            <Timer className="w-8 h-8 text-primary" />
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-2xl bg-zinc-900 rounded-[2rem] overflow-hidden border border-zinc-800">
+          <CardContent className="p-4 flex flex-col justify-between">
+            <p className="text-[9px] uppercase font-black text-orange-500 tracking-widest mb-2">TỔNG GIỜ OT 1.5</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-black text-orange-500">{(salaryInfo.totalOTMinutes / 60).toFixed(1)}</span>
+              <span className="text-[9px] font-bold text-zinc-600 uppercase">GIỜ</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card className="border-zinc-800 bg-zinc-900 shadow-xl rounded-[2rem] overflow-hidden border">
         <CardHeader className="p-6 pb-2">
           <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-zinc-400">
             <BarChart3 className="w-4 h-4 text-primary" />
-            Biểu đồ giờ công 7 ngày qua
+            Giờ công 7 ngày qua
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 pt-2">
@@ -304,10 +319,13 @@ export default function Home() {
                   </h4>
                   <div className="space-y-2.5">
                     <div className="flex justify-between text-xs font-bold text-zinc-400">
-                      <span>Cơ bản:</span> <span className="text-white">{formatCurrency(settings.baseMonthlySalary)}</span>
+                      <span>Lương cơ bản:</span> <span className="text-white">{formatCurrency(settings.baseMonthlySalary)}</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-zinc-400">
-                      <span>Lương OT:</span> <span className="text-green-500">+{formatCurrency(salaryInfo.sessionSalary)}</span>
+                      <span>Lương OT (1.5/2.0/3.0):</span> <span className="text-green-500">+{formatCurrency(salaryInfo.sessionSalary)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold text-orange-400">
+                      <span>Tổng giờ OT 1.5:</span> <span>{(salaryInfo.totalOTMinutes / 60).toFixed(2)}h</span>
                     </div>
                     <div className="flex justify-between text-xs font-bold text-zinc-400">
                       <span>Phụ cấp/Cơm:</span> <span className="text-green-500">+{formatCurrency(salaryInfo.lunchAllowance + salaryInfo.otherAllowances)}</span>
@@ -332,38 +350,6 @@ export default function Home() {
           </div>
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="border-none shadow-xl bg-zinc-900 rounded-[1.5rem] overflow-hidden border-l-4 border-l-green-500">
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-zinc-500">
-              <CalendarCheck className="w-4 h-4 text-green-500" />
-              Phép Năm Còn
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-1">
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-black text-white">{settings.annualLeaveBalance || 0}</span>
-              <span className="text-[10px] font-bold text-zinc-500 uppercase">Ngày</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-xl bg-zinc-900 rounded-[1.5rem] overflow-hidden border-l-4 border-l-orange-500">
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-zinc-500">
-              <AlertTriangle className="w-4 h-4 text-orange-500" />
-              Nghỉ K.Phép
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-1">
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-black text-white">{settings.unexcusedAbsences || 0}</span>
-              <span className="text-[10px] font-bold text-zinc-500 uppercase">Ngày</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

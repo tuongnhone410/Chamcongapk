@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useMemo, useCallback } from 'react';
@@ -101,9 +102,11 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
     if (multiplier === 1.0) {
+      // Nếu làm trên 8h30 (510 phút), tính OT cho phần vượt quá 8h (480 phút)
       const otMinutes = totalMinutes > 510 ? totalMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
+      // Ngày nghỉ/lễ tính toàn bộ là OT với hệ số tương ứng
       return (totalMinutes / 60) * settings.hourlyRate * multiplier;
     }
   }, [settings.hourlyRate, settings.overtimeMultiplier]);
@@ -179,19 +182,26 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const calculateFullSalary = useCallback((periodSessions: WorkSession[]) => {
     const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
+    
+    // Tính tổng phút OT 1.5 của tháng
+    const totalOTMinutes = periodSessions.reduce((acc, s) => {
+      if (s.multiplier === 1.0) {
+        return acc + (s.totalMinutes > 510 ? s.totalMinutes - 480 : 0);
+      }
+      return acc; // Không cộng ngày nghỉ/lễ vào ô OT 1.5 này (vì hệ số khác)
+    }, 0);
+
     const lunchAllowance = periodSessions.reduce((acc, s) => {
       let dailyLunch = settings.allowanceLunchPerShift;
       if (s.totalMinutes >= 600) dailyLunch += settings.allowanceLunchOT;
       return acc + dailyLunch;
     }, 0);
 
-    // Tính chuyên cần
     let attendanceBonus = settings.allowanceAttendanceBase;
     if (settings.unexcusedAbsences === 1) attendanceBonus -= 200000;
     else if (settings.unexcusedAbsences >= 2) attendanceBonus = 0;
     attendanceBonus = Math.max(0, attendanceBonus);
 
-    // Tính các loại phụ cấp bị khấu trừ theo ngày nghỉ kphep (Base / 30 * absences)
     const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + 
                                   (settings.allowanceResponsibility || 0) + 
                                   (settings.allowancePosition || 0) + 
@@ -214,6 +224,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
     return {
       sessionSalary,
+      totalOTMinutes,
       lunchAllowance,
       attendanceBonus,
       productSalary: settings.allowanceProduct || 0,
