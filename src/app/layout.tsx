@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Inter } from 'next/font/google';
@@ -10,7 +9,6 @@ import { AttendanceProvider } from '@/providers/AttendanceProvider';
 import { useUser } from '@/firebase';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import Head from 'next/head';
 
 const inter = Inter({ subsets: ['latin', 'vietnamese'], variable: '--font-inter' });
 
@@ -47,15 +45,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" className={`${inter.variable} dark`}>
-      <Head>
+      <head>
         <title>TimeSnap Pro</title>
-        <meta name="description" content="Hệ thống chấm công bảo mật" />
+        <meta name="description" content="Hệ thống chấm công bảo mật chuyên nghiệp" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="theme-color" content="#09090b" />
         <link rel="manifest" href="/manifest.json" />
-      </Head>
+        <link rel="apple-touch-icon" href="https://picsum.photos/seed/timesnap/192/192" />
+      </head>
       <body className="font-body antialiased min-h-screen bg-background text-foreground pb-20 selection:bg-primary/30">
         <FirebaseClientProvider>
           <AuthGuard>
