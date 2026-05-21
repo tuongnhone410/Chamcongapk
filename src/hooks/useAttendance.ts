@@ -85,12 +85,12 @@ export function useAttendance() {
 
   const calculateSessionSalary = (totalMinutes: number, multiplier: number) => {
     if (multiplier === 1.0) {
-      // Ngày thường: 8h đầu (480p) không tính thêm tiền vì đã có lương cơ bản
-      // Sau 8h tính tăng ca x1.5
-      const otMinutes = Math.max(0, totalMinutes - 480);
+      // Quy tắc: 8h = 480p. Nếu làm trễ dưới 30p (tổng <= 510p) thì không tính OT.
+      // Nếu làm trên 510p thì tính OT cho phần vượt quá 480p.
+      const otMinutes = totalMinutes > 510 ? totalMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
-      // Các ngày/ca đặc biệt: Tính toàn bộ theo hệ số (x1.5, x2.0, x3.0)
+      // Các ngày/ca đặc biệt: Tính toàn bộ theo hệ số ngay từ phút đầu
       return (totalMinutes / 60) * settings.hourlyRate * multiplier;
     }
   };
@@ -133,7 +133,6 @@ export function useAttendance() {
   };
 
   const updateSession = (updated: WorkSession) => {
-    // Khi cập nhật thủ công, cũng cần tính toán lại lương dựa trên logic 8h
     const salary = calculateSessionSalary(updated.totalMinutes, updated.multiplier);
     saveSessions(sessions.map(s => s.id === updated.id ? { ...updated, salary } : s));
   };
@@ -143,7 +142,8 @@ export function useAttendance() {
     
     const lunchAllowance = periodSessions.reduce((acc, s) => {
       let dailyLunch = settings.allowanceLunchPerShift;
-      if (s.totalMinutes >= 600) { 
+      // Cập nhật: Nếu có OT thực sự (vượt 8h30p) thì mới tính cơm thêm
+      if (s.totalMinutes > 510) { 
         dailyLunch += settings.allowanceLunchOT;
       }
       return acc + dailyLunch;

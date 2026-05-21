@@ -85,7 +85,10 @@ export default function HistoryPage() {
       ) : (
         <div className="space-y-4">
           {completedSessions.map((session) => {
-            const otMinutes = session.multiplier === 1.0 ? Math.max(0, session.totalMinutes - 480) : session.totalMinutes;
+            // Cập nhật hiển thị OT dựa trên quy tắc 30 phút cho ngày thường
+            const otMinutes = session.multiplier === 1.0 
+              ? (session.totalMinutes > 510 ? session.totalMinutes - 480 : 0) 
+              : session.totalMinutes;
             
             return (
               <Card key={session.id} className="border-none shadow-sm overflow-hidden group">
