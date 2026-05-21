@@ -1,11 +1,25 @@
 
-"use client";
+'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { WorkSession, AppSettings } from '@/lib/types';
-
-const STORAGE_KEY_SESSIONS = 'timesnap_sessions';
-const STORAGE_KEY_SETTINGS = 'timesnap_settings';
+import { 
+  useUser, 
+  useFirestore, 
+  useCollection, 
+  useDoc 
+} from '@/firebase';
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  addDoc, 
+  deleteDoc, 
+  updateDoc,
+  query,
+  orderBy,
+  serverTimestamp
+} from 'firebase/firestore';
 
 const defaultSettings: AppSettings = {
   baseMonthlySalary: 5730000,
@@ -36,75 +50,40 @@ const defaultSettings: AppSettings = {
   holidayMultiplier: 3.0,
 };
 
-// Danh sách các ngày lễ cố định tại Việt Nam
 const isVietnameseHoliday = (date: Date) => {
   const d = date.getDate();
   const m = date.getMonth() + 1;
-  const fixedHolidays = [
-    '1-1',   // Tết Dương Lịch
-    '30-4',  // Giải phóng miền Nam
-    '1-5',   // Quốc tế Lao động
-    '2-9',   // Quốc khánh
-    '3-9'    // Quốc khánh (nghỉ thêm)
-  ];
+  const fixedHolidays = ['1-1', '30-4', '1-5', '2-9', '3-9'];
   return fixedHolidays.includes(`${d}-${m}`);
 };
 
 export function useAttendance() {
-  const [sessions, setSessions] = useState<WorkSession[]>([]);
-  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { user } = useUser();
+  const db = useFirestore();
 
-  useEffect(() => {
-    const storedSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
-    const storedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+  // Firestore Queries
+  const sessionsRef = useMemo(() => {
+    if (!db || !user) return null;
+    return query(collection(db, 'users', user.uid, 'sessions'), orderBy('checkIn', 'desc'));
+  }, [db, user]);
 
-    if (storedSessions) {
-      try {
-        setSessions(JSON.parse(storedSessions));
-      } catch (e) {
-        console.error("Failed to parse sessions", e);
-      }
-    }
-    
-    if (storedSettings) {
-      try {
-        const parsed = JSON.parse(storedSettings);
-        setSettings({ ...defaultSettings, ...parsed });
-      } catch (e) {
-        console.error("Failed to parse settings", e);
-      }
-    }
-    
-    setIsLoaded(true);
-  }, []);
+  const settingsRef = useMemo(() => {
+    if (!db || !user) return null;
+    return doc(db, 'users', user.uid, 'settings', 'current');
+  }, [db, user]);
 
-  useEffect(() => {
-    if (settings.darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [settings.darkMode]);
+  const { data: sessionsData, loading: sessionsLoading } = useCollection<WorkSession>(sessionsRef);
+  const { data: settingsData, loading: settingsLoading } = useDoc<AppSettings>(settingsRef);
 
-  const saveSessions = (newSessions: WorkSession[]) => {
-    setSessions(newSessions);
-    localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(newSessions));
-  };
-
-  const updateSettings = (newSettings: AppSettings) => {
-    setSettings(newSettings);
-    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(newSettings));
-  };
+  const sessions = sessionsData || [];
+  const settings = settingsData || defaultSettings;
+  const isLoaded = !sessionsLoading && !settingsLoading;
 
   const calculateSessionSalary = (totalMinutes: number, multiplier: number) => {
     if (multiplier === 1.0) {
-      // Ngày thường: chỉ tính tiền OT sau 8 tiếng (có 30p ân hạn)
-      // Nếu làm > 8h30p thì tính tiền OT cho toàn bộ phần > 8h
       const otMinutes = totalMinutes > 510 ? totalMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
-      // Các ngày đặc biệt (CN, Lễ): tính toàn bộ thời gian theo hệ số
       return (totalMinutes / 60) * settings.hourlyRate * multiplier;
     }
   };
@@ -112,90 +91,83 @@ export function useAttendance() {
   const getAutoMultiplier = (date: Date = new Date()) => {
     if (isVietnameseHoliday(date)) return settings.holidayMultiplier;
     if (date.getDay() === 0) return settings.sundayMultiplier;
-    return 1.0; // Ngày thường (Mon-Sat)
+    return 1.0;
   };
 
   const activeSession = sessions.find(s => !s.checkOut);
 
   const punchIn = () => {
-    if (activeSession) return;
+    if (!db || !user || activeSession) return;
     const now = new Date();
     const multiplier = getAutoMultiplier(now);
     
-    const newSession: WorkSession = {
-      id: Math.random().toString(36).substr(2, 9),
+    addDoc(collection(db, 'users', user.uid, 'sessions'), {
       checkIn: now.toISOString(),
       checkOut: null,
       totalMinutes: 0,
       salary: 0,
       multiplier,
       note: '',
-      createdAt: now.toISOString(),
-    };
-    saveSessions([newSession, ...sessions]);
+      createdAt: now.toISOString()
+    });
   };
 
   const punchOut = () => {
-    if (!activeSession) return;
+    if (!db || !user || !activeSession) return;
     const checkOut = new Date();
     const checkIn = new Date(activeSession.checkIn);
     const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
     const salary = calculateSessionSalary(diffMinutes, activeSession.multiplier);
 
-    const updatedSessions = sessions.map(s => 
-      s.id === activeSession.id 
-        ? { ...s, checkOut: checkOut.toISOString(), totalMinutes: diffMinutes, salary } 
-        : s
-    );
-    saveSessions(updatedSessions);
+    updateDoc(doc(db, 'users', user.uid, 'sessions', activeSession.id), {
+      checkOut: checkOut.toISOString(),
+      totalMinutes: diffMinutes,
+      salary
+    });
   };
 
   const addManualSession = (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => {
+    if (!db || !user) return;
     const checkIn = new Date(data.checkIn);
     const checkOut = new Date(data.checkOut);
     const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
     const salary = calculateSessionSalary(diffMinutes, data.multiplier);
     
-    const newSession: WorkSession = {
-      id: Math.random().toString(36).substr(2, 9),
-      checkIn: data.checkIn,
-      checkOut: data.checkOut,
+    addDoc(collection(db, 'users', user.uid, 'sessions'), {
+      ...data,
       totalMinutes: diffMinutes,
       salary,
-      multiplier: data.multiplier,
-      note: data.note,
-      createdAt: new Date().toISOString(),
-    };
-    saveSessions([newSession, ...sessions]);
+      createdAt: new Date().toISOString()
+    });
+  };
+
+  const updateSettings = (newSettings: AppSettings) => {
+    if (!db || !user) return;
+    setDoc(doc(db, 'users', user.uid, 'settings', 'current'), newSettings, { merge: true });
   };
 
   const deleteSession = (id: string) => {
-    saveSessions(sessions.filter(s => s.id !== id));
+    if (!db || !user) return;
+    deleteDoc(doc(db, 'users', user.uid, 'sessions', id));
   };
 
   const updateSession = (updated: WorkSession) => {
+    if (!db || !user) return;
     const salary = calculateSessionSalary(updated.totalMinutes, updated.multiplier);
-    saveSessions(sessions.map(s => s.id === updated.id ? { ...updated, salary } : s));
+    updateDoc(doc(db, 'users', user.uid, 'sessions', updated.id), { ...updated, salary });
   };
 
   const calculateFullSalary = (periodSessions: WorkSession[]) => {
     const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
-    
     const lunchAllowance = periodSessions.reduce((acc, s) => {
       let dailyLunch = settings.allowanceLunchPerShift;
-      // Nếu làm từ 10 tiếng trở lên (tức là có ít nhất 2h OT thực tế) thì cộng tiền cơm tăng ca
-      if (s.totalMinutes >= 600) { 
-        dailyLunch += settings.allowanceLunchOT;
-      }
+      if (s.totalMinutes >= 600) dailyLunch += settings.allowanceLunchOT;
       return acc + dailyLunch;
     }, 0);
 
     let attendanceBonus = settings.allowanceAttendanceBase;
-    if (settings.unexcusedAbsences === 1) {
-      attendanceBonus -= 200000;
-    } else if (settings.unexcusedAbsences >= 2) {
-      attendanceBonus = 0;
-    }
+    if (settings.unexcusedAbsences === 1) attendanceBonus -= 200000;
+    else if (settings.unexcusedAbsences >= 2) attendanceBonus = 0;
     attendanceBonus = Math.max(0, attendanceBonus);
 
     const otherAllowances = (settings.allowanceHousing || 0) + 
@@ -205,15 +177,9 @@ export function useAttendance() {
                            (settings.allowanceBonus || 0) +
                            (settings.allowanceProduct || 0);
     
-    const totalAllowances = otherAllowances + lunchAllowance + attendanceBonus;
-    
-    const grossIncome = (settings.baseMonthlySalary || 0) + sessionSalary + totalAllowances;
-    
-    const insSalary = settings.insuranceSalary || settings.baseMonthlySalary || 0;
-    const insuranceAmount = (insSalary * (settings.insuranceRate || 0)) / 100;
-    
+    const grossIncome = (settings.baseMonthlySalary || 0) + sessionSalary + otherAllowances + lunchAllowance + attendanceBonus;
+    const insuranceAmount = ((settings.insuranceSalary || 0) * (settings.insuranceRate || 0)) / 100;
     const incomeTaxAmount = (grossIncome * (settings.incomeTaxRate || 0)) / 100;
-    
     const netSalary = grossIncome - insuranceAmount - (settings.unionFee || 0) - incomeTaxAmount;
 
     return {
@@ -222,7 +188,6 @@ export function useAttendance() {
       attendanceBonus,
       productSalary: settings.allowanceProduct || 0,
       otherAllowances: otherAllowances - (settings.allowanceProduct || 0),
-      totalAllowances,
       grossIncome,
       insuranceAmount,
       incomeTaxAmount,
@@ -247,7 +212,6 @@ export function useAttendance() {
     const link = document.createElement("a");
     link.setAttribute("href", url);
     link.setAttribute("download", `timesnap_report_${new Date().toLocaleDateString()}.csv`);
-    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

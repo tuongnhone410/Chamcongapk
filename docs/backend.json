@@ -1,0 +1,59 @@
+
+{
+  "entities": {
+    "WorkSession": {
+      "title": "WorkSession",
+      "description": "Thông tin chi tiết về một phiên làm việc",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "checkIn": { "type": "string", "format": "date-time" },
+        "checkOut": { "type": "string", "format": "date-time" },
+        "totalMinutes": { "type": "number" },
+        "salary": { "type": "number" },
+        "multiplier": { "type": "number" },
+        "note": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "checkIn", "multiplier"]
+    },
+    "AppSettings": {
+      "title": "AppSettings",
+      "description": "Cấu hình lương và ứng dụng của người dùng",
+      "type": "object",
+      "properties": {
+        "baseMonthlySalary": { "type": "number" },
+        "insuranceSalary": { "type": "number" },
+        "hourlyRate": { "type": "number" },
+        "payday": { "type": "number" },
+        "monthlyTarget": { "type": "number" },
+        "allowanceHousing": { "type": "number" },
+        "allowanceAttendanceBase": { "type": "number" },
+        "unexcusedAbsences": { "type": "number" },
+        "annualLeaveBalance": { "type": "number" },
+        "allowanceToxic": { "type": "number" },
+        "allowanceBonus": { "type": "number" },
+        "allowanceProduct": { "type": "number" },
+        "insuranceRate": { "type": "number" },
+        "unionFee": { "type": "number" },
+        "incomeTaxRate": { "type": "number" },
+        "overtimeMultiplier": { "type": "number" },
+        "sundayMultiplier": { "type": "number" },
+        "holidayMultiplier": { "type": "number" }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/users/{userId}/settings/current": {
+      "schema": { "$ref": "#/backend/entities/AppSettings" },
+      "description": "Cấu hình lương cá nhân"
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": { "$ref": "#/backend/entities/WorkSession" },
+      "description": "Danh sách các phiên làm việc"
+    }
+  }
+}
