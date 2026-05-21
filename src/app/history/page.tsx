@@ -42,7 +42,7 @@ export default function HistoryPage() {
     endDate: new Date().toISOString().slice(0, 10),
     startTime: '08:00',
     endTime: '17:30',
-    multiplier: -1, // -1 means AUTO recognition (Sun/Holiday)
+    multiplier: -1, // -1 means AUTO recognition
     excludeSundays: true
   });
 
@@ -92,7 +92,7 @@ export default function HistoryPage() {
     try {
       await batchAddSessions(batchData);
       setShowBatchDialog(false);
-      toast({ title: "Thành công", description: "Đã đồng bộ các ngày làm việc hàng loạt." });
+      toast({ title: "Thành công", description: "Đã đồng bộ dữ liệu hàng loạt." });
     } catch (error) {
       toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm hàng loạt." });
     }
@@ -115,7 +115,7 @@ export default function HistoryPage() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white">
               <DialogHeader>
-                <DialogTitle>Thêm phiên hàng loạt</DialogTitle>
+                <DialogTitle>Đồng bộ hàng loạt</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -159,17 +159,16 @@ export default function HistoryPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Loại hình (Hệ số lương)</Label>
+                  <Label>Loại hình</Label>
                   <Select value={batchData.multiplier.toString()} onValueChange={(v) => setBatchData({...batchData, multiplier: parseFloat(v)})}>
                     <SelectTrigger className="bg-zinc-900 border-zinc-800">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="-1">Tự động nhận diện (CN/Lễ)</SelectItem>
+                      <SelectItem value="-1">Tự động nhận diện (OT 2.0/3.0)</SelectItem>
                       <SelectItem value="1.0">Ngày thường (x1.0)</SelectItem>
-                      <SelectItem value={settings.overtimeMultiplier.toString()}>Tăng ca (OT {settings.overtimeMultiplier})</SelectItem>
-                      <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (OT {settings.sundayMultiplier})</SelectItem>
-                      <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (OT {settings.holidayMultiplier})</SelectItem>
+                      <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (OT {settings.sundayMultiplier.toFixed(1)})</SelectItem>
+                      <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (OT {settings.holidayMultiplier.toFixed(1)})</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -179,13 +178,12 @@ export default function HistoryPage() {
                     checked={batchData.excludeSundays}
                     onCheckedChange={(checked) => setBatchData({...batchData, excludeSundays: !!checked})}
                   />
-                  <Label htmlFor="excludeSundays" className="text-xs font-bold cursor-pointer">Nghỉ Chủ Nhật (Không thêm vào CN)</Label>
+                  <Label htmlFor="excludeSundays" className="text-xs font-bold cursor-pointer">Bỏ qua ngày Chủ Nhật</Label>
                 </div>
-                <p className="text-[10px] text-zinc-500 italic">* Hệ thống sẽ tự dùng hệ số trong Cài đặt và bỏ qua ngày đã có dữ liệu.</p>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowBatchDialog(false)} className="border-zinc-800">Hủy</Button>
-                <Button onClick={handleBatchAdd} className="bg-primary hover:bg-primary/90">Xác nhận đồng bộ</Button>
+                <Button onClick={handleBatchAdd} className="bg-primary hover:bg-primary/90">Xác nhận</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -224,20 +222,19 @@ export default function HistoryPage() {
                   <Label>Loại hình</Label>
                   <Select value={manualData.multiplier.toString()} onValueChange={(v) => setManualData({...manualData, multiplier: parseFloat(v)})}>
                     <SelectTrigger className="bg-zinc-900 border-zinc-800">
-                      <SelectValue placeholder="Chọn hệ số" />
+                      <SelectValue placeholder="Chọn loại hình" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1.0">Ngày thường (x1.0)</SelectItem>
-                      <SelectItem value={settings.overtimeMultiplier.toString()}>Tăng ca (OT {settings.overtimeMultiplier})</SelectItem>
-                      <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (OT {settings.sundayMultiplier})</SelectItem>
-                      <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (OT {settings.holidayMultiplier})</SelectItem>
+                      <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (OT {settings.sundayMultiplier.toFixed(1)})</SelectItem>
+                      <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (OT {settings.holidayMultiplier.toFixed(1)})</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Ghi chú</Label>
                   <Input 
-                    placeholder="Lý do nhập thủ công..." 
+                    placeholder="..." 
                     className="bg-zinc-900 border-zinc-800"
                     value={manualData.note}
                     onChange={(e) => setManualData({...manualData, note: e.target.value})}
@@ -246,7 +243,7 @@ export default function HistoryPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowManualDialog(false)} className="border-zinc-800">Hủy</Button>
-                <Button onClick={handleManualAdd}>Thêm vào nhật ký</Button>
+                <Button onClick={handleManualAdd}>Lưu</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -271,7 +268,7 @@ export default function HistoryPage() {
           </div>
           <div>
             <h3 className="text-lg font-bold">Chưa có lịch sử</h3>
-            <p className="text-muted-foreground text-sm">Các phiên làm việc đã hoàn thành sẽ xuất hiện ở đây.</p>
+            <p className="text-muted-foreground text-sm">Dữ liệu sẽ xuất hiện ở đây.</p>
           </div>
         </div>
       ) : (
@@ -314,12 +311,12 @@ export default function HistoryPage() {
                         </DialogTrigger>
                         <DialogContent className="bg-zinc-950 border-zinc-800 text-white">
                           <DialogHeader>
-                            <DialogTitle>Chỉnh Sửa Phiên</DialogTitle>
+                            <DialogTitle>Sửa thông tin</DialogTitle>
                           </DialogHeader>
                           {editingSession && (
                             <div className="space-y-4 py-4">
                               <div className="space-y-2">
-                                <Label>Thời gian vào</Label>
+                                <Label>Vào làm</Label>
                                 <Input 
                                   type="datetime-local" 
                                   className="bg-zinc-900 border-zinc-800"
@@ -328,7 +325,7 @@ export default function HistoryPage() {
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label>Thời gian ra</Label>
+                                <Label>Ra làm</Label>
                                 <Input 
                                   type="datetime-local" 
                                   className="bg-zinc-900 border-zinc-800"
@@ -337,23 +334,21 @@ export default function HistoryPage() {
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label>Hệ số lương</Label>
+                                <Label>Hệ số</Label>
                                 <Select value={editingSession.multiplier.toString()} onValueChange={(v) => setEditingSession({...editingSession, multiplier: parseFloat(v)})}>
                                   <SelectTrigger className="bg-zinc-900 border-zinc-800">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="1.0">Ngày thường (x1.0)</SelectItem>
-                                    <SelectItem value={settings.overtimeMultiplier.toString()}>Tăng ca (OT {settings.overtimeMultiplier})</SelectItem>
-                                    <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (OT {settings.sundayMultiplier})</SelectItem>
-                                    <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (OT {settings.holidayMultiplier})</SelectItem>
+                                    <SelectItem value="1.0">x1.0</SelectItem>
+                                    <SelectItem value={settings.sundayMultiplier.toString()}>OT {settings.sundayMultiplier.toFixed(1)}</SelectItem>
+                                    <SelectItem value={settings.holidayMultiplier.toString()}>OT {settings.holidayMultiplier.toFixed(1)}</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                               <div className="space-y-2">
                                 <Label>Ghi chú</Label>
                                 <Input 
-                                  placeholder="Thêm ghi chú..." 
                                   className="bg-zinc-900 border-zinc-800"
                                   value={editingSession.note}
                                   onChange={(e) => setEditingSession({...editingSession, note: e.target.value})}
@@ -363,7 +358,7 @@ export default function HistoryPage() {
                           )}
                           <DialogFooter>
                             <Button variant="outline" onClick={() => setEditingSession(null)} className="border-zinc-800">Hủy</Button>
-                            <Button onClick={handleUpdate}>Lưu thay đổi</Button>
+                            <Button onClick={handleUpdate}>Lưu</Button>
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
@@ -371,7 +366,7 @@ export default function HistoryPage() {
                   </div>
                   <div className="p-4 grid grid-cols-3 gap-4">
                     <div className="space-y-1">
-                      <p className="text-[10px] text-zinc-500 uppercase font-black">Thời gian</p>
+                      <p className="text-[10px] text-zinc-500 uppercase font-black">Giờ giấc</p>
                       <p className="text-xs font-medium">
                         {new Date(session.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                         <span className="mx-1">→</span>
@@ -379,12 +374,12 @@ export default function HistoryPage() {
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[10px] text-zinc-500 uppercase font-black">Tăng ca (OT)</p>
+                      <p className="text-[10px] text-zinc-500 uppercase font-black">Công OT</p>
                       <div className="flex items-center space-x-1 text-xs font-medium text-orange-600">
                         <Zap className="w-3 h-3" />
                         <span>{formatHours(otMinutes)}</span>
                       </div>
-                      <p className="text-[9px] text-zinc-500">Tổng: {formatHours(session.totalMinutes)} (x{session.multiplier})</p>
+                      <p className="text-[9px] text-zinc-500">x{session.multiplier.toFixed(1)}</p>
                     </div>
                     <div className="space-y-1 text-right">
                       <p className="text-[10px] text-zinc-500 uppercase font-black">Lương OT</p>

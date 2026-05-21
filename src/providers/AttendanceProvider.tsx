@@ -111,9 +111,11 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
     if (multiplier === 1.0) {
+      // Ngày thường: Tự động tính OT 1.5 nếu vượt quá 8h30p
       const otMinutes = totalMinutes > 510 ? totalMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
+      // Chủ Nhật / Ngày Lễ: Tính toàn bộ theo hệ số
       return (totalMinutes / 60) * settings.hourlyRate * multiplier;
     }
   }, [settings.hourlyRate, settings.overtimeMultiplier]);
@@ -199,7 +201,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         const checkOut = new Date(`${dateStr}T${data.endTime}`);
         const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
         
-        // Cải tiến: Nếu chọn -1 thì tự động nhận diện CN/Lễ
+        // Tự động nhận diện CN/Lễ nếu chọn -1
         const finalMultiplier = data.multiplier === -1 ? getAutoMultiplier(current) : data.multiplier;
         const salary = calculateSessionSalary(diffMinutes, finalMultiplier);
         
@@ -210,7 +212,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
           multiplier: finalMultiplier,
           totalMinutes: diffMinutes,
           salary,
-          note: data.multiplier === -1 ? 'Thêm hàng loạt (Tự động)' : 'Thêm hàng loạt',
+          note: data.multiplier === -1 ? 'Tự động' : 'Hàng loạt',
           createdAt: new Date().toISOString()
         });
       }
