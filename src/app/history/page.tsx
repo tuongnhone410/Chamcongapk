@@ -35,7 +35,8 @@ import {
   AlertTriangle,
   Save,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { WorkSession } from '@/lib/types';
@@ -72,6 +73,7 @@ export default function HistoryPage() {
   } = useAttendance();
   
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -122,39 +124,40 @@ export default function HistoryPage() {
   };
 
   const formatCurrency = (val: number) => {
-    return `${Math.round(val).toLocaleString('vi-VN')}${settings.currency}`;
+    return `${Math.round(val).toLocaleString('vi-VN')}đ`;
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (editingSession) {
-      const checkIn = new Date(editingSession.checkIn);
-      const checkOut = new Date(editingSession.checkOut || '');
-      const diffMs = checkOut.getTime() - checkIn.getTime();
-      const diffMinutes = Math.floor(diffMs / 1000 / 60);
-      
-      updateSession({
-        ...editingSession,
-        totalMinutes: diffMinutes,
-      });
-      setEditingSession(null);
-      toast({ title: "Đã lưu", description: "Thay đổi đã được cập nhật." });
-    }
-  };
-
-  const handleKeyDownUpdate = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleUpdate();
-      (e.target as HTMLElement).blur();
+      setIsProcessing(true);
+      try {
+        const checkIn = new Date(editingSession.checkIn);
+        const checkOut = new Date(editingSession.checkOut || '');
+        const diffMs = checkOut.getTime() - checkIn.getTime();
+        const diffMinutes = Math.floor(diffMs / 1000 / 60);
+        
+        await updateSession({
+          ...editingSession,
+          totalMinutes: diffMinutes,
+        });
+        setEditingSession(null);
+        toast({ title: "Đã lưu", description: "Thay đổi đã được cập nhật." });
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
   const handleBatchAdd = async () => {
+    setIsProcessing(true);
     try {
       await batchAddSessions(batchData);
       setShowBatchDialog(false);
       toast({ title: "Thành công", description: "Đã đồng bộ dữ liệu hàng loạt." });
     } catch (error) {
       toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm hàng loạt." });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -163,6 +166,7 @@ export default function HistoryPage() {
       toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn ít nhất 1 ngày trên lịch." });
       return;
     }
+    setIsProcessing(true);
     try {
       await multiAddSessions({
         dates: selectedDates,
@@ -175,6 +179,8 @@ export default function HistoryPage() {
       toast({ title: "Thành công", description: `Đã thêm ${selectedDates.length} phiên làm việc.` });
     } catch (error) {
       toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm dữ liệu." });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -184,26 +190,41 @@ export default function HistoryPage() {
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const content = event.target?.result as string;
-      await importFromCSV(content);
-      toast({ title: "Đã nhập", description: "Dữ liệu CSV đã được khôi phục thành công." });
+      setIsProcessing(true);
+      try {
+        const content = event.target?.result as string;
+        await importFromCSV(content);
+        toast({ title: "Đã nhập", description: "Dữ liệu CSV đã được khôi phục thành công." });
+      } finally {
+        setIsProcessing(false);
+      }
     };
     reader.readAsText(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleClearAll = async () => {
-    await clearAllHistory();
-    toast({ 
-      title: "Đã xóa tất cả", 
-      description: "Bạn có 10 giây để khôi phục dữ liệu.",
-      variant: "destructive"
-    });
+    setIsProcessing(true);
+    try {
+      await clearAllHistory();
+      toast({ 
+        title: "Đã xóa tất cả", 
+        description: "Bạn có 10 giây để khôi phục dữ liệu.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleRestore = async () => {
-    await restoreHistory();
-    toast({ title: "Đã khôi phục", description: "Dữ liệu của bạn đã quay trở lại." });
+    setIsProcessing(true);
+    try {
+      await restoreHistory();
+      toast({ title: "Đã khôi phục", description: "Dữ liệu của bạn đã quay trở lại." });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const changeMonth = (dir: number) => {
@@ -235,6 +256,7 @@ export default function HistoryPage() {
               size="sm" 
               variant="outline" 
               onClick={handleRestore}
+              disabled={isProcessing}
               className="gap-2 text-xs rounded-xl h-10 border-green-500/50 bg-green-500/10 text-green-500 font-black animate-pulse"
             >
               <RotateCcw className="w-4 h-4" />
@@ -247,14 +269,14 @@ export default function HistoryPage() {
               <Button 
                 size="sm" 
                 variant="outline" 
-                disabled={completedSessions.length === 0}
+                disabled={completedSessions.length === 0 || isProcessing}
                 className="gap-2 text-xs rounded-xl h-10 border-red-500/30 bg-zinc-900 text-red-500 font-bold hover:bg-red-500 hover:text-white"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Xóa hết
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
+            <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[100]">
               <AlertDialogHeader>
                 <AlertDialogTitle className="font-black text-xl text-red-500 flex items-center gap-2">
                   <AlertTriangle className="w-6 h-6" />
@@ -278,7 +300,7 @@ export default function HistoryPage() {
                 CHỌN NGÀY TĂNG CA
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto z-[100]">
               <DialogHeader>
                 <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Thêm nhanh theo ngày</DialogTitle>
               </DialogHeader>
@@ -341,10 +363,10 @@ export default function HistoryPage() {
                 </div>
               </div>
               <DialogFooter className="gap-2">
-                <Button variant="outline" onClick={() => setShowMultiDialog(false)} className="border-zinc-800 rounded-xl h-12 font-bold">Hủy</Button>
-                <Button onClick={handleMultiAdd} className="bg-primary hover:bg-primary/90 rounded-xl h-12 font-black shadow-xl gap-2">
-                  <Save className="w-4 h-4" />
-                  LƯU & THÊM
+                <Button variant="outline" onClick={() => setShowMultiDialog(false)} disabled={isProcessing} className="border-zinc-800 rounded-xl h-12 font-bold flex-1">Hủy</Button>
+                <Button onClick={handleMultiAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/90 rounded-xl h-12 font-black shadow-xl gap-2 flex-1">
+                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isProcessing ? "ĐANG LƯU..." : "LƯU & THÊM"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -357,7 +379,7 @@ export default function HistoryPage() {
                 Dải ngày
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
+            <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[100]">
               <DialogHeader>
                 <DialogTitle className="font-black text-xl uppercase tracking-tighter">Đồng bộ hàng loạt</DialogTitle>
               </DialogHeader>
@@ -428,10 +450,10 @@ export default function HistoryPage() {
                 )}
               </div>
               <DialogFooter className="gap-2">
-                <Button variant="outline" onClick={() => setShowBatchDialog(false)} className="border-zinc-800 rounded-xl h-12 font-bold">Hủy</Button>
-                <Button onClick={handleBatchAdd} className="bg-primary hover:bg-primary/90 rounded-xl h-12 font-black shadow-xl gap-2">
-                  <Save className="w-4 h-4" />
-                  LƯU & ĐỒNG BỘ
+                <Button variant="outline" onClick={() => setShowBatchDialog(false)} disabled={isProcessing} className="border-zinc-800 rounded-xl h-12 font-bold flex-1">Hủy</Button>
+                <Button onClick={handleBatchAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/90 rounded-xl h-12 font-black shadow-xl gap-2 flex-1">
+                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isProcessing ? "ĐANG LƯU..." : "LƯU & ĐỒNG BỘ"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -442,7 +464,7 @@ export default function HistoryPage() {
             size="sm" 
             className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold"
             onClick={exportToCSV}
-            disabled={completedSessions.length === 0}
+            disabled={completedSessions.length === 0 || isProcessing}
           >
             <Download className="w-3.5 h-3.5" />
             Xuất CSV
@@ -453,6 +475,7 @@ export default function HistoryPage() {
             size="sm" 
             className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold"
             onClick={() => fileInputRef.current?.click()}
+            disabled={isProcessing}
           >
             <Upload className="w-3.5 h-3.5" />
             Nhập CSV
@@ -518,6 +541,7 @@ export default function HistoryPage() {
                         size="icon" 
                         className="h-9 w-9 text-zinc-500 hover:text-destructive rounded-xl"
                         onClick={() => deleteSession(session.id)}
+                        disabled={isProcessing}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -526,6 +550,7 @@ export default function HistoryPage() {
                         size="icon" 
                         className="h-9 w-9 text-zinc-500 hover:text-primary rounded-xl"
                         onClick={() => setEditingSession(session)}
+                        disabled={isProcessing}
                       >
                         <Edit3 className="w-4 h-4" />
                       </Button>
@@ -561,7 +586,7 @@ export default function HistoryPage() {
 
       {editingSession && (
         <Dialog open={!!editingSession} onOpenChange={(open) => !open && setEditingSession(null)}>
-          <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
+          <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[100]">
             <DialogHeader>
               <DialogTitle className="font-black uppercase text-xl text-center">Chỉnh sửa phiên</DialogTitle>
             </DialogHeader>
@@ -599,10 +624,10 @@ export default function HistoryPage() {
               </div>
             </div>
             <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setEditingSession(null)} className="border-zinc-800 rounded-xl h-12 font-bold flex-1">Hủy</Button>
-              <Button onClick={handleUpdate} className="bg-primary rounded-xl h-12 font-black shadow-xl flex-1 gap-2 transition-all active:scale-95">
-                <Save className="w-4 h-4" />
-                LƯU THAY ĐỔI
+              <Button variant="outline" onClick={() => setEditingSession(null)} disabled={isProcessing} className="border-zinc-800 rounded-xl h-12 font-bold flex-1">Hủy</Button>
+              <Button onClick={handleUpdate} disabled={isProcessing} className="bg-primary rounded-xl h-12 font-black shadow-xl flex-1 gap-2 transition-all active:scale-95">
+                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {isProcessing ? "ĐANG LƯU..." : "LƯU THAY ĐỔI"}
               </Button>
             </DialogFooter>
           </DialogContent>
