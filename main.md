@@ -17,19 +17,19 @@ Chào bạn, lỗi bạn vừa gặp là do Token thiếu quyền **workflow**. 
 8. Nhấn **Generate token** và **COPY LẠI DÒNG MÃ MỚI** (ghp_...).
 
 **Bước B: Đẩy code lại bằng Token MỚI**
-Mở Terminal và chạy các lệnh này (Thay `<TOKEN_MỚI>` bằng dòng ghp_ bạn vừa copy):
+Mở Terminal và chạy các lệnh này **từng dòng một** (Thay `<TOKEN_MỚI>` bằng dòng ghp_ bạn vừa copy):
 
 ```bash
-# Xóa cấu hình cũ bị lỗi
+# 1. Xóa cấu hình cũ bị lỗi
 git remote remove origin 
 
-# Thêm lại cấu hình với Token có quyền workflow
-# Lưu ý: Thay <TOKEN_MỚI> bằng mã ghp_ của bạn
+# 2. Thêm lại cấu hình với Token có đủ quyền
+# Thay <TOKEN_MỚI> bằng mã ghp_ của bạn vào chỗ giữa // và @
 git remote add origin https://<TOKEN_MỚI>@github.com/tuongnhone410/Chamcongapk.git
 
-# Đẩy code lên lại
+# 3. Gom code và đẩy lên
 git add .
-git commit -m "Fix workflow permission and trigger APK build"
+git commit -m "Fix: Add workflow permission for APK build"
 git branch -M main
 git push -u origin main
 ```
