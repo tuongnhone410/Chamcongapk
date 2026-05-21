@@ -14,4 +14,5 @@ export interface AppSettings {
   currency: string;
   darkMode: boolean;
   payday: number; // Ngày chốt lương (1-31)
+  monthlyTarget: number; // Mục tiêu thu nhập hàng tháng
 }

@@ -4,9 +4,12 @@
 import { DigitalClock } from '@/components/attendance/DigitalClock';
 import { useAttendance } from '@/hooks/useAttendance';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { LogIn, LogOut, Clock, DollarSign, Calendar, Calculator } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LogIn, LogOut, DollarSign, Calendar, Calculator, TrendingUp, Target, Info } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { useMemo } from 'react';
 
 export default function Home() {
   const { 
@@ -18,17 +21,34 @@ export default function Home() {
     isLoaded 
   } = useAttendance();
 
+  // Thống kê 7 ngày gần nhất cho biểu đồ
+  const chartData = useMemo(() => {
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return d.toDateString();
+    });
+
+    return last7Days.map(dateStr => {
+      const daySessions = sessions.filter(s => new Date(s.checkIn).toDateString() === dateStr);
+      const totalSalary = daySessions.reduce((acc, s) => acc + s.salary, 0);
+      const date = new Date(dateStr);
+      return {
+        name: date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+        salary: totalSalary,
+      };
+    });
+  }, [sessions]);
+
   if (!isLoaded) return null;
 
   const now = new Date();
   const todayStr = now.toDateString();
   
-  // Today's sessions
   const todaySessions = sessions.filter(s => new Date(s.checkIn).toDateString() === todayStr);
   const todayMinutes = todaySessions.reduce((acc, s) => acc + s.totalMinutes, 0);
   const todaySalary = todaySessions.reduce((acc, s) => acc + s.salary, 0);
 
-  // Pay period calculation
   const getPayPeriod = () => {
     const year = now.getFullYear();
     const month = now.getMonth();
@@ -38,11 +58,9 @@ export default function Home() {
     let endDate: Date;
 
     if (day >= settings.payday) {
-      // We are in the current month's period
       startDate = new Date(year, month, settings.payday);
       endDate = new Date(year, month + 1, settings.payday - 1, 23, 59, 59);
     } else {
-      // We are in the previous month's period
       startDate = new Date(year, month - 1, settings.payday);
       endDate = new Date(year, month, settings.payday - 1, 23, 59, 59);
     }
@@ -56,8 +74,12 @@ export default function Home() {
     return checkIn >= startDate && checkIn <= endDate;
   });
 
-  const periodMinutes = periodSessions.reduce((acc, s) => acc + s.totalMinutes, 0);
   const periodSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
+  const targetPercent = Math.min(Math.round((periodSalary / settings.monthlyTarget) * 100), 100);
+  
+  // Gợi ý thông minh
+  const remainingAmount = Math.max(settings.monthlyTarget - periodSalary, 0);
+  const hoursNeeded = remainingAmount > 0 ? (remainingAmount / settings.hourlyRate).toFixed(1) : 0;
 
   const formatHours = (mins: number) => {
     const h = Math.floor(mins / 60);
@@ -105,94 +127,91 @@ export default function Home() {
             </>
           )}
         </Button>
-        
-        {activeSession && (
-          <div className="mt-4 text-center">
-            <p className="text-xs text-muted-foreground">Bắt đầu lúc</p>
-            <p className="text-base font-bold">
-              {new Date(activeSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-            </p>
-          </div>
-        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        <Card className="border-none shadow-sm bg-primary/5">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-full bg-primary/10 text-primary">
-                  <Calendar className="w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-sm uppercase tracking-wider">Hôm nay</h3>
-              </div>
-              <span className="text-[10px] font-bold text-muted-foreground bg-background px-2 py-1 rounded-full">
-                {now.toLocaleDateString('vi-VN')}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-2xl font-black font-headline">{formatHours(todayMinutes)}</p>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold">Giờ làm</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xl font-bold text-primary">{formatCurrency(todaySalary)}</p>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold">Thu nhập</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-accent/5">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-full bg-accent/10 text-accent">
-                  <Calculator className="w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-sm uppercase tracking-wider">Kỳ lương này</h3>
-              </div>
-              <span className="text-[10px] font-bold text-accent-foreground/60 bg-accent/10 px-2 py-1 rounded-full">
-                Từ ngày {settings.payday}
-              </span>
-            </div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-3xl font-black font-headline">{formatHours(periodMinutes)}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Tổng giờ kỳ này</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-accent">{formatCurrency(periodSalary)}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Dự kiến nhận</p>
-                </div>
-              </div>
-              <div className="pt-2 border-t border-accent/10">
-                <p className="text-[10px] text-muted-foreground italic">
-                  Chu kỳ: {startDate.toLocaleDateString('vi-VN')} - {endDate.toLocaleDateString('vi-VN')}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-none shadow-sm bg-muted/30">
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-full bg-muted text-muted-foreground">
-              <DollarSign className="w-4 h-4" />
-            </div>
+      {/* Thống kê mục tiêu */}
+      <Card className="border-none shadow-sm overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+            <Target className="w-4 h-4 text-primary" />
+            Mục tiêu tháng này
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between items-end">
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold">Mức lương</p>
-              <p className="text-sm font-bold">{formatCurrency(settings.hourlyRate)}/giờ</p>
+              <p className="text-3xl font-black font-headline">{targetPercent}%</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold">Tiến độ thu nhập</p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-primary">{formatCurrency(periodSalary)}</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold">Mục tiêu: {formatCurrency(settings.monthlyTarget)}</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" className="text-xs text-primary" asChild>
-            <a href="/settings">Thay đổi</a>
-          </Button>
+          <Progress value={targetPercent} className="h-2" />
+          
+          {remainingAmount > 0 ? (
+            <div className="bg-primary/5 p-3 rounded-lg flex items-start gap-3">
+              <Info className="w-4 h-4 text-primary mt-0.5" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Bạn đã đạt {targetPercent}% mục tiêu. Cần kiếm thêm <span className="font-bold text-primary">{formatCurrency(remainingAmount)}</span>, tương đương khoảng <span className="font-bold text-primary">{hoursNeeded} giờ</span> nữa để hoàn thành.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-green-500/10 p-3 rounded-lg flex items-start gap-3">
+              <TrendingUp className="w-4 h-4 text-green-500 mt-0.5" />
+              <p className="text-xs text-green-600 font-medium">
+                Tuyệt vời! Bạn đã vượt mục tiêu thu nhập của tháng này.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Biểu đồ xu hướng */}
+      <Card className="border-none shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            Xu hướng thu nhập (7 ngày)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="h-48 pt-4">
+          <ChartContainer config={{ salary: { label: "Thu nhập", color: "hsl(var(--primary))" } }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
+                <Bar 
+                  dataKey="salary" 
+                  fill="hsl(var(--primary))" 
+                  radius={[4, 4, 0, 0]} 
+                  barSize={30}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="border-none shadow-sm bg-primary/5">
+          <CardContent className="p-4">
+            <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Hôm nay</p>
+            <p className="text-lg font-black font-headline">{formatHours(todayMinutes)}</p>
+            <p className="text-xs font-bold text-primary">{formatCurrency(todaySalary)}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm bg-muted/30">
+          <CardContent className="p-4">
+            <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Lương giờ</p>
+            <p className="text-lg font-black font-headline">{formatCurrency(settings.hourlyRate)}</p>
+            <Button variant="link" size="sm" className="h-auto p-0 text-[10px] font-bold" asChild>
+              <a href="/settings">Thay đổi</a>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

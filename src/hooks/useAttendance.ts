@@ -12,6 +12,7 @@ const defaultSettings: AppSettings = {
   currency: '₫',
   darkMode: false,
   payday: 1,
+  monthlyTarget: 10000000, // Mặc định 10 triệu
 };
 
 export function useAttendance() {
@@ -34,8 +35,10 @@ export function useAttendance() {
     if (storedSettings) {
       try {
         const parsed = JSON.parse(storedSettings);
-        if (parsed.payday === undefined) parsed.payday = 1;
-        setSettings(parsed);
+        setSettings({
+          ...defaultSettings,
+          ...parsed
+        });
       } catch (e) {
         console.error("Failed to parse settings", e);
       }
@@ -44,7 +47,6 @@ export function useAttendance() {
     setIsLoaded(true);
   }, []);
 
-  // Apply dark mode whenever settings change
   useEffect(() => {
     if (settings.darkMode) {
       document.documentElement.classList.add('dark');
@@ -109,6 +111,33 @@ export function useAttendance() {
     saveSessions(sessions.map(s => s.id === updated.id ? updated : s));
   };
 
+  const exportToCSV = () => {
+    const headers = ["ID", "Vào làm", "Ra làm", "Phút", "Lương", "Ghi chú"];
+    const rows = sessions.map(s => [
+      s.id,
+      new Date(s.checkIn).toLocaleString('vi-VN'),
+      s.checkOut ? new Date(s.checkOut).toLocaleString('vi-VN') : '',
+      s.totalMinutes,
+      s.salary,
+      s.note
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(r => r.join(","))
+    ].join("\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `timesnap_report_${new Date().toLocaleDateString()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return {
     sessions,
     activeSession,
@@ -119,5 +148,6 @@ export function useAttendance() {
     updateSettings,
     deleteSession,
     updateSession,
+    exportToCSV,
   };
 }

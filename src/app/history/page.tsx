@@ -14,12 +14,12 @@ import {
   DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog';
-import { History, Trash2, Edit3, Clock, Calendar, StickyNote } from 'lucide-react';
+import { History, Trash2, Edit3, Clock, Calendar, StickyNote, Download } from 'lucide-react';
 import { useState } from 'react';
 import { WorkSession } from '@/lib/types';
 
 export default function HistoryPage() {
-  const { sessions, isLoaded, deleteSession, updateSession, settings } = useAttendance();
+  const { sessions, isLoaded, deleteSession, updateSession, settings, exportToCSV } = useAttendance();
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
 
   if (!isLoaded) return null;
@@ -57,9 +57,21 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold font-headline">Nhật Ký Chấm Công</h1>
-        <p className="text-muted-foreground text-sm">Xem và chỉnh sửa các phiên làm việc trước đây</p>
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold font-headline">Nhật Ký Chấm Công</h1>
+          <p className="text-muted-foreground text-sm">Xem và chỉnh sửa các phiên làm việc</p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-2 text-xs"
+          onClick={exportToCSV}
+          disabled={completedSessions.length === 0}
+        >
+          <Download className="w-3.5 h-3.5" />
+          Xuất CSV
+        </Button>
       </header>
 
       {completedSessions.length === 0 ? (
