@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldCheck, Gift, Clock, Target } from 'lucide-react';
+import { ShieldCheck, Gift, Clock, Target, Calculator } from 'lucide-react';
 
 export default function SettingsPage() {
   const { settings, updateSettings, isLoaded } = useAttendance();
@@ -14,6 +14,19 @@ export default function SettingsPage() {
   if (!isLoaded) return null;
 
   const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  // Hàm cập nhật lương tháng và tự động tính lương giờ
+  const handleMonthlySalaryChange = (val: number) => {
+    const monthlySalary = val || 0;
+    // Tính lương giờ dựa trên 208 giờ công (26 ngày * 8 tiếng)
+    const calculatedHourly = Math.round(monthlySalary / 208);
+    
+    updateSettings({
+      ...settings,
+      baseMonthlySalary: monthlySalary,
+      hourlyRate: calculatedHourly
+    });
+  };
 
   return (
     <div className="space-y-6 pb-24">
@@ -33,13 +46,19 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Lương cơ bản hàng tháng</Label>
-            <Input 
-              type="number" 
-              value={settings.baseMonthlySalary}
-              onChange={(e) => updateSettings({...settings, baseMonthlySalary: parseFloat(e.target.value) || 0})}
-              placeholder="Nhập lương cơ bản theo tháng..."
-            />
-            <p className="text-[10px] text-muted-foreground italic">Đây là phần lương cố định bạn nhận được mỗi tháng (chưa tính OT).</p>
+            <div className="relative">
+              <Input 
+                type="number" 
+                value={settings.baseMonthlySalary}
+                onChange={(e) => handleMonthlySalaryChange(parseFloat(e.target.value))}
+                placeholder="Nhập lương cơ bản theo tháng..."
+                className="pr-10"
+              />
+              <Calculator className="absolute right-3 top-3 w-4 h-4 text-muted-foreground opacity-50" />
+            </div>
+            <p className="text-[10px] text-muted-foreground italic">
+              * Khi nhập, lương giờ sẽ tự động tính dựa trên 208h công (26 ngày).
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
