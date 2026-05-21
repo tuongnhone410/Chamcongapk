@@ -78,7 +78,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 pb-24">
       <header>
-        <h1 className="text-2xl font-bold font-headline">Cấu Hình Lương</h1>
+        <h1 className="text-2xl font-bold font-headline">Thông tin lương</h1>
         <p className="text-muted-foreground text-sm">Thiết lập chi tiết dựa trên hợp đồng lao động</p>
       </header>
 
