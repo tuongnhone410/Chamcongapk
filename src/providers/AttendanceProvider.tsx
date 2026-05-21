@@ -17,7 +17,8 @@ import {
   deleteDoc, 
   updateDoc,
   query,
-  orderBy
+  orderBy,
+  writeBatch
 } from 'firebase/firestore';
 
 export interface AttendanceContextType {
@@ -28,6 +29,14 @@ export interface AttendanceContextType {
   punchIn: () => void;
   punchOut: () => void;
   addManualSession: (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => void;
+  batchAddSessions: (data: { 
+    startDate: string, 
+    endDate: string, 
+    startTime: string, 
+    endTime: string, 
+    multiplier: number, 
+    excludeSundays: boolean 
+  }) => Promise<void>;
   updateSettings: (newSettings: AppSettings) => void;
   deleteSession: (id: string) => void;
   updateSession: (updated: WorkSession) => void;
@@ -102,11 +111,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
     if (multiplier === 1.0) {
-      // Nếu làm trên 8h30 (510 phút), tính OT cho phần vượt quá 8h (480 phút)
       const otMinutes = totalMinutes > 510 ? totalMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
-      // Ngày nghỉ/lễ tính toàn bộ là OT với hệ số tương ứng
       return (totalMinutes / 60) * settings.hourlyRate * multiplier;
     }
   }, [settings.hourlyRate, settings.overtimeMultiplier]);
@@ -164,6 +171,52 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     });
   }, [db, user, calculateSessionSalary]);
 
+  const batchAddSessions = useCallback(async (data: { 
+    startDate: string, 
+    endDate: string, 
+    startTime: string, 
+    endTime: string, 
+    multiplier: number, 
+    excludeSundays: boolean 
+  }) => {
+    if (!db || !user) return;
+    const batch = writeBatch(db);
+    const start = new Date(data.startDate);
+    const end = new Date(data.endDate);
+    
+    let current = new Date(start);
+    while (current <= end) {
+      if (data.excludeSundays && current.getDay() === 0) {
+        current.setDate(current.getDate() + 1);
+        continue;
+      }
+
+      const dateStr = current.toISOString().split('T')[0];
+      const hasSession = sessions.some(s => s.checkIn.startsWith(dateStr));
+
+      if (!hasSession) {
+        const checkIn = new Date(`${dateStr}T${data.startTime}`);
+        const checkOut = new Date(`${dateStr}T${data.endTime}`);
+        const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+        const salary = calculateSessionSalary(diffMinutes, data.multiplier);
+        
+        const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
+        batch.set(newDocRef, {
+          checkIn: checkIn.toISOString(),
+          checkOut: checkOut.toISOString(),
+          multiplier: data.multiplier,
+          totalMinutes: diffMinutes,
+          salary,
+          note: 'Thêm hàng loạt',
+          createdAt: new Date().toISOString()
+        });
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    
+    await batch.commit();
+  }, [db, user, sessions, calculateSessionSalary]);
+
   const updateSettings = useCallback((newSettings: AppSettings) => {
     if (!db || !user) return;
     setDoc(doc(db, 'users', user.uid, 'settings', 'current'), newSettings, { merge: true });
@@ -183,12 +236,11 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const calculateFullSalary = useCallback((periodSessions: WorkSession[]) => {
     const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
     
-    // Tính tổng phút OT 1.5 của tháng
     const totalOTMinutes = periodSessions.reduce((acc, s) => {
       if (s.multiplier === 1.0) {
         return acc + (s.totalMinutes > 510 ? s.totalMinutes - 480 : 0);
       }
-      return acc; // Không cộng ngày nghỉ/lễ vào ô OT 1.5 này (vì hệ số khác)
+      return acc;
     }, 0);
 
     const lunchAllowance = periodSessions.reduce((acc, s) => {
@@ -266,6 +318,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     punchIn,
     punchOut,
     addManualSession,
+    batchAddSessions,
     updateSettings,
     deleteSession,
     updateSession,
@@ -275,7 +328,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     isHoliday: isVietnameseHoliday(new Date())
   }), [
     sessions, activeSession, settings, isLoaded, punchIn, punchOut, 
-    addManualSession, updateSettings, deleteSession, updateSession, 
+    addManualSession, batchAddSessions, updateSettings, deleteSession, updateSession, 
     exportToCSV, calculateFullSalary, getAutoMultiplier
   ]);
 
