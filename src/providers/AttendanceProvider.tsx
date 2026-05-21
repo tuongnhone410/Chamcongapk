@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { createContext, useMemo, useCallback, useState, useRef, useEffect } from 'react';
+import React, { createContext, useMemo, useCallback, useState, useRef } from 'react';
 import { WorkSession, AppSettings } from '@/lib/types';
 import { 
   useUser, 
@@ -63,7 +62,7 @@ const defaultSettings: AppSettings = {
   baseMonthlySalary: 5730000,
   insuranceSalary: 6017000,
   hourlyRate: 27548,
-  currency: '₫',
+  currency: 'đ',
   darkMode: false,
   payday: 5,
   monthlyTarget: 0,
@@ -121,19 +120,16 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     return doc(db, 'users', user.uid, 'settings', 'current');
   }, [db, user?.uid]);
 
-  const { data: sessionsData, loading: sessionsLoading } = useCollection<WorkSession>(sessionsQuery);
-  const { data: settingsData, loading: settingsLoading } = useDoc<AppSettings>(settingsDocRef);
+  const { data: sessionsData } = useCollection<WorkSession>(sessionsQuery);
+  const { data: settingsData } = useDoc<AppSettings>(settingsDocRef);
 
   const sessions = useMemo(() => sessionsData || [], [sessionsData]);
   const settings = useMemo(() => ({ ...defaultSettings, ...settingsData }), [settingsData]);
-  
-  // Cho phép app hiển thị ngay cả khi đang load để tăng cảm giác tốc độ
   const isLoaded = useMemo(() => !!user, [user]);
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
     const effectiveMinutes = totalMinutes > breakMinutes ? totalMinutes - breakMinutes : totalMinutes;
-
     if (multiplier === 1.0) {
       const otMinutes = effectiveMinutes > 510 ? effectiveMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
@@ -153,14 +149,12 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const punchIn = useCallback(() => {
     if (!db || !user || activeSession) return;
     const now = new Date();
-    const multiplier = getAutoMultiplier(now);
-    
     addDoc(collection(db, 'users', user.uid, 'sessions'), {
       checkIn: now.toISOString(),
       checkOut: null,
       totalMinutes: 0,
       salary: 0,
-      multiplier,
+      multiplier: getAutoMultiplier(now),
       note: '',
       createdAt: now.toISOString()
     });
@@ -171,145 +165,66 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const checkOut = new Date();
     const checkIn = new Date(activeSession.checkIn);
     const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-    const salary = calculateSessionSalary(diffMinutes, activeSession.multiplier);
-
     updateDoc(doc(db, 'users', user.uid, 'sessions', activeSession.id), {
       checkOut: checkOut.toISOString(),
       totalMinutes: diffMinutes,
-      salary
+      salary: calculateSessionSalary(diffMinutes, activeSession.multiplier)
     });
   }, [db, user, activeSession, calculateSessionSalary]);
 
-  const addManualSession = useCallback((data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => {
-    if (!db || !user) return;
-    const checkIn = new Date(data.checkIn);
-    const checkOut = new Date(data.checkOut);
-    const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-    const salary = calculateSessionSalary(diffMinutes, data.multiplier);
-    
-    addDoc(collection(db, 'users', user.uid, 'sessions'), {
-      ...data,
-      totalMinutes: diffMinutes,
-      salary,
-      createdAt: new Date().toISOString()
-    });
-  }, [db, user, calculateSessionSalary]);
-
-  const importFromCSV = useCallback(async (csvContent: string) => {
-    if (!db || !user) return;
-    const lines = csvContent.split('\n');
-    if (lines.length < 2) return;
-
-    const batch = writeBatch(db);
-    for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-      const values = lines[i].split(',');
-      const checkInStr = values[1]?.replace(/"/g, '');
-      const checkOutStr = values[2]?.replace(/"/g, '');
-      const multiplier = parseFloat(values[3]);
-      const note = values[6]?.replace(/"/g, '') || '';
-
-      if (checkInStr && checkOutStr) {
-        const parseDate = (str: string) => {
-          try {
-            const [datePart, timePart] = str.split(' ');
-            const [d, m, y] = datePart.split('/').map(Number);
-            const [h, min, s] = timePart.split(':').map(Number);
-            return new Date(y, m - 1, d, h, min, s).toISOString();
-          } catch {
-            return new Date(str).toISOString();
-          }
-        };
-
-        const checkIn = parseDate(checkInStr);
-        const checkOut = parseDate(checkOutStr);
-        const diffMinutes = Math.floor((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 60000);
-        const salary = calculateSessionSalary(diffMinutes, multiplier);
-
-        const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
-        batch.set(newDocRef, {
-          checkIn,
-          checkOut,
-          multiplier,
-          totalMinutes: diffMinutes,
-          salary,
-          note,
-          createdAt: new Date().toISOString()
-        });
-      }
-    }
-    await batch.commit();
-  }, [db, user, calculateSessionSalary]);
-
-  const multiAddSessions = useCallback(async (data: {
-    dates: Date[],
-    startTime: string,
-    endTime: string,
-    multiplier: number
-  }) => {
+  const multiAddSessions = useCallback(async (data: { dates: Date[], startTime: string, endTime: string, multiplier: number }) => {
     if (!db || !user) return;
     const batch = writeBatch(db);
-    for (const date of data.dates) {
+    data.dates.forEach(date => {
       const dateStr = date.toISOString().split('T')[0];
       const checkIn = new Date(`${dateStr}T${data.startTime}`);
       const checkOut = new Date(`${dateStr}T${data.endTime}`);
       const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-      const finalMultiplier = data.multiplier === -1 ? getAutoMultiplier(date) : data.multiplier;
-      const salary = calculateSessionSalary(diffMinutes, finalMultiplier);
+      const mult = data.multiplier === -1 ? getAutoMultiplier(date) : data.multiplier;
       const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
       batch.set(newDocRef, {
         checkIn: checkIn.toISOString(),
         checkOut: checkOut.toISOString(),
-        multiplier: finalMultiplier,
+        multiplier: mult,
         totalMinutes: diffMinutes,
-        salary,
+        salary: calculateSessionSalary(diffMinutes, mult),
         note: '',
         createdAt: new Date().toISOString()
       });
-    }
-    await batch.commit();
+    });
+    // Fire and forget - không dùng await để tránh lag UI
+    batch.commit().catch(e => console.error(e));
   }, [db, user, calculateSessionSalary, getAutoMultiplier]);
 
-  const batchAddSessions = useCallback(async (data: { 
-    startDate: string, 
-    endDate: string, 
-    startTime: string, 
-    endTime: string, 
-    multiplier: number, 
-    excludeSundays: boolean 
-  }) => {
+  const batchAddSessions = useCallback(async (data: { startDate: string, endDate: string, startTime: string, endTime: string, multiplier: number, excludeSundays: boolean }) => {
     if (!db || !user) return;
     const batch = writeBatch(db);
-    const start = new Date(data.startDate);
+    let current = new Date(data.startDate);
     const end = new Date(data.endDate);
-    let current = new Date(start);
     while (current <= end) {
-      if (data.excludeSundays && current.getDay() === 0 && data.multiplier === -1) {
-        current.setDate(current.getDate() + 1);
-        continue;
-      }
-      const dateStr = current.toISOString().split('T')[0];
-      const hasSession = sessions.some(s => s.checkIn.startsWith(dateStr));
-      if (!hasSession) {
-        const checkIn = new Date(`${dateStr}T${data.startTime}`);
-        const checkOut = new Date(`${dateStr}T${data.endTime}`);
-        const actualDiff = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-        const finalMultiplier = data.multiplier === -1 ? getAutoMultiplier(current) : data.multiplier;
-        const salary = calculateSessionSalary(actualDiff, finalMultiplier);
-        const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
-        batch.set(newDocRef, {
-          checkIn: checkIn.toISOString(),
-          checkOut: checkOut.toISOString(),
-          multiplier: finalMultiplier,
-          totalMinutes: actualDiff,
-          salary,
-          note: '',
-          createdAt: new Date().toISOString()
-        });
+      if (!(data.excludeSundays && current.getDay() === 0)) {
+        const dateStr = current.toISOString().split('T')[0];
+        const hasSession = sessions.some(s => s.checkIn.startsWith(dateStr));
+        if (!hasSession) {
+          const checkIn = new Date(`${dateStr}T${data.startTime}`);
+          const checkOut = new Date(`${dateStr}T${data.endTime}`);
+          const diff = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+          const mult = data.multiplier === -1 ? getAutoMultiplier(current) : data.multiplier;
+          const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
+          batch.set(newDocRef, {
+            checkIn: checkIn.toISOString(),
+            checkOut: checkOut.toISOString(),
+            multiplier: mult,
+            totalMinutes: diff,
+            salary: calculateSessionSalary(diff, mult),
+            note: '',
+            createdAt: new Date().toISOString()
+          });
+        }
       }
       current.setDate(current.getDate() + 1);
     }
-    await batch.commit();
+    batch.commit().catch(e => console.error(e));
   }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier]);
 
   const clearAllHistory = useCallback(async () => {
@@ -318,40 +233,26 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     setCanUndo(true);
     setUndoCountdown(10);
     const batch = writeBatch(db);
-    sessions.forEach(s => {
-      const sRef = doc(db, 'users', user.uid, 'sessions', s.id);
-      batch.delete(sRef);
-    });
-    await batch.commit();
-    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
-    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-    countdownIntervalRef.current = setInterval(() => {
-      setUndoCountdown(prev => (prev <= 1 ? 0 : prev - 1));
-    }, 1000);
-    undoTimerRef.current = setTimeout(() => {
-      setCanUndo(false);
-      setDeletedSessionsCache([]);
-    }, 10000);
+    sessions.forEach(s => batch.delete(doc(db, 'users', user.uid, 'sessions', s.id)));
+    batch.commit().catch(e => console.error(e));
+    countdownIntervalRef.current = setInterval(() => setUndoCountdown(p => p - 1), 1000);
+    undoTimerRef.current = setTimeout(() => { setCanUndo(false); setDeletedSessionsCache([]); }, 10000);
   }, [db, user, sessions]);
 
   const restoreHistory = useCallback(async () => {
-    if (!db || !user || !canUndo || deletedSessionsCache.length === 0) return;
+    if (!db || !user || !canUndo) return;
     const batch = writeBatch(db);
     deletedSessionsCache.forEach(s => {
-      const sRef = doc(db, 'users', user.uid, 'sessions', s.id);
       const { id, ...data } = s;
-      batch.set(sRef, data);
+      batch.set(doc(db, 'users', user.uid, 'sessions', id), data);
     });
-    await batch.commit();
+    batch.commit().catch(e => console.error(e));
     setCanUndo(false);
-    setDeletedSessionsCache([]);
-    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
-    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
   }, [db, user, canUndo, deletedSessionsCache]);
 
   const updateSettings = useCallback(async (newSettings: AppSettings) => {
     if (!db || !user) return;
-    await setDoc(doc(db, 'users', user.uid, 'settings', 'current'), newSettings, { merge: true });
+    setDoc(doc(db, 'users', user.uid, 'settings', 'current'), newSettings, { merge: true });
   }, [db, user]);
 
   const deleteSession = useCallback((id: string) => {
@@ -359,121 +260,52 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     deleteDoc(doc(db, 'users', user.uid, 'sessions', id));
   }, [db, user]);
 
-  const updateSession = useCallback((updated: WorkSession) => {
+  const updateSession = useCallback(async (updated: WorkSession) => {
     if (!db || !user) return;
-    const salary = calculateSessionSalary(updated.totalMinutes, updated.multiplier);
-    updateDoc(doc(db, 'users', user.uid, 'sessions', updated.id), { ...updated, salary });
+    updateDoc(doc(db, 'users', user.uid, 'sessions', updated.id), { 
+      ...updated, 
+      salary: calculateSessionSalary(updated.totalMinutes, updated.multiplier) 
+    });
   }, [db, user, calculateSessionSalary]);
 
   const calculateFullSalary = useCallback((periodSessions: WorkSession[]) => {
     const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
-    
     const totalOTMinutes = periodSessions.reduce((acc, s) => {
-      const effectiveMinutes = s.totalMinutes > breakMinutes ? s.totalMinutes - breakMinutes : s.totalMinutes;
-      if (s.multiplier === 1.0) {
-        return acc + (effectiveMinutes > 510 ? effectiveMinutes - 480 : 0);
-      }
-      return acc;
+      const effective = s.totalMinutes > breakMinutes ? s.totalMinutes - breakMinutes : s.totalMinutes;
+      return acc + (s.multiplier === 1.0 ? (effective > 510 ? effective - 480 : 0) : effective);
     }, 0);
-
-    const lunchAllowance = periodSessions.reduce((acc, s) => {
-      let dailyLunch = settings.allowanceLunchPerShift || 0;
-      if (s.totalMinutes >= 600) dailyLunch += (settings.allowanceLunchOT || 0);
-      return acc + dailyLunch;
-    }, 0);
-
+    const lunchAllowance = periodSessions.reduce((acc, s) => acc + (settings.allowanceLunchPerShift || 0) + (s.totalMinutes >= 600 ? (settings.allowanceLunchOT || 0) : 0), 0);
     let attendanceBonus = settings.allowanceAttendanceBase || 0;
     if (settings.unexcusedAbsences === 1) attendanceBonus -= 200000;
     else if (settings.unexcusedAbsences >= 2) attendanceBonus = 0;
-
-    const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + 
-                                  (settings.allowanceResponsibility || 0) + 
-                                  (settings.allowancePosition || 0) + 
-                                  (settings.allowancePerformance || 0);
-    const deductionForAbsence = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
-    
-    const otherAllowances = (settings.allowanceHousing || 0) + 
-                           (settings.allowanceFuel || 0) + 
-                           (settings.allowancePhone || 0) + 
-                           (settings.allowanceToxic || 0) +
-                           (settings.allowanceBonus || 0) +
-                           (settings.allowanceProduct || 0) +
-                           baseSubjectToAbsence - deductionForAbsence;
-    
-    const grossIncome = (settings.baseMonthlySalary || 0) + sessionSalary + otherAllowances + lunchAllowance + attendanceBonus;
-    const insuranceAmount = ((settings.insuranceSalary || 0) * (settings.insuranceRate || 0)) / 100;
-    const incomeTaxAmount = (grossIncome * (settings.incomeTaxRate || 0)) / 100;
-    const netSalary = grossIncome - insuranceAmount - (settings.unionFee || 0) - incomeTaxAmount;
-
-    return {
-      sessionSalary,
-      totalOTMinutes,
-      lunchAllowance,
-      attendanceBonus,
-      grossIncome,
-      insuranceAmount,
-      incomeTaxAmount,
-      netSalary
-    };
+    const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + (settings.allowanceResponsibility || 0) + (settings.allowancePosition || 0) + (settings.allowancePerformance || 0);
+    const deduction = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
+    const other = (settings.allowanceHousing || 0) + (settings.allowanceFuel || 0) + (settings.allowancePhone || 0) + (settings.allowanceToxic || 0) + (settings.allowanceBonus || 0) + (settings.allowanceProduct || 0) + baseSubjectToAbsence - deduction;
+    const gross = (settings.baseMonthlySalary || 0) + sessionSalary + other + lunchAllowance + attendanceBonus;
+    const insurance = ((settings.insuranceSalary || 0) * (settings.insuranceRate || 0)) / 100;
+    const tax = (gross * (settings.incomeTaxRate || 0)) / 100;
+    const net = gross - insurance - (settings.unionFee || 0) - tax;
+    return { sessionSalary, totalOTMinutes, lunchAllowance, attendanceBonus, grossIncome: gross, insuranceAmount: insurance, incomeTaxAmount: tax, netSalary: net };
   }, [settings]);
 
   const exportToCSV = useCallback(() => {
-    const headers = ["ID", "Vào làm", "Ra làm", "Hệ số", "Phút", "Lương", "Ghi chú"];
-    const rows = sessions.map(s => [
-      s.id,
-      new Date(s.checkIn).toLocaleString('vi-VN'),
-      s.checkOut ? new Date(s.checkOut).toLocaleString('vi-VN') : '',
-      s.multiplier,
-      s.totalMinutes,
-      s.salary,
-      `"${s.note || ''}"`
-    ]);
+    const headers = ["ID", "Vao lam", "Ra lam", "He so", "Phut", "Luong", "Ghi chu"];
+    const rows = sessions.map(s => [s.id, s.checkIn, s.checkOut || '', s.multiplier, s.totalMinutes, s.salary, s.note || '']);
     const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `timesnap_report_${new Date().toLocaleDateString()}.csv`);
-    document.body.appendChild(link);
+    link.href = url;
+    link.download = "timesnap_report.csv";
     link.click();
-    document.body.removeChild(link);
   }, [sessions]);
 
   const isHoliday = useMemo(() => isVietnameseHoliday(new Date()), []);
 
   const contextValue = useMemo(() => ({
-    sessions,
-    activeSession,
-    settings,
-    isLoaded,
-    punchIn,
-    punchOut,
-    addManualSession,
-    batchAddSessions,
-    multiAddSessions,
-    importFromCSV,
-    updateSettings,
-    deleteSession,
-    updateSession,
-    clearAllHistory,
-    restoreHistory,
-    canUndo,
-    undoCountdown,
-    exportToCSV,
-    calculateFullSalary,
-    getAutoMultiplier,
-    isHoliday
-  }), [
-    sessions, activeSession, settings, isLoaded, punchIn, punchOut, 
-    addManualSession, batchAddSessions, multiAddSessions, importFromCSV, updateSettings, deleteSession, updateSession, 
-    clearAllHistory, restoreHistory, canUndo, undoCountdown,
-    exportToCSV, calculateFullSalary, getAutoMultiplier, isHoliday
-  ]);
+    sessions, activeSession, settings, isLoaded, punchIn, punchOut, addManualSession, batchAddSessions, multiAddSessions, importFromCSV, updateSettings, deleteSession, updateSession, clearAllHistory, restoreHistory, canUndo, undoCountdown, exportToCSV, calculateFullSalary, getAutoMultiplier, isHoliday
+  }), [sessions, activeSession, settings, isLoaded, punchIn, punchOut, addManualSession, batchAddSessions, multiAddSessions, importFromCSV, updateSettings, deleteSession, updateSession, clearAllHistory, restoreHistory, canUndo, undoCountdown, exportToCSV, calculateFullSalary, getAutoMultiplier, isHoliday]);
 
-  return (
-    <AttendanceContext.Provider value={contextValue}>
-      {children}
-    </AttendanceContext.Provider>
-  );
+  return <AttendanceContext.Provider value={contextValue}>{children}</AttendanceContext.Provider>;
 }
