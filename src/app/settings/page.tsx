@@ -18,12 +18,12 @@ export default function SettingsPage() {
   const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
 
   const formatMoneyDisplay = (val: number) => {
-    if (val === 0) return "";
+    if (val === 0) return "0";
     return Math.round(val).toLocaleString('vi-VN');
   };
 
   const formatPercentDisplay = (val: number) => {
-    if (val === 0) return "";
+    if (val === 0) return "0";
     return val.toString();
   };
 
@@ -32,6 +32,7 @@ export default function SettingsPage() {
     const num = numericValue === "" ? 0 : parseInt(numericValue);
     
     if (key === 'baseMonthlySalary') {
+      // Tự động tính lương giờ gốc khi nhập LCB (chia 208 giờ chuẩn)
       const calculatedHourly = Math.round(num / 208);
       updateSettings({
         ...settings,
@@ -121,7 +122,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Lương cơ bản hàng tháng</Label>
+            <Label className="text-primary font-bold">Lương cơ bản hàng tháng (LCB)</Label>
             <div className="relative">
               <Input 
                 type="text" 
@@ -129,45 +130,24 @@ export default function SettingsPage() {
                 value={formatMoneyDisplay(settings.baseMonthlySalary)}
                 onChange={(e) => handleMoneyInput('baseMonthlySalary', e.target.value)}
                 placeholder="0"
-                className="pr-10 font-medium"
+                className="pr-10 font-black text-lg h-12"
               />
-              <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
+              <span className="absolute right-3 top-3 text-muted-foreground text-sm">đ</span>
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Lương / Giờ (Gốc)</Label>
               <div className="relative">
                 <Input 
+                  readOnly
+                  disabled
                   type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
                   value={formatMoneyDisplay(settings.hourlyRate)}
-                  onChange={(e) => handleMoneyInput('hourlyRate', e.target.value)}
-                  className="pr-8 font-medium"
+                  className="pr-8 font-bold bg-muted/50 cursor-not-allowed"
                 />
-                <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">đ</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-orange-600 font-bold">Lương OT 1.5 / Giờ</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatMoneyDisplay(settings.hourlyRate * settings.overtimeMultiplier)}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "");
-                    const num = val === "" ? 0 : parseInt(val);
-                    updateSettings({
-                      ...settings,
-                      hourlyRate: Math.round(num / settings.overtimeMultiplier)
-                    });
-                  }}
-                  className="pr-8 font-bold border-orange-200 focus-visible:ring-orange-500 text-orange-600"
-                />
-                <span className="absolute right-3 top-2.5 text-orange-400 text-sm font-bold">đ</span>
+                <span className="absolute right-3 top-2.5 text-muted-foreground text-xs">đ</span>
               </div>
             </div>
             <div className="space-y-2">
@@ -181,40 +161,89 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="pt-4 border-t">
-            <Label className="text-xs text-muted-foreground mb-3 block font-bold uppercase tracking-wider">Hệ số nhân lương</Label>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="pt-4 border-t space-y-4">
+            <Label className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">Hệ số & Lương OT tương ứng</Label>
+            
+            <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+              {/* OT 1.5 */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-primary" /> Tăng ca (OT)
+                <Label className="flex items-center gap-1.5 text-orange-500">
+                  <Zap className="w-3.5 h-3.5" /> Hệ số Tăng ca
                 </Label>
                 <Input 
                   type="number" 
                   step="0.1"
-                  placeholder="0"
+                  placeholder="1.5"
+                  className="font-bold h-11"
                   value={getNumberValue(settings.overtimeMultiplier)}
                   onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Chủ Nhật</Label>
+                <Label className="text-muted-foreground">Lương OT 1.5 / Giờ</Label>
+                <div className="relative">
+                  <Input 
+                    readOnly
+                    disabled
+                    value={formatMoneyDisplay(settings.hourlyRate * settings.overtimeMultiplier)}
+                    className="pr-8 font-bold bg-muted/50 text-orange-500/80 h-11"
+                  />
+                  <span className="absolute right-3 top-3 text-muted-foreground text-[10px]">đ</span>
+                </div>
+              </div>
+
+              {/* OT 2.0 (Sunday) */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5 text-blue-500">
+                  <Calculator className="w-3.5 h-3.5" /> Hệ số Chủ Nhật
+                </Label>
                 <Input 
                   type="number" 
                   step="0.1"
-                  placeholder="0"
+                  placeholder="2.0"
+                  className="font-bold h-11"
                   value={getNumberValue(settings.sundayMultiplier)}
                   onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Ngày Lễ</Label>
+                <Label className="text-muted-foreground">Lương CN (x{settings.sundayMultiplier}) / Giờ</Label>
+                <div className="relative">
+                  <Input 
+                    readOnly
+                    disabled
+                    value={formatMoneyDisplay(settings.hourlyRate * settings.sundayMultiplier)}
+                    className="pr-8 font-bold bg-muted/50 text-blue-500/80 h-11"
+                  />
+                  <span className="absolute right-3 top-3 text-muted-foreground text-[10px]">đ</span>
+                </div>
+              </div>
+
+              {/* OT 3.0 (Holiday) */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5 text-red-500">
+                  <Star className="w-3.5 h-3.5" /> Hệ số Ngày Lễ
+                </Label>
                 <Input 
                   type="number" 
                   step="0.1"
-                  placeholder="0"
+                  placeholder="3.0"
+                  className="font-bold h-11"
                   value={getNumberValue(settings.holidayMultiplier)}
                   onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Lương Lễ (x{settings.holidayMultiplier}) / Giờ</Label>
+                <div className="relative">
+                  <Input 
+                    readOnly
+                    disabled
+                    value={formatMoneyDisplay(settings.hourlyRate * settings.holidayMultiplier)}
+                    className="pr-8 font-bold bg-muted/50 text-red-500/80 h-11"
+                  />
+                  <span className="absolute right-3 top-3 text-muted-foreground text-[10px]">đ</span>
+                </div>
               </div>
             </div>
           </div>
