@@ -388,7 +388,7 @@ export default function SettingsPage() {
       </Card>
 
       <div className="pt-8 text-center">
-        <p className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Thiết kế bởi TimeSnap Pro</p>
+        <p className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Thiết kế bởi TruongVanKhoa</p>
       </div>
     </div>
   );
