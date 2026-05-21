@@ -16,7 +16,8 @@ import {
   Award,
   Zap,
   Clock,
-  Timer
+  Timer,
+  PlayCircle
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -33,13 +34,14 @@ export default function Home() {
     punchOut, 
     isLoaded,
     updateSettings,
-    calculateFullSalary
+    calculateFullSalary,
+    getAutoMultiplier,
+    isHoliday
   } = useAttendance();
 
   const [elapsedTime, setElapsedTime] = useState<string>("00:00:00");
   const [sessionMinutes, setSessionMinutes] = useState<number>(0);
 
-  // Cập nhật đồng hồ đếm giờ làm việc thực tế
   useEffect(() => {
     if (!activeSession) return;
 
@@ -66,6 +68,7 @@ export default function Home() {
   if (!isLoaded) return null;
 
   const now = new Date();
+  const autoMultiplier = getAutoMultiplier(now);
   
   const getPayPeriod = () => {
     const year = now.getFullYear();
@@ -94,7 +97,7 @@ export default function Home() {
   const targetPercent = Math.min(Math.round((salaryInfo.netSalary / (settings.monthlyTarget || 1)) * 100), 100);
 
   const formatCurrency = (val: number) => {
-    return `${(val || 0).toLocaleString('vi-VN')}${settings.currency}`;
+    return `${Math.round(val || 0).toLocaleString('vi-VN')}${settings.currency}`;
   };
 
   const handleNumberInput = (key: keyof AppSettings, val: string) => {
@@ -115,20 +118,24 @@ export default function Home() {
 
   const absenceColors = getAbsenceColorClasses(settings.unexcusedAbsences);
 
-  // Tính lương tạm tính cho ca hiện tại
   const calculateCurrentSessionSalary = () => {
     if (!activeSession) return 0;
     if (activeSession.multiplier !== 1.0) {
       return (sessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier;
     } else {
-      // Ngày thường: chỉ tính tiền OT sau 8 tiếng (có 30p ân hạn)
-      if (sessionMinutes <= 510) return 0; // Dưới 8h30p chưa tính OT
+      if (sessionMinutes <= 510) return 0; 
       return ((sessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     }
   };
 
   const currentSalary = calculateCurrentSessionSalary();
   const isOvertime = sessionMinutes > 480;
+
+  const getDayTypeName = () => {
+    if (isHoliday) return "Ngày Lễ (x3.0)";
+    if (now.getDay() === 0) return "Chủ Nhật (x2.0)";
+    return "Ngày Thường (x1.0)";
+  };
 
   return (
     <div className="space-y-6 pb-24">
@@ -146,14 +153,21 @@ export default function Home() {
 
       <div className="flex flex-col items-center justify-center py-2">
         {!activeSession ? (
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button onClick={() => punchIn(1.0)} className="rounded-full px-6 shadow-sm h-12 text-base font-bold">Ngày thường</Button>
-            <Button onClick={() => punchIn(settings.overtimeMultiplier)} variant="outline" className="rounded-full px-6 shadow-sm h-12 text-base font-bold border-2 border-primary/30">
-              <Zap className="w-4 h-4 mr-1 text-primary" />
-              Tăng ca x{settings.overtimeMultiplier}
+          <div className="w-full space-y-4">
+            <div className="text-center space-y-1">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Hệ thống ghi nhận</p>
+              <p className="text-lg font-black text-primary uppercase">{getDayTypeName()}</p>
+            </div>
+            <Button 
+              onClick={() => punchIn()} 
+              className="w-full rounded-2xl h-20 text-xl font-black shadow-xl gap-3 group bg-primary hover:bg-primary/90 transition-all active:scale-95"
+            >
+              <PlayCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />
+              BẮT ĐẦU VÀO CA
             </Button>
-            <Button onClick={() => punchIn(settings.sundayMultiplier)} variant="outline" className="rounded-full px-6 shadow-sm h-12 text-base font-bold border-2">Chủ Nhật</Button>
-            <Button onClick={() => punchIn(settings.holidayMultiplier)} variant="secondary" className="rounded-full px-6 shadow-sm h-12 text-base font-bold">Ngày Lễ</Button>
+            <p className="text-[10px] text-center text-muted-foreground italic px-8">
+              Hệ thống tự động tính lương theo lịch làm việc thực tế.
+            </p>
           </div>
         ) : (
           <Card className="w-full border-2 border-primary/20 shadow-xl overflow-hidden bg-white/50 backdrop-blur-sm">
@@ -191,12 +205,12 @@ export default function Home() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 border-y py-4">
-                  <div className="text-left">
+                  <div className="text-left border-r pr-4">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold">Bắt đầu lúc</p>
                     <p className="text-sm font-bold">{new Date(activeSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Lương tăng ca tạm tính</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Lương OT tạm tính</p>
                     <p className="text-sm font-black text-green-600">+{formatCurrency(currentSalary)}</p>
                   </div>
                 </div>
@@ -204,7 +218,7 @@ export default function Home() {
                 <Button 
                   onClick={punchOut} 
                   variant="destructive" 
-                  className="w-full h-14 rounded-xl shadow-lg flex items-center justify-center gap-3 text-lg font-black group"
+                  className="w-full h-16 rounded-xl shadow-lg flex items-center justify-center gap-3 text-lg font-black group"
                 >
                   <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                   KẾT THÚC CA LÀM
@@ -343,7 +357,7 @@ export default function Home() {
           <CardContent className="p-3">
             <div className="flex items-center gap-1.5 mb-1">
               <Wallet className="w-3.5 h-3.5 text-primary" />
-              <p className="text-[9px] text-muted-foreground uppercase font-bold leading-none">Lương cơ bản</p>
+              <p className="text-[9px] text-muted-foreground uppercase font-bold leading-none">Lương tháng</p>
             </div>
             <p className="text-xs font-black truncate">{formatCurrency(settings.baseMonthlySalary)}</p>
           </CardContent>
@@ -360,8 +374,8 @@ export default function Home() {
         <Card className="border-none shadow-sm bg-muted/40">
           <CardContent className="p-3">
             <div className="flex items-center gap-1.5 mb-1">
-              <TrendingUp className="w-3.5 h-3.5 text-primary" />
-              <p className="text-[9px] text-muted-foreground uppercase font-bold leading-none">Lương OT (x1.5)</p>
+              <Zap className="w-3.5 h-3.5 text-primary" />
+              <p className="text-[9px] text-muted-foreground uppercase font-bold leading-none">OT (x1.5)</p>
             </div>
             <p className="text-xs font-black truncate">{formatCurrency(Math.round(settings.hourlyRate * 1.5))}/h</p>
           </CardContent>

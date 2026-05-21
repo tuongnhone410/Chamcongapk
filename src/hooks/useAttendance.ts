@@ -36,6 +36,20 @@ const defaultSettings: AppSettings = {
   holidayMultiplier: 3.0,
 };
 
+// Danh sách các ngày lễ cố định tại Việt Nam
+const isVietnameseHoliday = (date: Date) => {
+  const d = date.getDate();
+  const m = date.getMonth() + 1;
+  const fixedHolidays = [
+    '1-1',   // Tết Dương Lịch
+    '30-4',  // Giải phóng miền Nam
+    '1-5',   // Quốc tế Lao động
+    '2-9',   // Quốc khánh
+    '3-9'    // Quốc khánh (nghỉ thêm)
+  ];
+  return fixedHolidays.includes(`${d}-${m}`);
+};
+
 export function useAttendance() {
   const [sessions, setSessions] = useState<WorkSession[]>([]);
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
@@ -85,27 +99,38 @@ export function useAttendance() {
 
   const calculateSessionSalary = (totalMinutes: number, multiplier: number) => {
     if (multiplier === 1.0) {
+      // Ngày thường: chỉ tính tiền OT sau 8 tiếng (có 30p ân hạn)
+      // Nếu làm > 8h30p thì tính tiền OT cho toàn bộ phần > 8h
       const otMinutes = totalMinutes > 510 ? totalMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
+      // Các ngày đặc biệt (CN, Lễ): tính toàn bộ thời gian theo hệ số
       return (totalMinutes / 60) * settings.hourlyRate * multiplier;
     }
   };
 
+  const getAutoMultiplier = (date: Date = new Date()) => {
+    if (isVietnameseHoliday(date)) return settings.holidayMultiplier;
+    if (date.getDay() === 0) return settings.sundayMultiplier;
+    return 1.0; // Ngày thường (Mon-Sat)
+  };
+
   const activeSession = sessions.find(s => !s.checkOut);
 
-  const punchIn = (multiplier: number = 1.0) => {
+  const punchIn = () => {
     if (activeSession) return;
-    const now = new Date().toISOString();
+    const now = new Date();
+    const multiplier = getAutoMultiplier(now);
+    
     const newSession: WorkSession = {
       id: Math.random().toString(36).substr(2, 9),
-      checkIn: now,
+      checkIn: now.toISOString(),
       checkOut: null,
       totalMinutes: 0,
       salary: 0,
       multiplier,
       note: '',
-      createdAt: now,
+      createdAt: now.toISOString(),
     };
     saveSessions([newSession, ...sessions]);
   };
@@ -158,6 +183,7 @@ export function useAttendance() {
     
     const lunchAllowance = periodSessions.reduce((acc, s) => {
       let dailyLunch = settings.allowanceLunchPerShift;
+      // Nếu làm từ 10 tiếng trở lên (tức là có ít nhất 2h OT thực tế) thì cộng tiền cơm tăng ca
       if (s.totalMinutes >= 600) { 
         dailyLunch += settings.allowanceLunchOT;
       }
@@ -239,6 +265,8 @@ export function useAttendance() {
     deleteSession,
     updateSession,
     exportToCSV,
-    calculateFullSalary
+    calculateFullSalary,
+    getAutoMultiplier,
+    isHoliday: isVietnameseHoliday(new Date())
   };
 }
