@@ -20,7 +20,7 @@ Chào bạn, lỗi bạn vừa gặp là do Token thiếu quyền **workflow**. 
 Mở Terminal và chạy các lệnh này (Thay `<TOKEN_MỚI>` bằng dòng ghp_ bạn vừa copy):
 
 ```bash
-# Xóa cấu hình cũ
+# Xóa cấu hình cũ bị lỗi
 git remote remove origin 
 
 # Thêm lại cấu hình với Token có quyền workflow
