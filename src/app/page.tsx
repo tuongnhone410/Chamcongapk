@@ -12,7 +12,8 @@ import {
   BarChart3,
   CalendarDays,
   Timer,
-  Zap
+  Zap,
+  CheckCircle2
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -79,6 +80,12 @@ export default function Home() {
     const totalMonthMinutes = monthSessions.reduce((acc, s) => acc + (s.totalMinutes || 0), 0);
     const totalMonthHours = (totalMonthMinutes / 60).toFixed(1);
 
+    const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
+    const standardDaysCount = monthSessions.filter(s => {
+      const effective = (s.totalMinutes || 0) - breakMinutes;
+      return effective >= 480; // 8 hours
+    }).length;
+
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(now.getDate() - (6 - i));
@@ -99,8 +106,8 @@ export default function Home() {
       hours: parseFloat(((dailyMinutes[date] || 0) / 60).toFixed(1))
     }));
 
-    return { totalMonthHours, chartData, monthSessionsCount: monthSessions.length };
-  }, [sessions, isLoaded]);
+    return { totalMonthHours, chartData, monthSessionsCount: monthSessions.length, standardDaysCount };
+  }, [sessions, isLoaded, settings.breakTimeDeduction]);
 
   const salaryInfo = useMemo(() => {
     if (!isLoaded) return null;
@@ -240,22 +247,43 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
+        <Card className="border-none shadow-2xl bg-zinc-900 rounded-[2rem] overflow-hidden border border-zinc-800 col-span-2">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-[10px] uppercase font-black text-zinc-500 tracking-widest">TỔNG GIỜ CÔNG THÁNG</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-black text-white">{analyticsData.totalMonthHours}</span>
+                <span className="text-xs font-bold text-zinc-600 uppercase tracking-tighter">GIỜ</span>
+              </div>
+            </div>
+            <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
+              <Timer className="w-6 h-6 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="border-none shadow-2xl bg-zinc-900 rounded-[2rem] overflow-hidden border border-zinc-800">
-          <CardContent className="p-4 flex flex-col justify-between">
-            <p className="text-[9px] uppercase font-black text-zinc-500 tracking-widest mb-2">TỔNG GIỜ CÔNG THÁNG</p>
+          <CardContent className="p-4 flex flex-col justify-between h-full">
+            <p className="text-[9px] uppercase font-black text-orange-500 tracking-widest mb-2 flex items-center gap-1">
+              <Zap className="w-3 h-3 fill-orange-500" />
+              TỔNG GIỜ OT
+            </p>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-black text-white">{analyticsData.totalMonthHours}</span>
+              <span className="text-3xl font-black text-orange-500">{(salaryInfo.totalOTMinutes / 60).toFixed(1)}</span>
               <span className="text-[9px] font-bold text-zinc-600 uppercase">GIỜ</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-none shadow-2xl bg-zinc-900 rounded-[2rem] overflow-hidden border border-zinc-800">
-          <CardContent className="p-4 flex flex-col justify-between">
-            <p className="text-[9px] uppercase font-black text-orange-500 tracking-widest mb-2">TỔNG GIỜ OT 1.5</p>
+          <CardContent className="p-4 flex flex-col justify-between h-full">
+            <p className="text-[9px] uppercase font-black text-green-500 tracking-widest mb-2 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3" />
+              NGÀY CÔNG (≥8h)
+            </p>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-black text-orange-500">{(salaryInfo.totalOTMinutes / 60).toFixed(1)}</span>
-              <span className="text-[9px] font-bold text-zinc-600 uppercase">GIỜ</span>
+              <span className="text-3xl font-black text-green-500">{analyticsData.standardDaysCount}</span>
+              <span className="text-[9px] font-bold text-zinc-600 uppercase">NGÀY</span>
             </div>
           </CardContent>
         </Card>
