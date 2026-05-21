@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useMemo, useCallback, useState, useRef, useEffect } from 'react';
@@ -111,7 +110,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Memoize refs to stabilize Firebase queries
   const sessionsQuery = useMemo(() => {
     if (!db || !user) return null;
     return query(collection(db, 'users', user.uid, 'sessions'), orderBy('checkIn', 'desc'));

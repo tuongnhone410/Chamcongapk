@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -76,7 +75,6 @@ export default function HistoryPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Filter states
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -108,7 +106,6 @@ export default function HistoryPage() {
 
   if (!isLoaded) return null;
 
-  // Lọc dữ liệu theo tháng và năm đã chọn
   const filteredSessions = sessions.filter(s => {
     const d = new Date(s.checkIn);
     return (d.getMonth() + 1) === selectedMonth && d.getFullYear() === selectedYear;
@@ -223,7 +220,6 @@ export default function HistoryPage() {
     setSelectedYear(nextYear);
   };
 
-  const showExcludeSundays = (batchData.multiplier === -1 || batchData.multiplier === 1.0);
   const sessionDates = sessions.map(s => new Date(s.checkIn).toDateString());
 
   return (
@@ -288,7 +284,6 @@ export default function HistoryPage() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-3 border border-zinc-800">
-                  <p className="text-[10px] font-black uppercase text-zinc-500 text-center">Tích chọn các ngày trên lịch</p>
                   <Calendar
                     mode="multiple"
                     selected={selectedDates}
@@ -319,17 +314,15 @@ export default function HistoryPage() {
                       className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 outline-none focus:border-primary transition-colors text-white w-full"
                       value={multiData.startTime}
                       onChange={(e) => setMultiData({...multiData, startTime: e.target.value})}
-                      onKeyDown={(e) => e.key === 'Enter' && handleMultiAdd()}
                     />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ ra</Label>
                     <input 
                       type="time" 
-                      className="bg-zinc-900 border border-orange-500/30 h-11 font-bold rounded-xl px-3 outline-none focus:border-orange-500 transition-colors text-orange-500 w-full"
+                      className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 outline-none focus:border-primary transition-colors text-white w-full"
                       value={multiData.endTime}
                       onChange={(e) => setMultiData({...multiData, endTime: e.target.value})}
-                      onKeyDown={(e) => e.key === 'Enter' && handleMultiAdd()}
                     />
                   </div>
                 </div>
@@ -423,7 +416,7 @@ export default function HistoryPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                {showExcludeSundays && (
+                {(batchData.multiplier === -1 || batchData.multiplier === 1.0) && (
                   <div className="flex items-center space-x-2 pt-2 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
                     <Checkbox 
                       id="excludeSundays" 
@@ -474,7 +467,6 @@ export default function HistoryPage() {
         </div>
       </header>
 
-      {/* Bộ lọc tháng/năm */}
       <div className="flex items-center justify-between bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
         <Button variant="ghost" size="icon" onClick={() => changeMonth(-1)} className="rounded-xl text-zinc-400">
           <ChevronLeft className="w-5 h-5" />
@@ -497,7 +489,6 @@ export default function HistoryPage() {
           </div>
           <div className="space-y-1">
             <h3 className="text-xl font-black uppercase tracking-tighter">Tháng này chưa có dữ liệu</h3>
-            <p className="text-zinc-500 text-xs font-medium uppercase tracking-widest">Sử dụng các công cụ ở trên để thêm giờ công.</p>
           </div>
         </div>
       ) : (
@@ -505,13 +496,12 @@ export default function HistoryPage() {
           {completedSessions.map((session) => {
             const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
             const effectiveMinutes = session.totalMinutes > breakMinutes ? session.totalMinutes - breakMinutes : session.totalMinutes;
-            
             const otMinutes = session.multiplier === 1.0 
               ? (effectiveMinutes > 510 ? effectiveMinutes - 480 : 0) 
               : effectiveMinutes;
             
             return (
-              <Card key={session.id} className="border-none shadow-xl overflow-hidden group bg-zinc-900 rounded-[1.5rem] border border-zinc-800">
+              <Card key={session.id} className="border-none shadow-xl overflow-hidden bg-zinc-900 rounded-[1.5rem] border border-zinc-800">
                 <CardContent className="p-0">
                   <div className="p-4 flex items-center justify-between border-b border-zinc-800 bg-zinc-950/30">
                     <div className="flex items-center space-x-2">
@@ -521,92 +511,24 @@ export default function HistoryPage() {
                       <span className="font-black text-sm uppercase tracking-tighter">
                         {new Date(session.checkIn).toLocaleDateString('vi-VN', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </span>
-                      {session.multiplier === settings.holidayMultiplier && (
-                        <div className="flex items-center gap-1 bg-red-500/10 text-red-500 px-2 py-0.5 rounded-full border border-red-500/20">
-                          <Star className="w-3 h-3 fill-red-500" />
-                          <span className="text-[10px] font-black uppercase">Lễ</span>
-                        </div>
-                      )}
                     </div>
                     <div className="flex items-center space-x-1">
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-9 w-9 text-zinc-500 hover:text-destructive transition-colors rounded-xl"
+                        className="h-9 w-9 text-zinc-500 hover:text-destructive rounded-xl"
                         onClick={() => deleteSession(session.id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                      <Dialog open={editingSession?.id === session.id} onOpenChange={(open) => !open && setEditingSession(null)}>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-9 w-9 text-zinc-500 hover:text-primary transition-colors rounded-xl"
-                            onClick={() => setEditingSession(session)}
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
-                          <DialogHeader>
-                            <DialogTitle className="font-black uppercase text-xl text-center">Chỉnh sửa phiên</DialogTitle>
-                          </DialogHeader>
-                          {editingSession && (
-                            <div className="space-y-4 py-4">
-                              <div className="space-y-1.5">
-                                <Label className="text-[10px] font-black uppercase text-zinc-500">Vào làm</Label>
-                                <Input 
-                                  type="datetime-local" 
-                                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white"
-                                  value={formatToLocalDatetime(editingSession.checkIn)}
-                                  onChange={(e) => setEditingSession({...editingSession, checkIn: new Date(e.target.value).toISOString()})}
-                                  onKeyDown={handleKeyDownUpdate}
-                                />
-                              </div>
-                              <div className="space-y-1.5">
-                                <Label className="text-[10px] font-black uppercase text-zinc-500">Ra làm</Label>
-                                <Input 
-                                  type="datetime-local" 
-                                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white"
-                                  value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""}
-                                  onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})}
-                                  onKeyDown={handleKeyDownUpdate}
-                                />
-                              </div>
-                              <div className="space-y-1.5">
-                                <Label className="text-[10px] font-black uppercase text-zinc-500">Hệ số</Label>
-                                <Select value={editingSession.multiplier.toString()} onValueChange={(v) => setEditingSession({...editingSession, multiplier: parseFloat(v)})}>
-                                  <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="1.0">x1.0 (Tự động OT 1.5)</SelectItem>
-                                    <SelectItem value={settings.sundayMultiplier.toString()}>OT {settings.sundayMultiplier.toFixed(1)}</SelectItem>
-                                    <SelectItem value={settings.holidayMultiplier.toString()}>OT {settings.holidayMultiplier.toFixed(1)}</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="space-y-1.5">
-                                <Label className="text-[10px] font-black uppercase text-zinc-500">Ghi chú</Label>
-                                <Input 
-                                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold"
-                                  value={editingSession.note}
-                                  onChange={(e) => setEditingSession({...editingSession, note: e.target.value})}
-                                  onKeyDown={handleKeyDownUpdate}
-                                />
-                              </div>
-                            </div>
-                          )}
-                          <DialogFooter className="gap-2">
-                            <Button variant="outline" onClick={() => setEditingSession(null)} className="border-zinc-800 rounded-xl h-12 font-bold flex-1">Hủy</Button>
-                            <Button onClick={handleUpdate} className="bg-primary rounded-xl h-12 font-black shadow-xl flex-1 gap-2 transition-all active:scale-95">
-                              <Save className="w-4 h-4" />
-                              LƯU THAY ĐỔI
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-9 w-9 text-zinc-500 hover:text-primary rounded-xl"
+                        onClick={() => setEditingSession(session)}
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                   <div className="p-5 grid grid-cols-3 gap-6">
@@ -624,26 +546,67 @@ export default function HistoryPage() {
                         <Zap className="w-3.5 h-3.5 fill-orange-500/20" />
                         <span>{formatHours(otMinutes)}</span>
                       </div>
-                      <p className="text-[9px] text-zinc-600 font-bold uppercase">
-                        Hệ số: x{session.multiplier === 1.0 ? '1.5' : session.multiplier.toFixed(1)}
-                      </p>
                     </div>
                     <div className="space-y-1.5 text-right">
                       <p className="text-[10px] text-green-500 uppercase font-black tracking-widest">Lương OT</p>
                       <p className="text-lg font-black text-green-500 tracking-tighter">{formatCurrency(session.salary)}</p>
                     </div>
                   </div>
-                  {session.note && (
-                    <div className="px-5 pb-4 flex items-start space-x-2">
-                      <StickyNote className="w-3 h-3 text-zinc-600 mt-0.5" />
-                      <p className="text-[10px] text-zinc-500 font-medium italic">{session.note}</p>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             );
           })}
         </div>
+      )}
+
+      {editingSession && (
+        <Dialog open={!!editingSession} onOpenChange={(open) => !open && setEditingSession(null)}>
+          <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
+            <DialogHeader>
+              <DialogTitle className="font-black uppercase text-xl text-center">Chỉnh sửa phiên</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-zinc-500">Vào làm</Label>
+                <Input 
+                  type="datetime-local" 
+                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white"
+                  value={formatToLocalDatetime(editingSession.checkIn)}
+                  onChange={(e) => setEditingSession({...editingSession, checkIn: new Date(e.target.value).toISOString()})}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-zinc-500">Ra làm</Label>
+                <Input 
+                  type="datetime-local" 
+                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white"
+                  value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""}
+                  onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-zinc-500">Hệ số</Label>
+                <Select value={editingSession.multiplier.toString()} onValueChange={(v) => setEditingSession({...editingSession, multiplier: parseFloat(v)})}>
+                  <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1.0">x1.0 (Tự động OT 1.5)</SelectItem>
+                    <SelectItem value={settings.sundayMultiplier.toString()}>OT {settings.sundayMultiplier.toFixed(1)}</SelectItem>
+                    <SelectItem value={settings.holidayMultiplier.toString()}>OT {settings.holidayMultiplier.toFixed(1)}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setEditingSession(null)} className="border-zinc-800 rounded-xl h-12 font-bold flex-1">Hủy</Button>
+              <Button onClick={handleUpdate} className="bg-primary rounded-xl h-12 font-black shadow-xl flex-1 gap-2 transition-all active:scale-95">
+                <Save className="w-4 h-4" />
+                LƯU THAY ĐỔI
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
