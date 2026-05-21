@@ -32,8 +32,8 @@ export default function HistoryPage() {
   // Trạng thái Thêm lẻ
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [manualData, setManualData] = useState({
-    checkIn: new Date().toISOString().slice(0, 16),
-    checkOut: new Date(new Date().getTime() + 8.5 * 60 * 60 * 1000).toISOString().slice(0, 16),
+    checkIn: new Date().toISOString().slice(0, 11) + "07:00",
+    checkOut: new Date().toISOString().slice(0, 11) + "20:00",
     multiplier: 1.0,
     note: ''
   });
@@ -43,8 +43,8 @@ export default function HistoryPage() {
   const [batchData, setBatchData] = useState({
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10),
     endDate: new Date().toISOString().slice(0, 10),
-    startTime: '08:00',
-    endTime: '17:30',
+    startTime: '07:00',
+    endTime: '20:00',
     multiplier: -1,
     excludeSundays: true
   });
@@ -53,8 +53,8 @@ export default function HistoryPage() {
   const [showMultiDialog, setShowMultiDialog] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
   const [multiData, setMultiData] = useState({
-    startTime: '08:00',
-    endTime: '20:30', // Mặc định giờ tăng ca cho nhanh
+    startTime: '07:00',
+    endTime: '20:00',
     multiplier: 1.0
   });
 
