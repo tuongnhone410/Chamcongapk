@@ -43,9 +43,9 @@
   }
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30;
-    /* Tối ưu hóa render trên mobile */
     -webkit-tap-highlight-color: transparent;
-    text-rendering: optimizeLegibility;
+    text-rendering: optimizeSpeed;
+    transform: translateZ(0); /* Kích hoạt tăng tốc phần cứng */
   }
 }
 
@@ -53,18 +53,18 @@
   letter-spacing: -0.04em;
 }
 
-/* Tối ưu shadow và giảm blur cho mobile */
+/* Loại bỏ hoàn toàn blur để tối ưu FPS trên APK */
+.backdrop-blur-md, .backdrop-blur-xl {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(9, 9, 11, 0.95) !important;
+}
+
 .card-shadow {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.5);
 }
 
-/* Giảm cường độ blur để tăng FPS trên APK */
-.backdrop-blur-md {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.backdrop-blur-xl {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* Giảm hiệu ứng chuyển động để mượt hơn */
+.transition-all {
+  transition-duration: 150ms !important;
 }

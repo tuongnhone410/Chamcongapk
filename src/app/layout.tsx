@@ -11,7 +11,11 @@ import { useUser } from '@/firebase';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const inter = Inter({ subsets: ['latin', 'vietnamese'], variable: '--font-inter' });
+const inter = Inter({ 
+  subsets: ['latin', 'vietnamese'], 
+  variable: '--font-inter',
+  display: 'swap', // Tối ưu tốc độ hiển thị font
+});
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
@@ -29,15 +33,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, pathname, router]);
 
-  if (loading || (!user && pathname !== '/auth') || !isReady) {
-    if (pathname === '/auth') return <>{children}</>;
+  // Nếu là trang auth, hiển thị ngay lập tức
+  if (pathname === '/auth') return <>{children}</>;
+
+  // Nếu đang load auth hoặc chưa sẵn sàng, hiện spinner nhẹ
+  if (loading || !isReady) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950">
-        <div className="relative w-12 h-12">
-          <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-        </div>
-        <p className="mt-4 text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">TimeSnap Pro Loading...</p>
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+        <p className="mt-4 text-zinc-600 text-[10px] font-black uppercase tracking-widest">Khởi động nhanh...</p>
       </div>
     );
   }
@@ -54,19 +58,16 @@ export default function RootLayout({
     <html lang="vi" className={`${inter.variable} dark`}>
       <head>
         <title>TimeSnap Pro</title>
-        <meta name="description" content="Hệ thống chấm công bảo mật chuyên nghiệp bởi TruongVanKhoa" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="theme-color" content="#09090b" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className="font-body antialiased min-h-screen bg-background text-foreground pb-20 selection:bg-primary/30">
+      <body className="font-body antialiased min-h-screen bg-background text-foreground pb-20 overflow-x-hidden">
         <FirebaseClientProvider>
           <AuthGuard>
             <AttendanceProvider>
               <div className="min-h-screen bg-zinc-950">
-                <main className="max-w-2xl mx-auto px-4 py-8">
+                <main className="max-w-2xl mx-auto px-4 py-6">
                   {children}
                 </main>
                 <BottomNav />

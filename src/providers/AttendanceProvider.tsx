@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useMemo, useCallback, useState, useRef, useEffect } from 'react';
@@ -65,7 +66,7 @@ const defaultSettings: AppSettings = {
   currency: '₫',
   darkMode: false,
   payday: 5,
-  monthlyTarget: 10000000,
+  monthlyTarget: 0,
   allowanceHousing: 300000,
   allowanceFuel: 0,
   allowanceLunchPerShift: 30000,
@@ -125,7 +126,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const sessions = useMemo(() => sessionsData || [], [sessionsData]);
   const settings = useMemo(() => ({ ...defaultSettings, ...settingsData }), [settingsData]);
-  const isLoaded = useMemo(() => !sessionsLoading && !settingsLoading, [sessionsLoading, settingsLoading]);
+  
+  // Cho phép app hiển thị ngay cả khi đang load để tăng cảm giác tốc độ
+  const isLoaded = useMemo(() => !!user, [user]);
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
@@ -137,13 +140,13 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     } else {
       return (effectiveMinutes / 60) * settings.hourlyRate * multiplier;
     }
-  }, [settings.hourlyRate, settings.overtimeMultiplier, settings.breakTimeDeduction]);
+  }, [settings]);
 
   const getAutoMultiplier = useCallback((date: Date = new Date()) => {
     if (isVietnameseHoliday(date)) return settings.holidayMultiplier;
     if (date.getDay() === 0) return settings.sundayMultiplier;
     return 1.0;
-  }, [settings.holidayMultiplier, settings.sundayMultiplier]);
+  }, [settings]);
 
   const activeSession = useMemo(() => sessions.find(s => !s.checkOut), [sessions]);
 
