@@ -35,7 +35,7 @@ export default function HistoryPage() {
   };
 
   const formatCurrency = (val: number) => {
-    return `${settings.currency}${val.toFixed(2)}`;
+    return `${val.toLocaleString('vi-VN')}${settings.currency}`;
   };
 
   const handleUpdate = () => {
@@ -58,8 +58,8 @@ export default function HistoryPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold font-headline">Attendance Log</h1>
-        <p className="text-muted-foreground text-sm">Review and edit your past work sessions</p>
+        <h1 className="text-2xl font-bold font-headline">Nhật Ký Chấm Công</h1>
+        <p className="text-muted-foreground text-sm">Xem và chỉnh sửa các phiên làm việc trước đây</p>
       </header>
 
       {completedSessions.length === 0 ? (
@@ -68,8 +68,8 @@ export default function HistoryPage() {
             <History className="w-12 h-12 text-muted-foreground" />
           </div>
           <div>
-            <h3 className="text-lg font-bold">No history yet</h3>
-            <p className="text-muted-foreground text-sm">Your completed work sessions will appear here.</p>
+            <h3 className="text-lg font-bold">Chưa có lịch sử</h3>
+            <p className="text-muted-foreground text-sm">Các phiên làm việc đã hoàn thành sẽ xuất hiện ở đây.</p>
           </div>
         </div>
       ) : (
@@ -81,7 +81,7 @@ export default function HistoryPage() {
                   <div className="flex items-center space-x-2">
                     <Calendar className="w-4 h-4 text-primary" />
                     <span className="font-bold text-sm">
-                      {new Date(session.checkIn).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+                      {new Date(session.checkIn).toLocaleDateString('vi-VN', { weekday: 'short', month: 'short', day: 'numeric' })}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -106,12 +106,12 @@ export default function HistoryPage() {
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Edit Session</DialogTitle>
+                          <DialogTitle>Chỉnh Sửa Phiên</DialogTitle>
                         </DialogHeader>
                         {editingSession && (
                           <div className="space-y-4 py-4">
                             <div className="space-y-2">
-                              <Label>Check In Time</Label>
+                              <Label>Thời gian vào</Label>
                               <Input 
                                 type="datetime-local" 
                                 value={editingSession.checkIn.slice(0, 16)}
@@ -119,7 +119,7 @@ export default function HistoryPage() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label>Check Out Time</Label>
+                              <Label>Thời gian ra</Label>
                               <Input 
                                 type="datetime-local" 
                                 value={editingSession.checkOut?.slice(0, 16) || ''}
@@ -127,9 +127,9 @@ export default function HistoryPage() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label>Note</Label>
+                              <Label>Ghi chú</Label>
                               <Input 
-                                placeholder="Add a note..." 
+                                placeholder="Thêm ghi chú..." 
                                 value={editingSession.note}
                                 onChange={(e) => setEditingSession({...editingSession, note: e.target.value})}
                               />
@@ -137,8 +137,8 @@ export default function HistoryPage() {
                           </div>
                         )}
                         <DialogFooter>
-                          <Button variant="outline" onClick={() => setEditingSession(null)}>Cancel</Button>
-                          <Button onClick={handleUpdate}>Save Changes</Button>
+                          <Button variant="outline" onClick={() => setEditingSession(null)}>Hủy</Button>
+                          <Button onClick={handleUpdate}>Lưu thay đổi</Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
@@ -146,22 +146,22 @@ export default function HistoryPage() {
                 </div>
                 <div className="p-4 grid grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Shift</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Ca làm</p>
                     <p className="text-xs font-medium">
-                      {new Date(session.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(session.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                       <span className="mx-1">→</span>
-                      {new Date(session.checkOut!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(session.checkOut!).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Duration</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Thời lượng</p>
                     <div className="flex items-center space-x-1 text-xs font-medium">
                       <Clock className="w-3 h-3 text-primary" />
                       <span>{formatHours(session.totalMinutes)}</span>
                     </div>
                   </div>
                   <div className="space-y-1 text-right">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Pay</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Lương</p>
                     <p className="text-sm font-black text-primary">{formatCurrency(session.salary)}</p>
                   </div>
                 </div>

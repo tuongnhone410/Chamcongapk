@@ -19,10 +19,10 @@ export function DigitalClock() {
   return (
     <div className="text-center py-6">
       <div className="text-5xl font-bold font-headline tracking-tighter text-primary">
-        {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        {time.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
       </div>
-      <div className="text-muted-foreground mt-1 text-sm font-medium">
-        {time.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+      <div className="text-muted-foreground mt-1 text-sm font-medium capitalize">
+        {time.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
       </div>
     </div>
   );

@@ -8,8 +8,8 @@ const STORAGE_KEY_SESSIONS = 'timesnap_sessions';
 const STORAGE_KEY_SETTINGS = 'timesnap_settings';
 
 const defaultSettings: AppSettings = {
-  hourlyRate: 15,
-  currency: '$',
+  hourlyRate: 50000,
+  currency: '₫',
   darkMode: false,
 };
 

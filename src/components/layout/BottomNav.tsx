@@ -10,9 +10,9 @@ export function BottomNav() {
   const pathname = usePathname();
 
   const navItems = [
-    { label: 'Home', icon: Home, href: '/' },
-    { label: 'History', icon: History, href: '/history' },
-    { label: 'Settings', icon: Settings, href: '/settings' },
+    { label: 'Trang chủ', icon: Home, href: '/' },
+    { label: 'Lịch sử', icon: History, href: '/history' },
+    { label: 'Cài đặt', icon: Settings, href: '/settings' },
   ];
 
   return (

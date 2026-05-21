@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { LogIn, LogOut, Clock, DollarSign, Calendar } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
-export default function Home() {
+export function Home() {
   const { 
     activeSession, 
     sessions, 
@@ -38,11 +38,11 @@ export default function Home() {
   const formatHours = (mins: number) => {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    return `${h}h ${m}m`;
+    return `${h}giờ ${m}phút`;
   };
 
   const formatCurrency = (val: number) => {
-    return `${settings.currency}${val.toFixed(2)}`;
+    return `${val.toLocaleString('vi-VN')}${settings.currency}`;
   };
 
   return (
@@ -50,12 +50,12 @@ export default function Home() {
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold font-headline">TimeSnap</h1>
-          <p className="text-muted-foreground text-sm">Offline Attendance Tracker</p>
+          <p className="text-muted-foreground text-sm">Trình Chấm Công Ngoại Tuyến</p>
         </div>
         {activeSession && (
           <div className="flex items-center space-x-2 animate-pulse">
             <div className="w-2 h-2 rounded-full bg-green-500" />
-            <span className="text-xs font-bold uppercase text-green-500">Working Now</span>
+            <span className="text-xs font-bold uppercase text-green-500">Đang làm việc</span>
           </div>
         )}
       </header>
@@ -72,21 +72,21 @@ export default function Home() {
           {activeSession ? (
             <>
               <LogOut className="w-12 h-12" />
-              <span className="text-xl font-bold uppercase tracking-widest">Punch Out</span>
+              <span className="text-xl font-bold uppercase tracking-widest">Kết Thúc</span>
             </>
           ) : (
             <>
               <LogIn className="w-12 h-12" />
-              <span className="text-xl font-bold uppercase tracking-widest">Punch In</span>
+              <span className="text-xl font-bold uppercase tracking-widest">Bắt Đầu</span>
             </>
           )}
         </Button>
         
         {activeSession && (
           <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">Checked in at</p>
+            <p className="text-sm text-muted-foreground">Bắt đầu lúc</p>
             <p className="text-lg font-bold">
-              {new Date(activeSession.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {new Date(activeSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
         )}
@@ -99,21 +99,21 @@ export default function Home() {
               <div className="p-2 rounded-full bg-primary/10 text-primary">
                 <Calendar className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-sm uppercase tracking-wider">Today's Total</h3>
+              <h3 className="font-bold text-sm uppercase tracking-wider">Tổng Hôm Nay</h3>
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-end">
                 <div>
                   <p className="text-3xl font-black font-headline">{formatHours(todayMinutes)}</p>
-                  <p className="text-xs text-muted-foreground">Work Duration</p>
+                  <p className="text-xs text-muted-foreground">Thời gian làm</p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-primary">{formatCurrency(todaySalary)}</p>
-                  <p className="text-xs text-muted-foreground">Earned</p>
+                  <p className="text-xs text-muted-foreground">Thu nhập</p>
                 </div>
               </div>
               <Progress value={Math.min((todayMinutes / 480) * 100, 100)} className="h-2" />
-              <p className="text-[10px] text-muted-foreground text-center">Daily goal: 8 hours</p>
+              <p className="text-[10px] text-muted-foreground text-center">Mục tiêu: 8 tiếng</p>
             </div>
           </CardContent>
         </Card>
@@ -124,17 +124,17 @@ export default function Home() {
               <div className="p-2 rounded-full bg-accent/10 text-accent">
                 <Clock className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-sm uppercase tracking-wider">Monthly Stats</h3>
+              <h3 className="font-bold text-sm uppercase tracking-wider">Thống Kê Tháng</h3>
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-end">
                 <div>
                   <p className="text-3xl font-black font-headline">{formatHours(monthMinutes)}</p>
-                  <p className="text-xs text-muted-foreground">Total Hours</p>
+                  <p className="text-xs text-muted-foreground">Tổng số giờ</p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-accent">{formatCurrency(monthSalary)}</p>
-                  <p className="text-xs text-muted-foreground">Total Salary</p>
+                  <p className="text-xs text-muted-foreground">Tổng lương</p>
                 </div>
               </div>
             </div>
@@ -149,15 +149,17 @@ export default function Home() {
               <DollarSign className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase font-bold">Hourly Rate</p>
-              <p className="text-lg font-bold">{formatCurrency(settings.hourlyRate)}/hour</p>
+              <p className="text-xs text-muted-foreground uppercase font-bold">Lương Theo Giờ</p>
+              <p className="text-lg font-bold">{formatCurrency(settings.hourlyRate)}/giờ</p>
             </div>
           </div>
           <Button variant="outline" size="sm" asChild>
-            <a href="/settings">Adjust</a>
+            <a href="/settings">Thay đổi</a>
           </Button>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+export default Home;

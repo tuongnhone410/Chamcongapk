@@ -5,8 +5,8 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'TimeSnap - Personal Attendance',
-  description: 'Track your work hours and earnings offline.',
+  title: 'TimeSnap - Chấm Công Cá Nhân',
+  description: 'Theo dõi giờ làm việc và thu nhập ngoại tuyến.',
 };
 
 export default function RootLayout({
@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

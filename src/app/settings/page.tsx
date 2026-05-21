@@ -18,51 +18,51 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold font-headline">Settings</h1>
-        <p className="text-muted-foreground text-sm">Personalize your tracking experience</p>
+        <h1 className="text-2xl font-bold font-headline">Cài Đặt</h1>
+        <p className="text-muted-foreground text-sm">Cá nhân hóa trải nghiệm theo dõi của bạn</p>
       </header>
 
       <Card className="border-none shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
             <DollarSign className="w-5 h-5 text-primary" />
-            <span>Remuneration</span>
+            <span>Thù Lao</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="hourlyRate">Hourly Rate</Label>
+            <Label htmlFor="hourlyRate">Lương Theo Giờ</Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">
-                {settings.currency}
-              </span>
               <Input 
                 id="hourlyRate" 
                 type="number" 
-                className="pl-8"
+                className="pr-8"
                 value={settings.hourlyRate}
                 onChange={(e) => updateSettings({...settings, hourlyRate: parseFloat(e.target.value) || 0})}
               />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">
+                {settings.currency}
+              </span>
             </div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
-              Base rate used for automatic salary calculation
+              Mức lương cơ bản dùng để tự động tính toán thu nhập
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label>Currency Symbol</Label>
+            <Label>Đơn Vị Tiền Tệ</Label>
             <Select 
               value={settings.currency} 
               onValueChange={(val) => updateSettings({...settings, currency: val})}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select currency" />
+                <SelectValue placeholder="Chọn loại tiền" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="₫">VND (₫)</SelectItem>
                 <SelectItem value="$">USD ($)</SelectItem>
                 <SelectItem value="€">EUR (€)</SelectItem>
                 <SelectItem value="£">GBP (£)</SelectItem>
-                <SelectItem value="₫">VND (₫)</SelectItem>
                 <SelectItem value="¥">JPY (¥)</SelectItem>
               </SelectContent>
             </Select>
@@ -74,14 +74,14 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center space-x-2">
             <Sun className="w-5 h-5 text-primary" />
-            <span>Display</span>
+            <span>Hiển Thị</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Dark Mode</Label>
-              <p className="text-xs text-muted-foreground">Adjust the interface for low-light environments</p>
+              <Label>Chế Độ Tối</Label>
+              <p className="text-xs text-muted-foreground">Điều chỉnh giao diện cho môi trường ánh sáng yếu</p>
             </div>
             <div className="flex items-center space-x-2">
               <Sun className="w-4 h-4 text-muted-foreground" />
@@ -98,7 +98,7 @@ export default function SettingsPage() {
       <Alert className="bg-primary/5 border-none">
         <Info className="h-4 w-4 text-primary" />
         <AlertDescription className="text-xs">
-          All your data is stored locally in your browser cache. Clearing your browser data will delete all work sessions.
+          Tất cả dữ liệu của bạn được lưu trữ cục bộ trong bộ nhớ cache của trình duyệt. Việc xóa dữ liệu trình duyệt sẽ xóa tất cả các phiên làm việc.
         </AlertDescription>
       </Alert>
 
