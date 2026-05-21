@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -17,15 +16,57 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
-import { History, Trash2, Edit3, Clock, Calendar as CalendarIcon, StickyNote, Download, Zap, PlusCircle, Layers, Star, CheckSquare, X } from 'lucide-react';
-import { useState } from 'react';
+import { 
+  History, 
+  Trash2, 
+  Edit3, 
+  Clock, 
+  Calendar as CalendarIcon, 
+  StickyNote, 
+  Download, 
+  Zap, 
+  PlusCircle, 
+  Layers, 
+  Star, 
+  CheckSquare, 
+  X,
+  RotateCcw,
+  AlertTriangle
+} from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { WorkSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
 
 export default function HistoryPage() {
-  const { sessions, isLoaded, deleteSession, updateSession, addManualSession, batchAddSessions, multiAddSessions, settings, exportToCSV } = useAttendance();
+  const { 
+    sessions, 
+    isLoaded, 
+    deleteSession, 
+    updateSession, 
+    addManualSession, 
+    batchAddSessions, 
+    multiAddSessions, 
+    clearAllHistory,
+    restoreHistory,
+    canUndo,
+    undoCountdown,
+    settings, 
+    exportToCSV 
+  } = useAttendance();
+  
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
   const { toast } = useToast();
   
@@ -138,8 +179,21 @@ export default function HistoryPage() {
     }
   };
 
-  const showExcludeSundays = (batchData.multiplier === -1 || batchData.multiplier === 1.0);
+  const handleClearAll = async () => {
+    await clearAllHistory();
+    toast({ 
+      title: "Đã xóa tất cả", 
+      description: "Bạn có 10 giây để khôi phục dữ liệu.",
+      variant: "destructive"
+    });
+  };
 
+  const handleRestore = async () => {
+    await restoreHistory();
+    toast({ title: "Đã khôi phục", description: "Dữ liệu của bạn đã quay trở lại." });
+  };
+
+  const showExcludeSundays = (batchData.multiplier === -1 || batchData.multiplier === 1.0);
   const sessionDates = sessions.map(s => new Date(s.checkIn).toDateString());
 
   return (
@@ -150,6 +204,49 @@ export default function HistoryPage() {
           <p className="text-muted-foreground text-xs font-medium uppercase tracking-widest">Quản lý phiên làm việc</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {/* Nút Undo - Chỉ hiện khi có thể khôi phục */}
+          {canUndo && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleRestore}
+              className="gap-2 text-xs rounded-xl h-10 border-green-500/50 bg-green-500/10 text-green-500 font-black animate-pulse"
+            >
+              <RotateCcw className="w-4 h-4" />
+              KHÔI PHỤC ({undoCountdown}s)
+            </Button>
+          )}
+
+          {/* Nút Xóa tất cả */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                disabled={completedSessions.length === 0}
+                className="gap-2 text-xs rounded-xl h-10 border-red-500/30 bg-zinc-900 text-red-500 font-bold hover:bg-red-500 hover:text-white"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Xóa hết
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="font-black text-xl text-red-500 flex items-center gap-2">
+                  <AlertTriangle className="w-6 h-6" />
+                  XÁC NHẬN XÓA TOÀN BỘ
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-zinc-400 font-bold">
+                  Hành động này sẽ xóa tất cả {completedSessions.length} phiên làm việc. Bạn sẽ có 10 giây để nhấn nút KHÔI PHỤC trước khi dữ liệu bị xóa vĩnh viễn.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="rounded-xl font-bold border-zinc-800">Hủy</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClearAll} className="bg-red-600 hover:bg-red-500 rounded-xl font-black">CHẤP NHẬN XÓA</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
           <Dialog open={showMultiDialog} onOpenChange={setShowMultiDialog}>
             <DialogTrigger asChild>
               <Button size="sm" variant="default" className="gap-2 text-xs rounded-xl h-10 bg-primary font-black shadow-lg">

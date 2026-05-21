@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { createContext, useMemo, useCallback } from 'react';
+import React, { createContext, useMemo, useCallback, useState, useRef } from 'react';
 import { WorkSession, AppSettings } from '@/lib/types';
 import { 
   useUser, 
@@ -18,7 +17,8 @@ import {
   updateDoc,
   query,
   orderBy,
-  writeBatch
+  writeBatch,
+  getDocs
 } from 'firebase/firestore';
 
 export interface AttendanceContextType {
@@ -46,6 +46,10 @@ export interface AttendanceContextType {
   updateSettings: (newSettings: AppSettings) => void;
   deleteSession: (id: string) => void;
   updateSession: (updated: WorkSession) => void;
+  clearAllHistory: () => Promise<void>;
+  restoreHistory: () => Promise<void>;
+  canUndo: boolean;
+  undoCountdown: number;
   exportToCSV: () => void;
   calculateFullSalary: (periodSessions: WorkSession[]) => any;
   getAutoMultiplier: (date?: Date) => number;
@@ -98,6 +102,12 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const { user } = useUser();
   const db = useFirestore();
 
+  const [canUndo, setCanUndo] = useState(false);
+  const [undoCountdown, setUndoCountdown] = useState(0);
+  const [deletedSessionsCache, setDeletedSessionsCache] = useState<WorkSession[]>([]);
+  const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const sessionsRef = useMemo(() => {
     if (!db || !user) return null;
     return query(collection(db, 'users', user.uid, 'sessions'), orderBy('checkIn', 'desc'));
@@ -117,11 +127,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
     if (multiplier === 1.0) {
-      // Ngày thường: Sau 8h30p (510p) tính OT 1.5 cho phần vượt quá 8h (480p)
       const otMinutes = totalMinutes > 510 ? totalMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
-      // Chủ Nhật / Ngày Lễ: Tính toàn bộ theo hệ số (OT 2.0/3.0)
       return (totalMinutes / 60) * settings.hourlyRate * multiplier;
     }
   }, [settings.hourlyRate, settings.overtimeMultiplier]);
@@ -259,6 +267,64 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     await batch.commit();
   }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier, settings.sundayMultiplier]);
 
+  const clearAllHistory = useCallback(async () => {
+    if (!db || !user || sessions.length === 0) return;
+
+    // Lưu lại cache
+    setDeletedSessionsCache([...sessions]);
+    setCanUndo(true);
+    setUndoCountdown(10);
+
+    // Xóa trong Firestore
+    const batch = writeBatch(db);
+    sessions.forEach(s => {
+      const sRef = doc(db, 'users', user.uid, 'sessions', s.id);
+      batch.delete(sRef);
+    });
+    await batch.commit();
+
+    // Hủy timer cũ nếu có
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+
+    // Bắt đầu đếm ngược
+    countdownIntervalRef.current = setInterval(() => {
+      setUndoCountdown(prev => {
+        if (prev <= 1) {
+          if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Sau 10s xóa cache vĩnh viễn
+    undoTimerRef.current = setTimeout(() => {
+      setCanUndo(false);
+      setDeletedSessionsCache([]);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    }, 10000);
+
+  }, [db, user, sessions]);
+
+  const restoreHistory = useCallback(async () => {
+    if (!db || !user || !canUndo || deletedSessionsCache.length === 0) return;
+
+    const batch = writeBatch(db);
+    deletedSessionsCache.forEach(s => {
+      const sRef = doc(db, 'users', user.uid, 'sessions', s.id);
+      const { id, ...data } = s; // Không lưu id vào nội dung doc vì id là tên file
+      batch.set(sRef, data);
+    });
+    await batch.commit();
+
+    // Xóa trạng thái undo
+    setCanUndo(false);
+    setDeletedSessionsCache([]);
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+  }, [db, user, canUndo, deletedSessionsCache]);
+
   const updateSettings = useCallback((newSettings: AppSettings) => {
     if (!db || !user) return;
     setDoc(doc(db, 'users', user.uid, 'settings', 'current'), newSettings, { merge: true });
@@ -368,6 +434,10 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     updateSettings,
     deleteSession,
     updateSession,
+    clearAllHistory,
+    restoreHistory,
+    canUndo,
+    undoCountdown,
     exportToCSV,
     calculateFullSalary,
     getAutoMultiplier,
@@ -375,6 +445,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   }), [
     sessions, activeSession, settings, isLoaded, punchIn, punchOut, 
     addManualSession, batchAddSessions, multiAddSessions, updateSettings, deleteSession, updateSession, 
+    clearAllHistory, restoreHistory, canUndo, undoCountdown,
     exportToCSV, calculateFullSalary, getAutoMultiplier
   ]);
 
