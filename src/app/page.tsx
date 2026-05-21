@@ -131,7 +131,6 @@ export default function Home() {
 
   const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
   
-  // Tính tiền OT 1.5 đang nhảy trực tiếp
   const currentOTSalary = activeSession 
     ? (activeSession.multiplier === 1.0 
       ? (sessionMinutes > 510 ? ((sessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier : 0)
@@ -170,7 +169,7 @@ export default function Home() {
               className="w-full rounded-[2rem] h-24 text-2xl font-black shadow-2xl gap-3 bg-primary hover:bg-primary/90 transition-all active:scale-95 border-b-4 border-black/20"
             >
               <PlayCircle className="w-8 h-8" />
-              BẮT ĐẦU VÀO CA
+              VÀO CA
             </Button>
           </div>
         ) : (
@@ -219,10 +218,10 @@ export default function Home() {
                 <Button 
                   onClick={punchOut} 
                   variant="destructive" 
-                  className="w-full h-20 rounded-[1.5rem] shadow-xl text-xl font-black group border-b-4 border-black/20"
+                  className="w-full h-24 rounded-[2rem] shadow-xl text-2xl font-black group border-b-4 border-black/20"
                 >
-                  <LogOut className="w-6 h-6 mr-2" />
-                  KẾT THÚC PHIÊN
+                  <LogOut className="w-7 h-7 mr-2" />
+                  RA CA
                 </Button>
               </div>
             </CardContent>
