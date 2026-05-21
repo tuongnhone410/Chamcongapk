@@ -170,48 +170,48 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          <Card className="w-full border-2 border-primary/20 shadow-xl overflow-hidden bg-white/50 backdrop-blur-sm">
+          <Card className="w-full border-2 border-zinc-800 shadow-2xl overflow-hidden bg-zinc-950 text-white">
             <CardContent className="p-0">
-              <div className="bg-primary/5 p-4 border-b flex items-center justify-between">
+              <div className="bg-zinc-900 p-4 border-b border-zinc-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-primary">Đang trong ca làm</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-green-500">Đang trong ca làm</span>
                 </div>
-                <div className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">
+                <div className="text-[10px] bg-primary/20 text-primary-foreground px-2 py-0.5 rounded font-bold border border-primary/30">
                   Hệ số x{activeSession.multiplier}
                 </div>
               </div>
               
               <div className="p-6 text-center space-y-6">
                 <div className="space-y-1">
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Thời gian làm việc</p>
-                  <div className="text-5xl font-black text-primary font-mono tracking-tighter">
+                  <p className="text-[10px] text-zinc-400 uppercase font-bold">Thời gian làm việc</p>
+                  <div className="text-5xl font-black text-white font-mono tracking-tighter">
                     {elapsedTime}
                   </div>
                   <div className="flex items-center justify-center gap-2 mt-2">
                     {activeSession.multiplier === 1.0 ? (
                       <span className={cn(
                         "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-                        isOvertime ? "bg-orange-100 text-orange-600 border-orange-200" : "bg-blue-100 text-blue-600 border-blue-200"
+                        isOvertime ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-blue-500/20 text-blue-400 border-blue-500/30"
                       )}>
                         {isOvertime ? "TRẠNG THÁI: TĂNG CA (OT)" : "TRẠNG THÁI: GIỜ HÀNH CHÍNH"}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-600 border border-purple-200">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
                         TRẠNG THÁI: TĂNG CA ĐẶC BIỆT
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 border-y py-4">
-                  <div className="text-left border-r pr-4">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Bắt đầu lúc</p>
-                    <p className="text-sm font-bold">{new Date(activeSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
+                <div className="grid grid-cols-2 gap-4 border-y border-zinc-800 py-4">
+                  <div className="text-left border-r border-zinc-800 pr-4">
+                    <p className="text-[10px] text-zinc-400 uppercase font-bold">Bắt đầu lúc</p>
+                    <p className="text-sm font-bold text-zinc-200">{new Date(activeSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Lương OT tạm tính</p>
-                    <p className="text-sm font-black text-green-600">+{formatCurrency(currentSalary)}</p>
+                    <p className="text-[10px] text-zinc-400 uppercase font-bold">Lương OT tạm tính</p>
+                    <p className="text-sm font-black text-green-400">+{formatCurrency(currentSalary)}</p>
                   </div>
                 </div>
 
@@ -223,7 +223,7 @@ export default function Home() {
                   <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                   KẾT THÚC CA LÀM
                 </Button>
-                <p className="text-[9px] text-muted-foreground italic">Nhấn kết thúc để lưu dữ liệu vào nhật ký chấm công</p>
+                <p className="text-[9px] text-zinc-500 italic">Nhấn kết thúc để lưu dữ liệu vào nhật ký chấm công</p>
               </div>
             </CardContent>
           </Card>
