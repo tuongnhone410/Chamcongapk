@@ -111,11 +111,11 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
     if (multiplier === 1.0) {
-      // Ngày thường: Tự động tính OT 1.5 nếu vượt quá 8h30p
+      // Ngày thường: Sau 8h30p tính OT 1.5
       const otMinutes = totalMinutes > 510 ? totalMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
-      // Chủ Nhật / Ngày Lễ: Tính toàn bộ theo hệ số
+      // Chủ Nhật / Ngày Lễ: Tính toàn bộ theo hệ số (OT 2.0/3.0)
       return (totalMinutes / 60) * settings.hourlyRate * multiplier;
     }
   }, [settings.hourlyRate, settings.overtimeMultiplier]);
@@ -188,7 +188,8 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     
     let current = new Date(start);
     while (current <= end) {
-      if (data.excludeSundays && current.getDay() === 0) {
+      // Chỉ kiểm tra "Bỏ qua chủ nhật" nếu người dùng KHÔNG chọn đích danh OT 2.0
+      if (data.excludeSundays && current.getDay() === 0 && data.multiplier !== settings.sundayMultiplier) {
         current.setDate(current.getDate() + 1);
         continue;
       }
@@ -201,7 +202,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         const checkOut = new Date(`${dateStr}T${data.endTime}`);
         const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
         
-        // Tự động nhận diện CN/Lễ nếu chọn -1
+        // Tự động nhận diện nếu multiplier = -1
         const finalMultiplier = data.multiplier === -1 ? getAutoMultiplier(current) : data.multiplier;
         const salary = calculateSessionSalary(diffMinutes, finalMultiplier);
         
@@ -220,7 +221,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     }
     
     await batch.commit();
-  }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier]);
+  }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier, settings.sundayMultiplier]);
 
   const updateSettings = useCallback((newSettings: AppSettings) => {
     if (!db || !user) return;

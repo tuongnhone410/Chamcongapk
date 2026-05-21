@@ -26,23 +26,21 @@ export default function HistoryPage() {
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
   const { toast } = useToast();
   
-  // State for manual entry
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [manualData, setManualData] = useState({
     checkIn: new Date().toISOString().slice(0, 16),
-    checkOut: new Date(new Date().getTime() + 8 * 60 * 60 * 1000).toISOString().slice(0, 16),
+    checkOut: new Date(new Date().getTime() + 8.5 * 60 * 60 * 1000).toISOString().slice(0, 16),
     multiplier: 1.0,
     note: ''
   });
 
-  // State for batch entry
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [batchData, setBatchData] = useState({
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10),
     endDate: new Date().toISOString().slice(0, 10),
     startTime: '08:00',
     endTime: '17:30',
-    multiplier: -1, // -1 means AUTO recognition
+    multiplier: -1,
     excludeSundays: true
   });
 
@@ -97,6 +95,9 @@ export default function HistoryPage() {
       toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm hàng loạt." });
     }
   };
+
+  // Ẩn checkbox "Bỏ qua chủ nhật" nếu người dùng chọn đích danh OT 2.0 (Chủ nhật)
+  const showExcludeSundays = batchData.multiplier === -1 || batchData.multiplier === 1.0;
 
   return (
     <div className="space-y-6">
@@ -165,21 +166,23 @@ export default function HistoryPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="-1">Tự động nhận diện (OT 2.0/3.0)</SelectItem>
+                      <SelectItem value="-1">Tự động (Nhận diện OT {settings.sundayMultiplier.toFixed(1)}/{settings.holidayMultiplier.toFixed(1)})</SelectItem>
                       <SelectItem value="1.0">Ngày thường (x1.0)</SelectItem>
-                      <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (OT {settings.sundayMultiplier.toFixed(1)})</SelectItem>
-                      <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (OT {settings.holidayMultiplier.toFixed(1)})</SelectItem>
+                      <SelectItem value={settings.sundayMultiplier.toString()}>OT {settings.sundayMultiplier.toFixed(1)} (Chủ Nhật)</SelectItem>
+                      <SelectItem value={settings.holidayMultiplier.toString()}>OT {settings.holidayMultiplier.toFixed(1)} (Ngày Lễ)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox 
-                    id="excludeSundays" 
-                    checked={batchData.excludeSundays}
-                    onCheckedChange={(checked) => setBatchData({...batchData, excludeSundays: !!checked})}
-                  />
-                  <Label htmlFor="excludeSundays" className="text-xs font-bold cursor-pointer">Bỏ qua ngày Chủ Nhật</Label>
-                </div>
+                {showExcludeSundays && (
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Checkbox 
+                      id="excludeSundays" 
+                      checked={batchData.excludeSundays}
+                      onCheckedChange={(checked) => setBatchData({...batchData, excludeSundays: !!checked})}
+                    />
+                    <Label htmlFor="excludeSundays" className="text-xs font-bold cursor-pointer">Bỏ qua ngày Chủ Nhật</Label>
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowBatchDialog(false)} className="border-zinc-800">Hủy</Button>
@@ -226,8 +229,8 @@ export default function HistoryPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1.0">Ngày thường (x1.0)</SelectItem>
-                      <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (OT {settings.sundayMultiplier.toFixed(1)})</SelectItem>
-                      <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (OT {settings.holidayMultiplier.toFixed(1)})</SelectItem>
+                      <SelectItem value={settings.sundayMultiplier.toString()}>OT {settings.sundayMultiplier.toFixed(1)} (Chủ Nhật)</SelectItem>
+                      <SelectItem value={settings.holidayMultiplier.toString()}>OT {settings.holidayMultiplier.toFixed(1)} (Ngày Lễ)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -379,7 +382,7 @@ export default function HistoryPage() {
                         <Zap className="w-3 h-3" />
                         <span>{formatHours(otMinutes)}</span>
                       </div>
-                      <p className="text-[9px] text-zinc-500">x{session.multiplier.toFixed(1)}</p>
+                      <p className="text-[9px] text-zinc-500">OT {session.multiplier === 1.0 ? '1.5' : session.multiplier.toFixed(1)}</p>
                     </div>
                     <div className="space-y-1 text-right">
                       <p className="text-[10px] text-zinc-500 uppercase font-black">Lương OT</p>
