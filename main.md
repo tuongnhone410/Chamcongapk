@@ -1,36 +1,45 @@
-
 # Hướng dẫn tạo file APK & Đẩy code lên GitHub - TimeSnap Pro
 
-Chào bạn TruongVanKhoa, đây là hướng dẫn để bạn tự tay tạo ra file **.apk** từ mã nguồn này.
+Chào bạn TruongVanKhoa, đây là hướng dẫn chuẩn nhất để bạn đưa code lên GitHub thành công và tự tạo file **.apk**.
 
-### 1. Cách đẩy code lên GitHub (Chạy từng dòng)
-Nếu gặp lỗi, hãy chạy lệnh này trước: `git remote remove origin`
+### 1. Cách đẩy code lên GitHub (CHẠY TỪNG DÒNG)
+Để tránh lỗi, hãy chạy lệnh xóa cấu hình cũ trước:
 
 ```bash
+git remote remove origin
 git init
 git add .
-git commit -m "Hoàn thiện app TimeSnap Pro - Sẵn sàng tạo APK"
+git commit -m "Hoàn thiện app TimeSnap Pro - Chuẩn bị xuất APK"
 git branch -M main
 git remote add origin https://github.com/tuongnhone410/Chamcongapk.git
 git push -u origin main
 ```
 
-### 2. Cách tự tạo file APK (Cần máy tính có cài Android Studio)
+### 2. Cách tự tạo file APK (Cần máy tính)
 
-Vì tôi là AI nên không thể xuất file trực tiếp, nhưng tôi đã cấu hình sẵn để bạn làm việc này cực nhanh:
+Sau khi code đã lên GitHub, bạn tải code về máy tính cá nhân và làm theo các bước này để lấy file `.apk`:
 
-1. **Bước 1**: Tải mã nguồn này về máy tính của bạn.
-2. **Bước 2**: Mở Terminal tại thư mục dự án và chạy các lệnh:
+1. **Bước 1**: Cài đặt các thư viện cần thiết:
    ```bash
    npm install
+   ```
+2. **Bước 2**: Biên dịch ứng dụng sang bản tĩnh:
+   ```bash
    npm run build
+   ```
+3. **Bước 3**: Khởi tạo môi trường Android (Chỉ chạy lần đầu):
+   ```bash
    npx cap add android
+   ```
+4. **Bước 4**: Đồng bộ code vào thư mục Android:
+   ```bash
    npx cap copy
+   ```
+5. **Bước 5**: Mở bằng Android Studio để xuất APK:
+   ```bash
    npx cap open android
    ```
-3. **Bước 3**: Sau lệnh cuối, **Android Studio** sẽ tự động mở lên.
-4. **Bước 4**: Trong Android Studio, chọn menu **Build** -> **Build Bundle(s) / APK(s)** -> **Build APK(s)**.
-5. **Bước 5**: Chờ một lát, Android Studio sẽ hiện thông báo "APK(s) generated successfully". Bạn nhấn **Locate** để lấy file `.apk` cài vào điện thoại!
+6. **Bước 6**: Trong Android Studio: Chọn **Build** -> **Build Bundle(s) / APK(s)** -> **Build APK(s)**.
 
 ---
 **Thiết kế bởi TruongVanKhoa**
