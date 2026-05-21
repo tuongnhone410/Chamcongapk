@@ -25,7 +25,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
@@ -44,14 +44,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={inter.variable}>
-      <body className="font-body antialiased min-h-screen bg-background text-foreground pb-20">
+    <html lang="vi" className={`${inter.variable} dark`}>
+      <body className="font-body antialiased min-h-screen bg-background text-foreground pb-20 selection:bg-primary/30">
         <FirebaseClientProvider>
           <AuthGuard>
-            <main className="max-w-2xl mx-auto px-4 py-8">
-              {children}
-            </main>
-            <BottomNav />
+            <div className="min-h-screen bg-zinc-950">
+              <main className="max-w-2xl mx-auto px-4 py-8">
+                {children}
+              </main>
+              <BottomNav />
+            </div>
           </AuthGuard>
           <Toaster />
         </FirebaseClientProvider>
