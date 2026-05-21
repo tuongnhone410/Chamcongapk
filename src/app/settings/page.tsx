@@ -191,21 +191,21 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
-            <Label className={labelClass}>OT thường</Label>
+            <Label className={cn(labelClass, "text-zinc-500")}>OT thường</Label>
             <Input type="number" step="0.1" className={inputClass} value={localSettings.overtimeMultiplier.toString()} onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)} />
             <p className="text-[10px] font-black text-orange-500 mt-1">
               {formatMoneyDisplay(localSettings.hourlyRate * localSettings.overtimeMultiplier)}đ/h
             </p>
           </div>
           <div className="space-y-1">
-            <Label className={labelClass}>OT CN</Label>
+            <Label className={cn(labelClass, "text-zinc-500")}>OT CN</Label>
             <Input type="number" step="0.1" className={inputClass} value={localSettings.sundayMultiplier.toString()} onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)} />
             <p className="text-[10px] font-black text-orange-500 mt-1">
               {formatMoneyDisplay(localSettings.hourlyRate * localSettings.sundayMultiplier)}đ/h
             </p>
           </div>
           <div className="space-y-1">
-            <Label className={labelClass}>OT Lễ</Label>
+            <Label className={cn(labelClass, "text-zinc-500")}>OT Lễ</Label>
             <Input type="number" step="0.1" className={inputClass} value={localSettings.holidayMultiplier.toString()} onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)} />
             <p className="text-[10px] font-black text-orange-500 mt-1">
               {formatMoneyDisplay(localSettings.hourlyRate * localSettings.holidayMultiplier)}đ/h
@@ -251,38 +251,38 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Phụ Cấp & Tiền Cơm */}
+      {/* Các khoản phụ cấp */}
       <Card className="border-zinc-800 bg-zinc-900 overflow-hidden rounded-[2rem]">
         <CardHeader className="pb-2">
-          <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-blue-500">
+          <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-zinc-500">
             <Gift className="w-4 h-4" /> Các khoản phụ cấp
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-blue-500")}>Kỹ thuật (Trừ KP)</Label>
+              <Label className={cn(labelClass, "text-zinc-500")}>Kỹ thuật (Trừ KP)</Label>
               <div className="relative">
                 <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceTechnical)} onChange={(e) => handleMoneyInput('allowanceTechnical', e.target.value)} />
                 <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-blue-500")}>Trách nhiệm (Trừ KP)</Label>
+              <Label className={cn(labelClass, "text-zinc-500")}>Trách nhiệm (Trừ KP)</Label>
               <div className="relative">
                 <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowanceResponsibility)} onChange={(e) => handleMoneyInput('allowanceResponsibility', e.target.value)} />
                 <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-blue-500")}>Chức vụ (Trừ KP)</Label>
+              <Label className={cn(labelClass, "text-zinc-500")}>Chức vụ (Trừ KP)</Label>
               <div className="relative">
                 <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowancePosition)} onChange={(e) => handleMoneyInput('allowancePosition', e.target.value)} />
                 <span className={currencyClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-blue-500")}>Hiệu suất (Trừ KP)</Label>
+              <Label className={cn(labelClass, "text-zinc-500")}>Hiệu suất (Trừ KP)</Label>
               <div className="relative">
                 <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings.allowancePerformance)} onChange={(e) => handleMoneyInput('allowancePerformance', e.target.value)} />
                 <span className={currencyClass}>đ</span>
