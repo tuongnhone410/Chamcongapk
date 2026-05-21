@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth, useUser } from '@/firebase';
 import { 
   signInWithEmailAndPassword, 
@@ -27,17 +26,22 @@ export default function AuthPage() {
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
 
-  if (user) {
-    router.push('/');
+  // Chuyển logic điều hướng vào useEffect để tránh lỗi "setState in render"
+  useEffect(() => {
+    if (user && !userLoading) {
+      router.push('/');
+    }
+  }, [user, userLoading, router]);
+
+  if (user || userLoading) {
     return null;
   }
 
   const handleEmailAuth = async (mode: 'login' | 'signup') => {
     if (!auth) return;
 
-    // Chuẩn hóa dữ liệu đầu vào
     let targetEmail = email.trim();
     const targetPassword = password.trim();
 
@@ -55,7 +59,6 @@ export default function AuthPage() {
       return;
     }
 
-    // Kiểm tra định dạng email cơ bản
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(targetEmail)) {
       toast({
@@ -73,7 +76,7 @@ export default function AuthPage() {
       } else {
         await createUserWithEmailAndPassword(auth, targetEmail, targetPassword);
       }
-      router.push('/');
+      // Điều hướng sẽ được xử lý bởi useEffect phía trên
     } catch (error: any) {
       let errorMessage = 'Đã có lỗi xảy ra';
       
@@ -114,7 +117,6 @@ export default function AuthPage() {
       setLoading(true);
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      router.push('/');
     } catch (error: any) {
       toast({
         variant: 'destructive',
