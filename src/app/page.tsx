@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DigitalClock } from '@/components/attendance/DigitalClock';
@@ -89,6 +90,13 @@ export default function Home() {
     };
   }, [sessions, isLoaded, settings.breakTimeDeduction]);
 
+  // Tính toán phụ cấp tổng hợp cho Modal
+  const otherAllowancesTotal = useMemo(() => {
+    const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + (settings.allowanceResponsibility || 0) + (settings.allowancePosition || 0) + (settings.allowancePerformance || 0);
+    const deduction = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
+    return (settings.allowanceHousing || 0) + (settings.allowanceFuel || 0) + (settings.allowancePhone || 0) + (settings.allowanceToxic || 0) + (settings.allowanceBonus || 0) + (settings.allowanceProduct || 0) + baseSubjectToAbsence - deduction;
+  }, [settings]);
+
   const salaryInfo = useMemo(() => {
     if (!isLoaded) return null;
     const now = new Date();
@@ -96,12 +104,6 @@ export default function Home() {
     const endDate = new Date(now.getFullYear(), now.getMonth() + (now.getDate() < settings.payday ? 0 : 1), settings.payday - 1, 23, 59, 59);
     return calculateFullSalary(sessions.filter(s => new Date(s.checkIn) >= startDate && new Date(s.checkIn) <= endDate));
   }, [sessions, settings, isLoaded, calculateFullSalary]);
-
-  const otherAllowancesTotal = useMemo(() => {
-    const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + (settings.allowanceResponsibility || 0) + (settings.allowancePosition || 0) + (settings.allowancePerformance || 0);
-    const deduction = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
-    return (settings.allowanceHousing || 0) + (settings.allowanceFuel || 0) + (settings.allowancePhone || 0) + (settings.allowanceToxic || 0) + (settings.allowanceBonus || 0) + (settings.allowanceProduct || 0) + baseSubjectToAbsence - deduction;
-  }, [settings]);
 
   const handleAction = async (action: 'in' | 'out') => {
     setIsProcessing(true);
@@ -121,7 +123,7 @@ export default function Home() {
     <div className="space-y-6 pb-24 px-1 sm:px-0">
       <header className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <h1 className="text-xl sm:text-2xl font-black font-headline tracking-tighter">TimeSnap</h1>
+          <h1 className="text-xl sm:text-2xl font-black font-headline tracking-tighter text-white">TimeSnap</h1>
           <p className="text-zinc-500 text-[10px] font-medium uppercase tracking-widest">Dashboard Pro</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-2xl flex items-center gap-2">
@@ -138,7 +140,7 @@ export default function Home() {
             <div className="text-center space-y-1">
               <p className="text-sm font-black text-primary uppercase">{isHoliday ? `Ngày Lễ` : new Date().getDay() === 0 ? `Chủ Nhật` : `Ngày Thường`}</p>
             </div>
-            <Button onClick={() => handleAction('in')} disabled={isProcessing} className="w-full rounded-[2rem] h-20 sm:h-24 text-xl sm:text-2xl font-black shadow-2xl gap-3 bg-primary hover:bg-primary/90">
+            <Button onClick={() => handleAction('in')} disabled={isProcessing} className="w-full rounded-[2rem] h-20 sm:h-24 text-xl sm:text-2xl font-black shadow-2xl gap-3 bg-primary hover:bg-primary/90 text-black">
               {isProcessing ? "ĐANG XỬ LÝ..." : <><PlayCircle className="w-8 h-8" /> VÀO CA</>}
             </Button>
           </div>
@@ -185,16 +187,16 @@ export default function Home() {
       <Card className="bg-primary text-primary-foreground rounded-[2rem] p-6 shadow-xl relative overflow-hidden">
         <div className="flex justify-between items-center relative z-10">
           <div className="space-y-1">
-            <p className="text-[9px] uppercase font-black opacity-80">THỰC LĨNH DỰ KIẾN (Tạm tính)</p>
-            <p className="text-3xl font-black tracking-tighter">{formatCurrency(salaryInfo.netSalary)}</p>
+            <p className="text-[9px] uppercase font-black opacity-80 text-black">THỰC LĨNH DỰ KIẾN (Tạm tính)</p>
+            <p className="text-3xl font-black tracking-tighter text-black">{formatCurrency(salaryInfo.netSalary)}</p>
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button size="icon" variant="secondary" className="rounded-2xl h-12 w-12 bg-white/20 hover:bg-white/30 border-none shadow-lg">
-                <Calculator className="w-6 h-6 text-white" />
+              <Button size="icon" variant="secondary" className="rounded-2xl h-12 w-12 bg-black/20 hover:bg-black/30 border-none shadow-lg">
+                <Calculator className="w-6 h-6 text-black" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-w-md w-[95vw] p-6 max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-w-md w-[95vw] p-6 max-h-[90vh] overflow-y-auto z-[100]">
               <DialogHeader>
                 <DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Chi tiết lương dự kiến</DialogTitle>
                 <DialogDescription className="text-zinc-500 text-[10px] font-bold uppercase">Phân tích các khoản thu nhập và khấu trừ</DialogDescription>

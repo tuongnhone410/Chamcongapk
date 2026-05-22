@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -186,10 +187,15 @@ export default function HistoryPage() {
   };
 
   const handleMultiAdd = () => {
-    if (!selectedDates?.length) return;
+    if (!selectedDates || selectedDates.length === 0) return;
     setIsProcessing(true);
     setShowMultiDialog(false);
-    multiAddSessions({ ...multiData, dates: selectedDates }).finally(() => {
+    multiAddSessions({ 
+      dates: selectedDates, 
+      startTime: multiData.startTime, 
+      endTime: multiData.endTime, 
+      multiplier: multiData.multiplier 
+    }).finally(() => {
       setSelectedDates([]);
       setIsProcessing(false);
     });
@@ -204,7 +210,17 @@ export default function HistoryPage() {
     setSelectedYear(nextYear);
   };
 
-  if (!isLoaded) return <div className="p-8 animate-pulse bg-zinc-900 rounded-2xl h-64" />;
+  if (!isLoaded) {
+    return (
+      <div className="space-y-6 pb-24 animate-pulse">
+        <header className="h-10 bg-zinc-900 rounded-xl w-48" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => <div key={i} className="h-24 bg-zinc-900 rounded-[1.5rem]" />)}
+        </div>
+        <div className="h-14 bg-zinc-900 rounded-2xl w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-24 text-white">
@@ -223,7 +239,7 @@ export default function HistoryPage() {
                 <Trash2 className="w-3.5 h-3.5" /> Xóa hết
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] w-[95vw] max-w-md p-6">
+            <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
               <AlertDialogHeader>
                 <AlertDialogTitle className="font-black text-xl text-red-500 flex items-center gap-2">
                   <AlertTriangle className="w-6 h-6" /> XÁC NHẬN XÓA
@@ -245,19 +261,27 @@ export default function HistoryPage() {
                 <CheckSquare className="w-4 h-4" /> CHỌN NGÀY OT
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto w-[95vw] max-w-md p-6">
+            <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[95vh] overflow-y-auto w-[95vw] max-w-[400px] p-4">
               <DialogHeader>
-                <DialogTitle className="font-black text-xl uppercase text-primary">Thêm theo ngày</DialogTitle>
-                <DialogDescription className="text-[10px] text-zinc-500 font-bold">CHỈ ÁP DỤNG CHO NGÀY CHƯA CÓ DỮ LIỆU</DialogDescription>
+                <DialogTitle className="font-black text-xl uppercase text-primary text-center">Thêm theo ngày</DialogTitle>
+                <DialogDescription className="text-[10px] text-zinc-500 font-bold text-center">CHỈ ÁP DỤNG CHO NGÀY CHƯA CÓ DỮ LIỆU</DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-4">
-                <Calendar mode="multiple" selected={selectedDates} onSelect={setSelectedDates} className="mx-auto" disabled={(date) => sessionDatesSet.has(date.toDateString())} />
+              <div className="space-y-4 py-2">
+                <div className="bg-zinc-900 rounded-2xl p-1 border border-zinc-800">
+                  <Calendar 
+                    mode="multiple" 
+                    selected={selectedDates} 
+                    onSelect={setSelectedDates} 
+                    className="mx-auto" 
+                    disabled={(date) => sessionDatesSet.has(date.toDateString())} 
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase text-zinc-500">Vào</Label><input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 w-full" value={multiData.startTime} onChange={(e) => setMultiData({...multiData, startTime: e.target.value})} /></div>
-                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase text-zinc-500">Ra</Label><input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 w-full" value={multiData.endTime} onChange={(e) => setMultiData({...multiData, endTime: e.target.value})} /></div>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase text-zinc-500">Vào</Label><input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 w-full text-white" value={multiData.startTime} onChange={(e) => setMultiData({...multiData, startTime: e.target.value})} /></div>
+                  <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase text-zinc-500">Ra</Label><input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 w-full text-white" value={multiData.endTime} onChange={(e) => setMultiData({...multiData, endTime: e.target.value})} /></div>
                 </div>
                 <Select value={multiData.multiplier.toString()} onValueChange={(v) => setMultiData({...multiData, multiplier: parseFloat(v)})}>
-                  <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl text-white"><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
                     <SelectItem value="1.0">Ngày thường</SelectItem>
                     <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (x{settings.sundayMultiplier})</SelectItem>
@@ -265,7 +289,7 @@ export default function HistoryPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <DialogFooter><Button onClick={handleMultiAdd} className="bg-primary text-black rounded-xl h-14 font-black w-full">LƯU DỮ LIỆU</Button></DialogFooter>
+              <DialogFooter className="mt-2"><Button onClick={handleMultiAdd} className="bg-primary text-black rounded-xl h-14 font-black w-full">LƯU DỮ LIỆU</Button></DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
@@ -321,7 +345,7 @@ export default function HistoryPage() {
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase text-zinc-500">Vào</Label><Input type="datetime-local" className="bg-zinc-900 border-zinc-800 rounded-xl font-bold" value={formatToLocalDatetime(editingSession.checkIn)} onChange={(e) => setEditingSession({...editingSession, checkIn: new Date(e.target.value).toISOString()})} /></div>
               <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase text-zinc-500">Ra</Label><Input type="datetime-local" className="bg-zinc-900 border-zinc-800 rounded-xl font-bold" value={formatToLocalDatetime(editingSession.checkOut!)} onChange={(e) => setEditingSession({...editingSession, checkOut: new Date(e.target.value).toISOString()})} /></div>
               <Select value={editingSession.multiplier.toString()} onValueChange={(v) => setEditingSession({...editingSession, multiplier: parseFloat(v)})}>
-                <SelectTrigger className="bg-zinc-900 border-zinc-800 rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-zinc-900 border-zinc-800 rounded-xl font-bold text-white"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-zinc-800 text-white"><SelectItem value="1.0">Ngày thường</SelectItem><SelectItem value={settings.sundayMultiplier.toString()}>OT CN (x{settings.sundayMultiplier})</SelectItem></SelectContent>
               </Select>
             </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -58,6 +59,13 @@ export default function SettingsPage() {
 
   const handleNumberInput = (key: keyof AppSettings, val: string) => {
     setLocalSettings({ ...localSettings, [key]: parseFloat(val || "0") });
+  };
+
+  const handleLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+      window.location.href = '/auth';
+    }
   };
 
   const labelClass = "text-[10px] font-black uppercase tracking-widest mb-1.5 block";
