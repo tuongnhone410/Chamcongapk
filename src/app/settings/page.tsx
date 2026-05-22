@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -347,4 +346,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
