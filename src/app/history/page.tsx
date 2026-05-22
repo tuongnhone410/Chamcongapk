@@ -35,7 +35,8 @@ import {
   CheckSquare,
   DollarSign,
   Download,
-  Upload
+  Upload,
+  PlayCircle
 } from 'lucide-react';
 import { useState, useRef, useMemo } from 'react';
 import { WorkSession } from '@/lib/types';
@@ -57,6 +58,7 @@ import { type DateRange } from "react-day-picker";
 export default function HistoryPage() {
   const { 
     sessions, 
+    activeSession,
     isLoaded, 
     deleteSession, 
     updateSession, 
@@ -124,6 +126,16 @@ export default function HistoryPage() {
       .filter(s => s.checkOut)
       .sort((a, b) => new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime());
   }, [filteredSessions]);
+
+  // Xác định xem có phiên đang hoạt động trong tháng này không
+  const currentActiveSession = useMemo(() => {
+    if (!activeSession) return null;
+    const d = new Date(activeSession.checkIn);
+    if ((d.getMonth() + 1) === selectedMonth && d.getFullYear() === selectedYear) {
+      return activeSession;
+    }
+    return null;
+  }, [activeSession, selectedMonth, selectedYear]);
 
   const getSessionOTMetrics = (session: WorkSession) => {
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
@@ -567,7 +579,41 @@ export default function HistoryPage() {
         </Button>
       </div>
       
-      {completedSessions.length === 0 ? (
+      {/* Hiển thị phiên đang làm việc (nếu có) */}
+      {currentActiveSession && (
+        <div className="space-y-4">
+          <p className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest">Đang làm việc</p>
+          <Card className="border-none shadow-xl overflow-hidden bg-primary/5 rounded-[1.5rem] border border-primary/20 animate-pulse">
+            <CardContent className="p-0">
+              <div className="p-4 flex items-center justify-between border-b border-primary/10 bg-primary/10">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
+                    <PlayCircle className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="font-black text-sm uppercase tracking-tighter text-white">
+                    {new Date(currentActiveSession.checkIn).toLocaleDateString('vi-VN', { weekday: 'short', month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+                <Badge className="bg-primary text-black font-black text-[9px] uppercase">LIVE</Badge>
+              </div>
+              <div className="p-5 grid grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Giờ vào</p>
+                  <p className="text-sm font-bold text-white">
+                    {new Date(currentActiveSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                  </p>
+                </div>
+                <div className="space-y-1.5 text-right">
+                  <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Trạng thái</p>
+                  <p className="text-sm font-black text-primary uppercase">Chưa kết thúc</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {completedSessions.length === 0 && !currentActiveSession ? (
         <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
           <div className="p-8 rounded-[2rem] bg-zinc-900 border border-zinc-800">
             <History className="w-16 h-16 text-zinc-800" />
@@ -576,6 +622,9 @@ export default function HistoryPage() {
         </div>
       ) : (
         <div className="space-y-4">
+          {completedSessions.length > 0 && (
+             <p className="text-[10px] font-black uppercase text-zinc-500 ml-1 tracking-widest">Đã hoàn thành</p>
+          )}
           {completedSessions.map((session) => {
             const metrics = getSessionOTMetrics(session);
             
