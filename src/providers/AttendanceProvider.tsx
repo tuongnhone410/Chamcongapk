@@ -113,15 +113,18 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Khôi phục trạng thái từ localStorage một cách an toàn
+  // Tạo khóa lưu trữ cá nhân theo User ID
+  const storageKey = useMemo(() => user ? `timesnap_active_start_${user.uid}` : null, [user?.uid]);
+
+  // Khôi phục trạng thái từ localStorage một cách an toàn và cá nhân hóa
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('timesnap_active_start');
+    if (typeof window !== 'undefined' && storageKey) {
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         setLocalActiveStart(saved);
       }
     }
-  }, []);
+  }, [storageKey]);
 
   const sessionsQuery = useMemo(() => {
     if (!db || !user) return null;
@@ -139,7 +142,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const sessions = useMemo(() => sessionsData || [], [sessionsData]);
   const settings = useMemo(() => ({ ...defaultSettings, ...settingsData }), [settingsData]);
   
-  // App sẵn sàng khi đã có User. Settings load xong thì tốt, chưa xong thì dùng default.
   const isLoaded = useMemo(() => !!user, [user]);
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
@@ -159,22 +161,34 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     return 1.0;
   }, [settings]);
 
+  // Logic nhận diện phiên hoạt động ổn định nhất cho APK
   const activeSession = useMemo(() => {
+    // 1. Kiểm tra trong dữ liệu Firestore đã tải về có phiên nào chưa đóng không
     const fromDb = sessions.find(s => !s.checkOut);
-    if (fromDb) return fromDb;
-
-    if (localActiveStart && !sessionsLoading) {
-      const stillActiveInDb = sessions.some(s => !s.checkOut);
-      if (!stillActiveInDb) {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('timesnap_active_start');
-        }
-        setLocalActiveStart(null);
-        return undefined;
+    if (fromDb) {
+      // Nếu thấy phiên trên DB, cập nhật lại bộ nhớ tạm cho chắc chắn và trả về
+      if (typeof window !== 'undefined' && storageKey) {
+        localStorage.setItem(storageKey, fromDb.checkIn);
       }
+      return fromDb;
     }
 
+    // 2. Nếu DB chưa thấy phiên mở, kiểm tra bộ nhớ tạm của máy
     if (localActiveStart) {
+      // Kiểm tra xem có phiên nào trong DB trùng với giờ vào này mà ĐÃ ĐÓNG chưa
+      // Nếu đã đóng trên DB rồi thì xóa bộ nhớ tạm vì phiên này đã kết thúc
+      const alreadyClosedOnServer = sessions.some(s => s.checkIn === localActiveStart && s.checkOut);
+      
+      if (alreadyClosedOnServer && !sessionsLoading) {
+        if (typeof window !== 'undefined' && storageKey) {
+          localStorage.removeItem(storageKey);
+        }
+        // Trì hoãn việc cập nhật state để tránh vòng lặp render
+        setTimeout(() => setLocalActiveStart(null), 0);
+        return undefined;
+      }
+
+      // Nếu chưa thấy bản ghi đã đóng trên DB, hiển thị như phiên đang chạy (giả lập)
       return {
         id: 'local-temp',
         checkIn: localActiveStart,
@@ -188,18 +202,20 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     }
 
     return undefined;
-  }, [sessions, localActiveStart, sessionsLoading, getAutoMultiplier]);
+  }, [sessions, localActiveStart, storageKey, sessionsLoading, getAutoMultiplier]);
 
   const punchIn = useCallback(() => {
     if (!db || !user || activeSession) return;
     const now = new Date();
     const isoStr = now.toISOString();
     
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('timesnap_active_start', isoStr);
+    // Lưu vào máy ngay lập tức để APK ghi nhớ
+    if (typeof window !== 'undefined' && storageKey) {
+      localStorage.setItem(storageKey, isoStr);
     }
     setLocalActiveStart(isoStr);
 
+    // Đẩy lên Firestore (sẽ chạy ngầm nếu mạng chậm)
     addDoc(collection(db, 'users', user.uid, 'sessions'), {
       checkIn: isoStr,
       checkOut: null,
@@ -209,13 +225,14 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       note: '',
       createdAt: isoStr
     });
-  }, [db, user, activeSession, getAutoMultiplier]);
+  }, [db, user, activeSession, storageKey, getAutoMultiplier]);
 
   const punchOut = useCallback(() => {
     if (!db || !user || !activeSession) return;
     
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('timesnap_active_start');
+    // Xóa bộ nhớ tạm ngay khi bấm Ra ca
+    if (typeof window !== 'undefined' && storageKey) {
+      localStorage.removeItem(storageKey);
     }
     setLocalActiveStart(null);
 
@@ -223,6 +240,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const checkIn = new Date(activeSession.checkIn);
     const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
     
+    // Tìm ID thực trên DB nếu phiên hiện tại đang là 'local-temp'
     const targetSessionId = activeSession.id === 'local-temp' 
       ? sessions.find(s => !s.checkOut)?.id 
       : activeSession.id;
@@ -234,7 +252,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         salary: calculateSessionSalary(diffMinutes, activeSession.multiplier)
       });
     }
-  }, [db, user, activeSession, sessions, calculateSessionSalary]);
+  }, [db, user, activeSession, sessions, storageKey, calculateSessionSalary]);
 
   const addManualSession = useCallback(async (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => {
     if (!db || !user) return;
