@@ -22,7 +22,7 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 w-full",
         month: "space-y-4 w-full",
         month_caption: "flex justify-center pt-1 relative items-center mb-4",
         caption_label: "text-sm font-black uppercase tracking-widest text-primary",
@@ -35,14 +35,14 @@ function Calendar({
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 border-zinc-800 absolute right-1 z-10"
         ),
-        month_grid: "w-full border-collapse space-y-1",
-        weekdays: "grid grid-cols-7 mb-2",
-        weekday: "text-zinc-500 font-black text-[10px] uppercase text-center w-full",
-        weeks: "space-y-1",
-        week: "grid grid-cols-7 w-full",
+        month_grid: "w-full space-y-1",
+        weekdays: "flex w-full mb-2",
+        weekday: "text-zinc-500 font-black text-[10px] uppercase text-center flex-1",
+        weeks: "space-y-1 w-full",
+        week: "flex w-full",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-full p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all hover:bg-zinc-800 text-sm"
+          "h-9 flex-1 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all hover:bg-zinc-800 text-sm"
         ),
         day_button: "w-full h-full flex items-center justify-center",
         range_start: "day-range-start",
