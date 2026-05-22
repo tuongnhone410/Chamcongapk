@@ -109,14 +109,15 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const [undoCountdown, setUndoCountdown] = useState(0);
   const [deletedSessionsCache, setDeletedSessionsCache] = useState<WorkSession[]>([]);
   const [localActiveStart, setLocalActiveStart] = useState<string | null>(null);
+  const [isHoliday, setIsHoliday] = useState(false);
   
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Khóa lưu trữ riêng biệt theo User ID để tránh chồng lấn dữ liệu giữa các tài khoản
   const storageKey = useMemo(() => user ? `timesnap_active_start_${user.uid}` : null, [user?.uid]);
 
   useEffect(() => {
+    setIsHoliday(isVietnameseHoliday(new Date()));
     if (typeof window !== 'undefined' && storageKey) {
       const saved = localStorage.getItem(storageKey);
       setLocalActiveStart(saved);
@@ -141,7 +142,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const sessions = useMemo(() => sessionsData || [], [sessionsData]);
   const settings = useMemo(() => ({ ...defaultSettings, ...settingsData }), [settingsData]);
   
-  // Trạng thái sẵn sàng chỉ khi đã xác thực user và tải xong dữ liệu của chính user đó
   const isLoaded = useMemo(() => {
     return !!user && !sessionsLoading && !settingsLoading && !userLoading;
   }, [user, sessionsLoading, settingsLoading, userLoading]);
@@ -166,7 +166,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const activeSession = useMemo(() => {
     if (!user) return undefined;
 
-    // 1. Kiểm tra phiên mở trên Firestore (Dữ liệu chuẩn nhất)
     const fromDb = sessions.find(s => !s.checkOut);
     if (fromDb) {
       if (typeof window !== 'undefined' && storageKey) {
@@ -175,7 +174,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       return fromDb;
     }
 
-    // 2. Dự phòng bằng localStorage cá nhân (Dùng khi mạng yếu hoặc vừa vào lại app)
     if (localActiveStart) {
       const alreadyClosedOnServer = sessions.some(s => s.checkIn === localActiveStart && s.checkOut);
       
@@ -420,8 +418,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     link.download = "timesnap_report.csv";
     link.click();
   }, [sessions]);
-
-  const isHoliday = useMemo(() => isVietnameseHoliday(new Date()), []);
 
   const contextValue = useMemo(() => ({
     sessions, activeSession, settings, isLoaded, punchIn, punchOut, addManualSession, batchAddSessions, multiAddSessions, importFromCSV, updateSettings, deleteSession, updateSession, clearAllHistory, restoreHistory, canUndo, undoCountdown, exportToCSV, calculateFullSalary, getAutoMultiplier, isHoliday

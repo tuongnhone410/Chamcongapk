@@ -42,6 +42,13 @@ export default function Home() {
   const [sessionMinutes, setSessionMinutes] = useState<number>(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSalaryDetailOpen, setIsSalaryDetailOpen] = useState(false);
+  const [dayLabel, setDayLabel] = useState<string>("");
+
+  // Tránh lỗi Hydration cho nhãn ngày tháng
+  useEffect(() => {
+    const now = new Date();
+    setDayLabel(isHoliday ? "Ngày Lễ" : now.getDay() === 0 ? "Chủ Nhật" : "Ngày Thường");
+  }, [isHoliday]);
 
   useEffect(() => {
     if (!activeSession) return;
@@ -155,7 +162,7 @@ export default function Home() {
         {!activeSession ? (
           <div className="w-full space-y-4">
             <div className="text-center space-y-1">
-              <p className="text-sm font-black text-primary uppercase">{isHoliday ? `Ngày Lễ` : new Date().getDay() === 0 ? `Chủ Nhật` : `Ngày Thường`}</p>
+              <p className="text-sm font-black text-primary uppercase">{dayLabel}</p>
             </div>
             <Button onClick={() => handleAction('in')} disabled={isProcessing} className="w-full rounded-[2rem] h-20 sm:h-24 text-xl sm:text-2xl font-black shadow-2xl gap-3 bg-primary hover:bg-primary/90 text-black">
               {isProcessing ? "ĐANG XỬ LÝ..." : <><PlayCircle className="w-8 h-8" /> VÀO CA</>}
