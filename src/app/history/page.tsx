@@ -514,7 +514,7 @@ export default function HistoryPage() {
             </div>
             <div>
               <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Số ngày công</p>
-              <h4 className="text-2xl font-black text-white">{monthlySummary.totalCount} phiên</h4>
+              <h4 className="text-2xl font-black text-white">{monthlySummary.totalCount} ngày</h4>
             </div>
           </CardContent>
         </Card>
