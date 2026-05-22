@@ -107,21 +107,38 @@ export default function SettingsPage() {
       <Card className="bg-zinc-900 border-zinc-800 rounded-[2rem]">
         <CardHeader><CardTitle className="text-xs font-black uppercase text-green-500 flex items-center gap-2"><Gift className="w-4 h-4" /> Các khoản phụ cấp</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
-          {[
-            { key: 'allowanceTechnical', label: 'Kỹ thuật', color: 'text-blue-400' },
-            { key: 'allowanceResponsibility', label: 'Trách nhiệm', color: 'text-amber-400' },
-            { key: 'allowancePosition', label: 'Chức vụ', color: 'text-purple-400' },
-            { key: 'allowancePerformance', label: 'Hiệu suất', color: 'text-cyan-400' },
-            { key: 'allowanceProduct', label: 'Sản phẩm', color: 'text-orange-400' },
-            { key: 'allowanceHousing', label: 'Nhà ở', color: 'text-indigo-400' },
-            { key: 'allowanceToxic', label: 'Độc hại', color: 'text-rose-400' },
-            { key: 'allowanceFuel', label: 'Xăng xe', color: 'text-sky-400' }
-          ].map((item) => (
-            <div key={item.key} className="space-y-1">
-              <Label className={cn(labelClass, item.color)}>{item.label}</Label>
-              <div className="relative"><Input value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} className={inputClass} /><span className={suffixClass}>đ</span></div>
-            </div>
-          ))}
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-blue-400")}>Kỹ thuật</Label>
+            <div className="relative"><Input value={formatMoneyDisplay(localSettings.allowanceTechnical)} onChange={(e) => handleMoneyInput('allowanceTechnical', e.target.value)} className={inputClass} /><span className={suffixClass}>đ</span></div>
+          </div>
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-amber-400")}>Trách nhiệm</Label>
+            <div className="relative"><Input value={formatMoneyDisplay(localSettings.allowanceResponsibility)} onChange={(e) => handleMoneyInput('allowanceResponsibility', e.target.value)} className={inputClass} /><span className={suffixClass}>đ</span></div>
+          </div>
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-purple-400")}>Chức vụ</Label>
+            <div className="relative"><Input value={formatMoneyDisplay(localSettings.allowancePosition)} onChange={(e) => handleMoneyInput('allowancePosition', e.target.value)} className={inputClass} /><span className={suffixClass}>đ</span></div>
+          </div>
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-cyan-400")}>Hiệu suất</Label>
+            <div className="relative"><Input value={formatMoneyDisplay(localSettings.allowancePerformance)} onChange={(e) => handleMoneyInput('allowancePerformance', e.target.value)} className={inputClass} /><span className={suffixClass}>đ</span></div>
+          </div>
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-orange-400")}>Sản phẩm</Label>
+            <div className="relative"><Input value={formatMoneyDisplay(localSettings.allowanceProduct)} onChange={(e) => handleMoneyInput('allowanceProduct', e.target.value)} className={inputClass} /><span className={suffixClass}>đ</span></div>
+          </div>
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-indigo-400")}>Nhà ở</Label>
+            <div className="relative"><Input value={formatMoneyDisplay(localSettings.allowanceHousing)} onChange={(e) => handleMoneyInput('allowanceHousing', e.target.value)} className={inputClass} /><span className={suffixClass}>đ</span></div>
+          </div>
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-rose-400")}>Độc hại</Label>
+            <div className="relative"><Input value={formatMoneyDisplay(localSettings.allowanceToxic)} onChange={(e) => handleMoneyInput('allowanceToxic', e.target.value)} className={inputClass} /><span className={suffixClass}>đ</span></div>
+          </div>
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-sky-400")}>Xăng xe</Label>
+            <div className="relative"><Input value={formatMoneyDisplay(localSettings.allowanceFuel)} onChange={(e) => handleMoneyInput('allowanceFuel', e.target.value)} className={inputClass} /><span className={suffixClass}>đ</span></div>
+          </div>
         </CardContent>
       </Card>
 
