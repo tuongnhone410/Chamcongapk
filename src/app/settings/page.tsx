@@ -230,23 +230,27 @@ export default function SettingsPage() {
                 />
                 <span className={suffixClass}>%</span>
               </div>
+              <p className="text-[10px] font-black text-red-500 mt-1 pl-1">
+                -{formatMoneyDisplay((localSettings.insuranceSalary * localSettings.insuranceRate) / 100)}đ
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label className={cn(labelClass, "text-zinc-500")}>Đoàn phí</Label>
+            <div className="relative">
+              <Input 
+                type="text" 
+                value={formatMoneyDisplay(localSettings.unionFee)}
+                onChange={(e) => handleMoneyInput('unionFee', e.target.value)}
+                className={cn(inputClass, "pr-10")}
+                disabled={isSaving}
+              />
+              <span className={suffixClass}>đ</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label className={cn(labelClass, "text-zinc-500")}>Đoàn phí</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  value={formatMoneyDisplay(localSettings.unionFee)}
-                  onChange={(e) => handleMoneyInput('unionFee', e.target.value)}
-                  className={cn(inputClass, "pr-10")}
-                  disabled={isSaving}
-                />
-                <span className={suffixClass}>đ</span>
-              </div>
-            </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Ngày chốt lương</Label>
               <Select 
@@ -262,17 +266,16 @@ export default function SettingsPage() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="space-y-1">
-            <Label className={cn(labelClass, "text-zinc-500")}>Khấu trừ giờ nghỉ hàng ngày (giờ)</Label>
-            <Input 
-              type="number" step="0.1"
-              className={inputClass}
-              value={localSettings.breakTimeDeduction === 0 ? "" : localSettings.breakTimeDeduction.toString()}
-              onChange={(e) => handleNumberInput('breakTimeDeduction', e.target.value)}
-              disabled={isSaving}
-            />
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-zinc-500")}>Khấu trừ giờ nghỉ (giờ)</Label>
+              <Input 
+                type="number" step="0.1"
+                className={inputClass}
+                value={localSettings.breakTimeDeduction === 0 ? "" : localSettings.breakTimeDeduction.toString()}
+                onChange={(e) => handleNumberInput('breakTimeDeduction', e.target.value)}
+                disabled={isSaving}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
