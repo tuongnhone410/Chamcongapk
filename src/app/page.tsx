@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DigitalClock } from '@/components/attendance/DigitalClock';
@@ -39,6 +40,7 @@ export default function Home() {
   const [elapsedTime, setElapsedTime] = useState<string>("00:00:00");
   const [sessionMinutes, setSessionMinutes] = useState<number>(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSalaryDetailOpen, setIsSalaryDetailOpen] = useState(false);
 
   useEffect(() => {
     if (!activeSession) return;
@@ -188,13 +190,13 @@ export default function Home() {
             <p className="text-[9px] uppercase font-black opacity-80 text-black">THỰC LĨNH DỰ KIẾN (Tạm tính)</p>
             <p className="text-3xl font-black tracking-tighter text-black">{formatCurrency(salaryInfo.netSalary)}</p>
           </div>
-          <Dialog>
+          <Dialog open={isSalaryDetailOpen} onOpenChange={setIsSalaryDetailOpen}>
             <DialogTrigger asChild>
-              <Button size="icon" variant="secondary" className="rounded-2xl h-12 w-12 bg-black/20 hover:bg-black/30 border-none shadow-lg">
+              <Button onClick={() => setIsSalaryDetailOpen(true)} size="icon" variant="secondary" className="rounded-2xl h-12 w-12 bg-black/20 hover:bg-black/30 border-none shadow-lg">
                 <Calculator className="w-6 h-6 text-black" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-w-md w-[95vw] p-6 max-h-[90vh] overflow-y-auto z-[100]">
+            <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-w-md w-[95vw] p-6 max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Chi tiết lương dự kiến</DialogTitle>
                 <DialogDescription className="text-zinc-500 text-[10px] font-bold uppercase">Phân tích các khoản thu nhập và khấu trừ</DialogDescription>

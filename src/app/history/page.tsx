@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -331,7 +332,6 @@ export default function HistoryPage() {
         </div>
         
         <div className="flex flex-col gap-3 w-full sm:w-auto sm:items-end">
-          {/* Hàng nút phụ: Xóa & Khôi phục */}
           <div className="flex flex-wrap gap-2">
             {canUndo && (
               <Button 
@@ -376,7 +376,6 @@ export default function HistoryPage() {
             </AlertDialog>
           </div>
 
-          {/* Lưới nút chính: Đồng bộ & CSV */}
           <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:w-auto">
             <Dialog open={showMultiDialog} onOpenChange={setShowMultiDialog}>
               <DialogTrigger asChild>
@@ -385,7 +384,7 @@ export default function HistoryPage() {
                   CHỌN NGÀY OT
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto z-[100]">
+              <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Thêm nhanh theo ngày</DialogTitle>
                   <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Chỉ áp dụng cho những ngày chưa có dữ liệu</DialogDescription>
@@ -453,7 +452,7 @@ export default function HistoryPage() {
                   THÊM HÀNG LOẠT
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto z-[100]">
+              <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Đồng bộ hàng loạt</DialogTitle>
                   <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Chọn khoảng ngày trên lịch để đồng bộ nhanh</DialogDescription>
@@ -631,7 +630,7 @@ export default function HistoryPage() {
       
       {editingSession && (
         <Dialog open={!!editingSession} onOpenChange={(open) => !open && setEditingSession(null)}>
-          <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[100] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-black uppercase text-xl text-center">Chỉnh sửa phiên</DialogTitle>
             </DialogHeader>
