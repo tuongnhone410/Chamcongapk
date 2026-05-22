@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { createContext, useMemo, useCallback, useState, useRef } from 'react';
+import React, { createContext, useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { WorkSession, AppSettings } from '@/lib/types';
 import { 
   useUser, 
@@ -107,8 +108,18 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const [canUndo, setCanUndo] = useState(false);
   const [undoCountdown, setUndoCountdown] = useState(0);
   const [deletedSessionsCache, setDeletedSessionsCache] = useState<WorkSession[]>([]);
+  const [localActiveStart, setLocalActiveStart] = useState<string | null>(null);
+  
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Khôi phục trạng thái từ localStorage khi khởi động
+  useEffect(() => {
+    const saved = localStorage.getItem('timesnap_active_start');
+    if (saved) {
+      setLocalActiveStart(saved);
+    }
+  }, []);
 
   const sessionsQuery = useMemo(() => {
     if (!db || !user) return null;
@@ -120,12 +131,14 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     return doc(db, 'users', user.uid, 'settings', 'current');
   }, [db, user?.uid]);
 
-  const { data: sessionsData } = useCollection<WorkSession>(sessionsQuery);
-  const { data: settingsData } = useDoc<AppSettings>(settingsDocRef);
+  const { data: sessionsData, loading: sessionsLoading } = useCollection<WorkSession>(sessionsQuery);
+  const { data: settingsData, loading: settingsLoading } = useDoc<AppSettings>(settingsDocRef);
 
   const sessions = useMemo(() => sessionsData || [], [sessionsData]);
   const settings = useMemo(() => ({ ...defaultSettings, ...settingsData }), [settingsData]);
-  const isLoaded = useMemo(() => !!user, [user]);
+  
+  // App chỉ được coi là đã sẵn sàng khi User đã load và Settings đã load xong
+  const isLoaded = useMemo(() => !!user && !settingsLoading, [user, settingsLoading]);
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
@@ -144,33 +157,82 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     return 1.0;
   }, [settings]);
 
-  const activeSession = useMemo(() => sessions.find(s => !s.checkOut), [sessions]);
+  // Xác định phiên đang hoạt động (Kết hợp DB và LocalStorage)
+  const activeSession = useMemo(() => {
+    const fromDb = sessions.find(s => !s.checkOut);
+    if (fromDb) return fromDb;
+
+    // Nếu DB đã load xong mà không có session, nhưng Local có -> Clear Local vì DB là chân lý
+    if (localActiveStart && !sessionsLoading) {
+      const stillActiveInDb = sessions.some(s => !s.checkOut);
+      if (!stillActiveInDb) {
+        localStorage.removeItem('timesnap_active_start');
+        setLocalActiveStart(null);
+        return undefined;
+      }
+    }
+
+    // Nếu Local có start time, tạo một phiên giả lập để hiển thị UI ngay lập tức
+    if (localActiveStart) {
+      return {
+        id: 'local-temp',
+        checkIn: localActiveStart,
+        checkOut: null,
+        totalMinutes: 0,
+        salary: 0,
+        multiplier: getAutoMultiplier(new Date(localActiveStart)),
+        note: '',
+        createdAt: localActiveStart
+      } as WorkSession;
+    }
+
+    return undefined;
+  }, [sessions, localActiveStart, sessionsLoading, getAutoMultiplier]);
 
   const punchIn = useCallback(() => {
     if (!db || !user || activeSession) return;
     const now = new Date();
+    const isoStr = now.toISOString();
+    
+    // Lưu local ngay lập tức
+    localStorage.setItem('timesnap_active_start', isoStr);
+    setLocalActiveStart(isoStr);
+
     addDoc(collection(db, 'users', user.uid, 'sessions'), {
-      checkIn: now.toISOString(),
+      checkIn: isoStr,
       checkOut: null,
       totalMinutes: 0,
       salary: 0,
       multiplier: getAutoMultiplier(now),
       note: '',
-      createdAt: now.toISOString()
+      createdAt: isoStr
     });
   }, [db, user, activeSession, getAutoMultiplier]);
 
   const punchOut = useCallback(() => {
     if (!db || !user || !activeSession) return;
+    
+    // Xóa local ngay lập tức
+    localStorage.removeItem('timesnap_active_start');
+    setLocalActiveStart(null);
+
     const checkOut = new Date();
     const checkIn = new Date(activeSession.checkIn);
     const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-    updateDoc(doc(db, 'users', user.uid, 'sessions', activeSession.id), {
-      checkOut: checkOut.toISOString(),
-      totalMinutes: diffMinutes,
-      salary: calculateSessionSalary(diffMinutes, activeSession.multiplier)
-    });
-  }, [db, user, activeSession, calculateSessionSalary]);
+    
+    // Nếu là session giả lập thì tìm session thật trong DB để update
+    const targetSessionId = activeSession.id === 'local-temp' 
+      ? sessions.find(s => !s.checkOut)?.id 
+      : activeSession.id;
+
+    if (targetSessionId) {
+      updateDoc(doc(db, 'users', user.uid, 'sessions', targetSessionId), {
+        checkOut: checkOut.toISOString(),
+        totalMinutes: diffMinutes,
+        salary: calculateSessionSalary(diffMinutes, activeSession.multiplier)
+      });
+    }
+  }, [db, user, activeSession, sessions, calculateSessionSalary]);
 
   const addManualSession = useCallback(async (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => {
     if (!db || !user) return;
