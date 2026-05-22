@@ -22,7 +22,7 @@ function Calendar({
       className={cn("p-3", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
+        month: "space-y-4 w-full",
         caption: "flex justify-center pt-1 relative items-center mb-4",
         caption_label: "text-sm font-black uppercase tracking-widest text-primary",
         nav: "space-x-1 flex items-center",
@@ -34,7 +34,7 @@ function Calendar({
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse",
         head_row: "grid grid-cols-7 w-full mb-2",
-        head_cell: "text-zinc-500 rounded-md font-black text-[10px] uppercase text-center py-2",
+        head_cell: "text-zinc-500 rounded-md font-black text-[10px] uppercase text-center",
         row: "grid grid-cols-7 w-full mt-1",
         cell: "h-9 w-full text-center text-sm p-0 relative flex items-center justify-center",
         day: cn(

@@ -90,7 +90,6 @@ export default function Home() {
     };
   }, [sessions, isLoaded, settings.breakTimeDeduction]);
 
-  // Tính toán phụ cấp tổng hợp cho Modal
   const otherAllowancesTotal = useMemo(() => {
     const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + (settings.allowanceResponsibility || 0) + (settings.allowancePosition || 0) + (settings.allowancePerformance || 0);
     const deduction = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
