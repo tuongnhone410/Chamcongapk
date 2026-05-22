@@ -178,7 +178,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-bold px-1 mt-1">
               <Info className="w-3.5 h-3.5 text-primary" />
-              Lương mỗi giờ chuẩn: <span className="text-white">{formatMoneyDisplay(localSettings.hourlyRate)}đ/h</span>
+              Lương mỗi giờ chuẩn: <span className="text-white font-black">{formatMoneyDisplay(localSettings.hourlyRate)}đ/h</span>
             </div>
           </div>
           

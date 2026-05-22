@@ -275,8 +275,10 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const batch = writeBatch(db);
     sessions.forEach(s => batch.delete(doc(db, 'users', user.uid, 'sessions', s.id)));
     await batch.commit();
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     countdownIntervalRef.current = setInterval(() => setUndoCountdown(p => p - 1), 1000);
-    undoTimerRef.current = setTimeout(() => { setCanUndo(false); setDeletedSessionsCache([]); }, 10000);
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = setTimeout(() => { setCanUndo(false); setDeletedSessionsCache([]); if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); }, 10000);
   }, [db, user, sessions]);
 
   const restoreHistory = useCallback(async () => {
