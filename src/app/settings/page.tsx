@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -118,7 +119,7 @@ export default function SettingsPage() {
     }
   };
 
-  const labelClass = "text-[10px] font-black uppercase tracking-widest mb-1.5 block";
+  const labelClass = "text-[10px] font-black uppercase tracking-widest mb-1.5 block transition-colors";
   const inputClass = "h-11 font-bold bg-zinc-900 border-zinc-800 rounded-xl text-white text-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 focus-visible:border-zinc-700 focus:outline-none transition-colors";
   const suffixClass = "absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-sm pointer-events-none";
 
@@ -282,33 +283,45 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             {[
-              { key: 'allowanceTechnical', label: 'Kỹ thuật' },
-              { key: 'allowanceResponsibility', label: 'Trách nhiệm' },
-              { key: 'allowancePosition', label: 'Chức vụ' },
-              { key: 'allowancePerformance', label: 'Hiệu suất' }
+              { key: 'allowanceTechnical', label: 'Kỹ thuật', color: 'text-blue-400' },
+              { key: 'allowanceResponsibility', label: 'Trách nhiệm', color: 'text-amber-400' },
+              { key: 'allowancePosition', label: 'Chức vụ', color: 'text-purple-400' },
+              { key: 'allowancePerformance', label: 'Hiệu suất', color: 'text-cyan-400' }
             ].map((item) => (
               <div key={item.key} className="space-y-1">
-                <Label className={cn(labelClass, "text-zinc-500")}>{item.label}</Label>
+                <Label className={cn(labelClass, item.color)}>{item.label}</Label>
                 <div className="relative">
-                  <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} disabled={isSaving} />
+                  <Input 
+                    type="text" 
+                    className={cn(inputClass, "pr-10")} 
+                    value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} 
+                    onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} 
+                    disabled={isSaving}
+                  />
                   <span className={suffixClass}>đ</span>
                 </div>
               </div>
             ))}
             
             {[
-              { key: 'allowanceProduct', label: 'Tiền sản phẩm' },
-              { key: 'allowanceLunchPerShift', label: 'Cơm / ca' },
-              { key: 'allowanceLunchOT', label: 'Cơm OT (≥ 2h)' },
-              { key: 'allowanceHousing', label: 'Nhà ở' },
-              { key: 'allowanceToxic', label: 'Độc hại' },
-              { key: 'allowanceBonus', label: 'Thưởng / Doanh thu' },
-              { key: 'allowanceFuel', label: 'Xăng xe' }
+              { key: 'allowanceProduct', label: 'Tiền sản phẩm', color: 'text-orange-400' },
+              { key: 'allowanceLunchPerShift', label: 'Cơm / ca', color: 'text-emerald-400' },
+              { key: 'allowanceLunchOT', label: 'Cơm OT (≥ 2h)', color: 'text-teal-400' },
+              { key: 'allowanceHousing', label: 'Nhà ở', color: 'text-indigo-400' },
+              { key: 'allowanceToxic', label: 'Độc hại', color: 'text-rose-400' },
+              { key: 'allowanceBonus', label: 'Thưởng / Doanh thu', color: 'text-yellow-400' },
+              { key: 'allowanceFuel', label: 'Xăng xe', color: 'text-sky-400' }
             ].map((item) => (
               <div key={item.key} className="space-y-1">
-                <Label className={cn(labelClass, "text-zinc-500")}>{item.label}</Label>
+                <Label className={cn(labelClass, item.color)}>{item.label}</Label>
                 <div className="relative">
-                  <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} disabled={isSaving} />
+                  <Input 
+                    type="text" 
+                    className={cn(inputClass, "pr-10")} 
+                    value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} 
+                    onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} 
+                    disabled={isSaving}
+                  />
                   <span className={suffixClass}>đ</span>
                 </div>
               </div>
@@ -334,3 +347,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+
