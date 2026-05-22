@@ -9,11 +9,6 @@ import {
   Calculator, 
   PlayCircle,
   CalendarDays,
-  Timer,
-  Zap,
-  CheckCircle2,
-  DollarSign,
-  Info,
   ArrowDownCircle,
   ArrowUpCircle
 } from 'lucide-react';
@@ -25,14 +20,7 @@ import {
   DialogTrigger,
   DialogDescription
 } from "@/components/ui/dialog";
-import { 
-  ChartContainer, 
-  ChartTooltip, 
-  ChartTooltipContent,
-  type ChartConfig 
-} from "@/components/ui/chart";
-import { Bar, BarChart, XAxis, ResponsiveContainer } from "recharts";
-import { cn } from '@/lib/utils';
+import { ResponsiveContainer, BarChart, XAxis, Bar } from "recharts";
 import { useState, useEffect, useMemo } from 'react';
 import { Separator } from '@/components/ui/separator';
 
@@ -67,17 +55,7 @@ export default function Home() {
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  },[activeSession]);
-
-  const handleAction = async (action: 'in' | 'out') => {
-    setIsProcessing(true);
-    try {
-      if (action === 'in') await punchIn();
-      else await punchOut();
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  }, [activeSession]);
 
   const analyticsData = useMemo(() => {
     if (!isLoaded) return null;
@@ -103,8 +81,13 @@ export default function Home() {
       dailyMinutes[dateKey] = (dailyMinutes[dateKey] || 0) + (s.totalMinutes || 0);
     });
 
-    return { totalMonthHours, chartData: last7Days.map(date => ({ date, hours: parseFloat(((dailyMinutes[date] || 0) / 60).toFixed(1)) })), monthSessionsCount: monthSessions.length, standardDaysCount };
-  },[sessions, isLoaded, settings.breakTimeDeduction]);
+    return { 
+      totalMonthHours, 
+      chartData: last7Days.map(date => ({ date, hours: parseFloat(((dailyMinutes[date] || 0) / 60).toFixed(1)) })), 
+      monthSessionsCount: monthSessions.length, 
+      standardDaysCount 
+    };
+  }, [sessions, isLoaded, settings.breakTimeDeduction]);
 
   const salaryInfo = useMemo(() => {
     if (!isLoaded) return null;
@@ -112,18 +95,27 @@ export default function Home() {
     const startDate = new Date(now.getFullYear(), now.getMonth() - (now.getDate() < settings.payday ? 1 : 0), settings.payday);
     const endDate = new Date(now.getFullYear(), now.getMonth() + (now.getDate() < settings.payday ? 0 : 1), settings.payday - 1, 23, 59, 59);
     return calculateFullSalary(sessions.filter(s => new Date(s.checkIn) >= startDate && new Date(s.checkIn) <= endDate));
-  },[sessions, settings, isLoaded, calculateFullSalary]);
+  }, [sessions, settings, isLoaded, calculateFullSalary]);
 
-  if (!isLoaded || !analyticsData || !salaryInfo) return null;
-
-  const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
-
-  // Tính toán phụ cấp tổng hợp cho Modal
   const otherAllowancesTotal = useMemo(() => {
     const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + (settings.allowanceResponsibility || 0) + (settings.allowancePosition || 0) + (settings.allowancePerformance || 0);
     const deduction = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
     return (settings.allowanceHousing || 0) + (settings.allowanceFuel || 0) + (settings.allowancePhone || 0) + (settings.allowanceToxic || 0) + (settings.allowanceBonus || 0) + (settings.allowanceProduct || 0) + baseSubjectToAbsence - deduction;
   }, [settings]);
+
+  const handleAction = async (action: 'in' | 'out') => {
+    setIsProcessing(true);
+    try {
+      if (action === 'in') await punchIn();
+      else await punchOut();
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (!isLoaded || !analyticsData || !salaryInfo) return null;
+
+  const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
 
   return (
     <div className="space-y-6 pb-24 px-1 sm:px-0">
@@ -193,9 +185,7 @@ export default function Home() {
       <Card className="bg-primary text-primary-foreground rounded-[2rem] p-6 shadow-xl relative overflow-hidden">
         <div className="flex justify-between items-center relative z-10">
           <div className="space-y-1">
-            <p className="text-[9px] uppercase font-black opacity-80 flex items-center gap-1">
-              THỰC LĨNH DỰ KIẾN (Tạm tính)
-            </p>
+            <p className="text-[9px] uppercase font-black opacity-80">THỰC LĨNH DỰ KIẾN (Tạm tính)</p>
             <p className="text-3xl font-black tracking-tighter">{formatCurrency(salaryInfo.netSalary)}</p>
           </div>
           <Dialog>
@@ -209,9 +199,7 @@ export default function Home() {
                 <DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Chi tiết lương dự kiến</DialogTitle>
                 <DialogDescription className="text-zinc-500 text-[10px] font-bold uppercase">Phân tích các khoản thu nhập và khấu trừ</DialogDescription>
               </DialogHeader>
-              
               <div className="space-y-6 py-4">
-                {/* Thu nhập */}
                 <div className="space-y-3">
                   <h4 className="text-[10px] font-black uppercase text-green-500 flex items-center gap-2">
                     <ArrowUpCircle className="w-4 h-4" /> Các khoản thu nhập (+)
@@ -245,7 +233,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Khấu trừ */}
                 <div className="space-y-3">
                   <h4 className="text-[10px] font-black uppercase text-red-500 flex items-center gap-2">
                     <ArrowDownCircle className="w-4 h-4" /> Các khoản khấu trừ (-)
@@ -266,21 +253,16 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Kết quả cuối cùng */}
                 <div className="bg-primary/10 border border-primary/20 p-4 rounded-2xl space-y-2 mt-4">
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] font-black uppercase text-primary">THỰC LĨNH (NET)</span>
                     <span className="text-2xl font-black text-primary">{formatCurrency(salaryInfo.netSalary)}</span>
                   </div>
-                  <p className="text-[9px] text-zinc-500 font-bold leading-tight">
-                    * Lưu ý: Con số này được tính toán dựa trên cấu hình cài đặt lương của bạn và các phiên làm việc đã được ghi nhận.
-                  </p>
                 </div>
               </div>
             </DialogContent>
           </Dialog>
         </div>
-        {/* Trang trí nền cho card */}
         <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
       </Card>
     </div>
