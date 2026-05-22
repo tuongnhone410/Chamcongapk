@@ -28,13 +28,12 @@ import {
   X,
   RotateCcw,
   AlertTriangle,
-  Save,
   ChevronLeft,
   ChevronRight,
-  Loader2,
-  CheckSquare
+  CheckSquare,
+  DollarSign
 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { WorkSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -66,7 +65,7 @@ export default function HistoryPage() {
     settings, 
     exportToCSV 
   } = useAttendance();
-  
+
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
@@ -75,10 +74,11 @@ export default function HistoryPage() {
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
-  
-  const formatToLocalDatetime = (isoString: string | Date) => {
+
+  const formatToLocalDatetime = (isoString: string | Date | null | undefined) => {
     if (!isoString) return "";
     const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "";
     const offset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - offset).toISOString().slice(0, 16);
   };
@@ -101,16 +101,49 @@ export default function HistoryPage() {
     multiplier: 1.0
   });
 
-  if (!isLoaded) return null;
+  const sessionDatesSet = useMemo(() => {
+    return new Set(sessions.map(s => new Date(s.checkIn).toDateString()));
+  }, [sessions]);
 
-  const filteredSessions = sessions.filter(s => {
-    const d = new Date(s.checkIn);
-    return (d.getMonth() + 1) === selectedMonth && d.getFullYear() === selectedYear;
-  });
+  const filteredSessions = useMemo(() => {
+    return sessions.filter(s => {
+      const d = new Date(s.checkIn);
+      return (d.getMonth() + 1) === selectedMonth && d.getFullYear() === selectedYear;
+    });
+  }, [sessions, selectedMonth, selectedYear]);
 
-  const completedSessions = filteredSessions.filter(s => s.checkOut).sort((a, b) => 
-    new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime()
-  );
+  const completedSessions = useMemo(() => {
+    return filteredSessions
+      .filter(s => s.checkOut)
+      .sort((a, b) => new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime());
+  }, [filteredSessions]);
+
+  const getSessionOTMetrics = (session: WorkSession) => {
+    const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
+    const effectiveMinutes = session.totalMinutes > breakMinutes 
+      ? session.totalMinutes - breakMinutes 
+      : session.totalMinutes;
+
+    const otMinutes = session.multiplier === 1.0 
+      ? (effectiveMinutes > 510 ? effectiveMinutes - 480 : 0) 
+      : effectiveMinutes;
+
+    return {
+      otMinutes: otMinutes > 0 ? otMinutes : 0,
+      salary: session.salary || 0
+    };
+  };
+
+  const monthlySummary = useMemo(() => {
+    return completedSessions.reduce((acc, s) => {
+      const metrics = getSessionOTMetrics(s);
+      return {
+        totalMinutesOT: acc.totalMinutesOT + metrics.otMinutes,
+        totalSalary: acc.totalSalary + metrics.salary,
+        totalCount: acc.totalCount + 1
+      };
+    }, { totalMinutesOT: 0, totalSalary: 0, totalCount: 0 });
+  }, [completedSessions]);
 
   const formatHours = (mins: number) => {
     const h = Math.floor(mins / 60);
@@ -123,23 +156,47 @@ export default function HistoryPage() {
   };
 
   const handleUpdate = async () => {
-    if (editingSession) {
-      setIsProcessing(true);
-      try {
-        const checkIn = new Date(editingSession.checkIn);
-        const checkOut = new Date(editingSession.checkOut || '');
-        const diffMs = checkOut.getTime() - checkIn.getTime();
-        const diffMinutes = Math.floor(diffMs / 1000 / 60);
-        
-        await updateSession({
-          ...editingSession,
-          totalMinutes: diffMinutes,
-        });
-        setEditingSession(null);
-        toast({ title: "Đã lưu", description: "Thay đổi đã được cập nhật." });
-      } finally {
-        setIsProcessing(false);
-      }
+    if (!editingSession) return;
+    if (!editingSession.checkIn || !editingSession.checkOut) {
+      toast({
+        variant: 'destructive',
+        title: "Dữ liệu thiếu",
+        description: "Vui lòng nhập đầy đủ thời gian vào và ra."
+      });
+      return;
+    }
+
+    const checkIn = new Date(editingSession.checkIn);
+    const checkOut = new Date(editingSession.checkOut);
+
+    if (checkOut <= checkIn) {
+      toast({
+        variant: 'destructive',
+        title: "Thời gian không hợp lệ",
+        description: "Giờ ra phải xảy ra sau giờ vào."
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const diffMs = checkOut.getTime() - checkIn.getTime();
+      const diffMinutes = Math.floor(diffMs / 1000 / 60);
+
+      await updateSession({
+        ...editingSession,
+        totalMinutes: diffMinutes,
+      });
+      setEditingSession(null);
+      toast({ title: "Đã lưu", description: "Thay đổi của phiên công đã được cập nhật thành công." });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi cập nhật",
+        description: "Không thể lưu dữ liệu thay đổi."
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -148,7 +205,7 @@ export default function HistoryPage() {
     setShowBatchDialog(false);
     try {
       batchAddSessions(batchData);
-      toast({ title: "Thành công", description: "Dữ liệu đang được đồng bộ..." });
+      toast({ title: "Thành công", description: "Hệ thống đang đồng bộ dữ liệu dải ngày..." });
     } finally {
       setIsProcessing(false);
     }
@@ -156,7 +213,7 @@ export default function HistoryPage() {
 
   const handleMultiAdd = () => {
     if (!selectedDates || selectedDates.length === 0) {
-      toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn ít nhất 1 ngày." });
+      toast({ variant: "destructive", title: "Lỗi chọn ngày", description: "Vui lòng chọn ít nhất 1 ngày trên lịch." });
       return;
     }
     setIsProcessing(true);
@@ -169,7 +226,7 @@ export default function HistoryPage() {
         multiplier: multiData.multiplier
       });
       setSelectedDates([]);
-      toast({ title: "Thành công", description: `Đang xử lý ${selectedDates.length} phiên OT.` });
+      toast({ title: "Thành công", description: `Đã xử lý thêm ${selectedDates.length} phiên làm việc.` });
     } finally {
       setIsProcessing(false);
     }
@@ -185,7 +242,9 @@ export default function HistoryPage() {
       try {
         const content = event.target?.result as string;
         await importFromCSV(content);
-        toast({ title: "Đã nhập", description: "Dữ liệu CSV đã được khôi phục." });
+        toast({ title: "Nhập thành công", description: "Dữ liệu từ tệp CSV đã được khôi phục." });
+      } catch (error) {
+        toast({ variant: "destructive", title: "Lỗi nhập tệp", description: "Định dạng tệp CSV không hợp lệ." });
       } finally {
         setIsProcessing(false);
       }
@@ -200,7 +259,7 @@ export default function HistoryPage() {
       await clearAllHistory();
       toast({ 
         title: "Đã xóa tất cả", 
-        description: "Bạn có 10 giây để khôi phục.",
+        description: "Bạn có 10 giây để nhấn nút khôi phục.",
         variant: "destructive"
       });
     } finally {
@@ -212,7 +271,7 @@ export default function HistoryPage() {
     setIsProcessing(true);
     try {
       await restoreHistory();
-      toast({ title: "Đã khôi phục", description: "Dữ liệu đã được quay trở lại." });
+      toast({ title: "Đã phục hồi", description: "Toàn bộ dữ liệu của bạn đã quay trở lại." });
     } finally {
       setIsProcessing(false);
     }
@@ -232,13 +291,26 @@ export default function HistoryPage() {
     setSelectedYear(nextYear);
   };
 
-  const sessionDates = sessions.map(s => new Date(s.checkIn).toDateString());
+  if (!isLoaded) {
+    return (
+      <div className="space-y-6 pb-24 animate-pulse">
+        <header className="h-10 bg-zinc-900 rounded-xl w-48" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => <div key={i} className="h-24 bg-zinc-900 rounded-[1.5rem]" />)}
+        </div>
+        <div className="h-14 bg-zinc-900 rounded-2xl w-full" />
+        <div className="space-y-4">
+          {[1, 2].map(i => <div key={i} className="h-32 bg-zinc-900 rounded-[1.5rem]" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-24 text-white">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-black font-headline tracking-tighter uppercase">LỊCH SỬ CÔNG</h1>
+          <h1 className="text-2xl font-black tracking-tighter uppercase">Lịch sử công</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           {canUndo && (
@@ -260,7 +332,7 @@ export default function HistoryPage() {
                 size="sm" 
                 variant="outline" 
                 disabled={completedSessions.length === 0 || isProcessing}
-                className="gap-2 text-xs rounded-xl h-10 border-red-500/30 bg-zinc-900 text-red-500 font-bold"
+                className="gap-2 text-xs rounded-xl h-10 border-red-500/30 bg-zinc-900 text-red-500 font-bold hover:bg-red-950/20"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Xóa hết
@@ -277,15 +349,15 @@ export default function HistoryPage() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="rounded-xl font-bold border-zinc-800 text-white">Hủy</AlertDialogCancel>
-                <AlertDialogAction onClick={handleClearAll} className="bg-red-600 hover:bg-red-500 rounded-xl font-black">XÓA BỎ</AlertDialogAction>
+                <AlertDialogCancel className="rounded-xl font-bold border-zinc-800 text-white hover:bg-zinc-900">Hủy</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClearAll} className="bg-red-600 hover:bg-red-500 rounded-xl font-black text-white">XÓA BỎ</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
 
           <Dialog open={showMultiDialog} onOpenChange={setShowMultiDialog}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="default" className="gap-2 text-xs rounded-xl h-10 bg-primary font-black shadow-lg">
+              <Button size="sm" variant="default" className="gap-2 text-xs rounded-xl h-10 bg-primary hover:bg-primary/95 font-black shadow-lg text-black">
                 <CheckSquare className="w-4 h-4" />
                 CHỌN NGÀY OT
               </Button>
@@ -302,7 +374,7 @@ export default function HistoryPage() {
                     selected={selectedDates}
                     onSelect={setSelectedDates}
                     className="rounded-md mx-auto"
-                    disabled={(date) => sessionDates.includes(date.toDateString())}
+                    disabled={(date) => sessionDatesSet.has(date.toDateString())}
                   />
                   {selectedDates && selectedDates.length > 0 && (
                     <div className="pt-3 border-t border-zinc-800">
@@ -311,7 +383,7 @@ export default function HistoryPage() {
                         {selectedDates.map((date, idx) => (
                           <Badge key={idx} variant="secondary" className="bg-primary/20 text-primary border-primary/30 text-[9px] font-bold">
                             {date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
-                            <X className="w-2.5 h-2.5 ml-1 cursor-pointer" onClick={() => setSelectedDates(selectedDates.filter(d => d.getTime() !== date.getTime()))} />
+                            <X className="w-2.5 h-2.5 ml-1 cursor-pointer hover:text-red-500" onClick={() => setSelectedDates(selectedDates.filter(d => d.getTime() !== date.getTime()))} />
                           </Badge>
                         ))}
                       </div>
@@ -322,11 +394,11 @@ export default function HistoryPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ vào</Label>
-                    <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full" value={multiData.startTime} onChange={(e) => setMultiData({...multiData, startTime: e.target.value})} />
+                    <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={multiData.startTime} onChange={(e) => setMultiData({...multiData, startTime: e.target.value})} />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ ra</Label>
-                    <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full" value={multiData.endTime} onChange={(e) => setMultiData({...multiData, endTime: e.target.value})} />
+                    <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={multiData.endTime} onChange={(e) => setMultiData({...multiData, endTime: e.target.value})} />
                   </div>
                 </div>
                 <div className="space-y-1.5">
@@ -335,7 +407,7 @@ export default function HistoryPage() {
                     <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
                       <SelectItem value="1.0">Ngày thường (Tự tính OT)</SelectItem>
                       <SelectItem value={settings.sundayMultiplier.toString()}>OT CN (x{settings.sundayMultiplier})</SelectItem>
                       <SelectItem value={settings.holidayMultiplier.toString()}>OT Lễ (x{settings.holidayMultiplier})</SelectItem>
@@ -344,16 +416,16 @@ export default function HistoryPage() {
                 </div>
               </div>
               <DialogFooter className="gap-2">
-                <Button onClick={handleMultiAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/90 rounded-xl h-12 font-black shadow-xl w-full">
+                <Button onClick={handleMultiAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/90 text-black rounded-xl h-12 font-black shadow-xl w-full">
                   LƯU DỮ LIỆU
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
+          
           <Dialog open={showBatchDialog} onOpenChange={setShowBatchDialog}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline" className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold text-white">
+              <Button size="sm" variant="outline" className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold text-white hover:bg-zinc-850">
                 <Layers className="w-3.5 h-3.5" />
                 DẢI NGÀY
               </Button>
@@ -376,7 +448,7 @@ export default function HistoryPage() {
                   <SelectTrigger className="bg-zinc-900 border-zinc-800 rounded-xl h-11 font-bold text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
                     <SelectItem value="-1">Tự động (CN/Lễ)</SelectItem>
                     <SelectItem value="1.0">Ngày thường</SelectItem>
                   </SelectContent>
@@ -387,26 +459,62 @@ export default function HistoryPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleBatchAdd} disabled={isProcessing} className="bg-primary rounded-xl h-12 font-black shadow-xl w-full">
+                <Button onClick={handleBatchAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/95 text-black rounded-xl h-12 font-black shadow-xl w-full">
                   ĐỒNG BỘ NGAY
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
-          <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold text-white" onClick={exportToCSV}>
+          
+          <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold text-white hover:bg-zinc-850" onClick={exportToCSV}>
             XUẤT CSV
           </Button>
-
-          <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold text-white" onClick={() => fileInputRef.current?.click()}>
+          
+          <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold text-white hover:bg-zinc-850" onClick={() => fileInputRef.current?.click()}>
             NHẬP CSV
           </Button>
           <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleImportCSV} />
         </div>
       </header>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-none shadow-xl bg-zinc-900 border border-zinc-800 rounded-[1.5rem]">
+          <CardContent className="p-5 flex items-center space-x-4">
+            <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center">
+              <CalendarIcon className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Số ngày công</p>
+              <h4 className="text-2xl font-black text-white">{monthlySummary.totalCount} phiên</h4>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-xl bg-zinc-900 border border-zinc-800 rounded-[1.5rem]">
+          <CardContent className="p-5 flex items-center space-x-4">
+            <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center">
+              <Clock className="w-6 h-6 text-orange-500" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Tổng giờ làm OT</p>
+              <h4 className="text-2xl font-black text-orange-500">{formatHours(monthlySummary.totalMinutesOT)}</h4>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-xl bg-zinc-900 border border-zinc-800 rounded-[1.5rem]">
+          <CardContent className="p-5 flex items-center space-x-4">
+            <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-green-500" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Lương OT dự tính</p>
+              <h4 className="text-2xl font-black text-green-500">{formatCurrency(monthlySummary.totalSalary)}</h4>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="flex items-center justify-between bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
-        <Button variant="ghost" size="icon" onClick={() => changeMonth(-1)} className="rounded-xl text-zinc-400">
+        <Button variant="ghost" size="icon" onClick={() => changeMonth(-1)} className="rounded-xl text-zinc-400 hover:text-white">
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div className="text-center">
@@ -415,11 +523,11 @@ export default function HistoryPage() {
             Tháng {selectedMonth} <span className="text-zinc-500">/</span> {selectedYear}
           </p>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => changeMonth(1)} className="rounded-xl text-zinc-400">
+        <Button variant="ghost" size="icon" onClick={() => changeMonth(1)} className="rounded-xl text-zinc-400 hover:text-white">
           <ChevronRight className="w-5 h-5" />
         </Button>
       </div>
-
+      
       {completedSessions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
           <div className="p-8 rounded-[2rem] bg-zinc-900 border border-zinc-800">
@@ -430,11 +538,7 @@ export default function HistoryPage() {
       ) : (
         <div className="space-y-4">
           {completedSessions.map((session) => {
-            const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
-            const effectiveMinutes = session.totalMinutes > breakMinutes ? session.totalMinutes - breakMinutes : session.totalMinutes;
-            const otMinutes = session.multiplier === 1.0 
-              ? (effectiveMinutes > 510 ? effectiveMinutes - 480 : 0) 
-              : effectiveMinutes;
+            const metrics = getSessionOTMetrics(session);
             
             return (
               <Card key={session.id} className="border-none shadow-xl overflow-hidden bg-zinc-900 rounded-[1.5rem] border border-zinc-800">
@@ -449,10 +553,10 @@ export default function HistoryPage() {
                       </span>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-500 hover:text-destructive rounded-xl" onClick={() => deleteSession(session.id)} disabled={isProcessing}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-500 hover:text-red-500 hover:bg-zinc-800 rounded-xl" onClick={() => deleteSession(session.id)} disabled={isProcessing}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-500 hover:text-primary rounded-xl" onClick={() => setEditingSession(session)} disabled={isProcessing}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-500 hover:text-primary hover:bg-zinc-800 rounded-xl" onClick={() => setEditingSession(session)} disabled={isProcessing}>
                         <Edit3 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -463,19 +567,19 @@ export default function HistoryPage() {
                       <p className="text-xs font-bold text-white">
                         {new Date(session.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                         <span className="mx-1 text-zinc-600">→</span>
-                        {new Date(session.checkOut!).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                        {session.checkOut ? new Date(session.checkOut).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
                       </p>
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-[10px] text-orange-500 uppercase font-black tracking-widest">Tổng OT</p>
                       <div className="flex items-center space-x-1 text-xs font-black text-orange-500">
                         <Zap className="w-3.5 h-3.5 fill-orange-500/20" />
-                        <span>{formatHours(otMinutes)}</span>
+                        <span>{formatHours(metrics.otMinutes)}</span>
                       </div>
                     </div>
                     <div className="space-y-1.5 text-right">
                       <p className="text-[10px] text-green-500 uppercase font-black tracking-widest">Lương OT</p>
-                      <p className="text-lg font-black text-green-500 tracking-tighter">{formatCurrency(session.salary)}</p>
+                      <p className="text-lg font-black text-green-500 tracking-tighter">{formatCurrency(metrics.salary)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -484,7 +588,7 @@ export default function HistoryPage() {
           })}
         </div>
       )}
-
+      
       {editingSession && (
         <Dialog open={!!editingSession} onOpenChange={(open) => !open && setEditingSession(null)}>
           <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[100]">
@@ -492,22 +596,40 @@ export default function HistoryPage() {
               <DialogTitle className="font-black uppercase text-xl text-center">Chỉnh sửa phiên</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <Input type="datetime-local" className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white" value={formatToLocalDatetime(editingSession.checkIn)} onChange={(e) => setEditingSession({...editingSession, checkIn: new Date(e.target.value).toISOString()})} />
-              <Input type="datetime-local" className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white" value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""} onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})} />
-              <Select value={editingSession.multiplier.toString()} onValueChange={(v) => setEditingSession({...editingSession, multiplier: parseFloat(v)})}>
-                <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1.0">Ngày thường</SelectItem>
-                  <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (x{settings.sundayMultiplier})</SelectItem>
-                  <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (x{settings.holidayMultiplier})</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-zinc-500">Thời gian vào</Label>
+                <Input 
+                  type="datetime-local" 
+                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white" 
+                  value={formatToLocalDatetime(editingSession.checkIn)} 
+                  onChange={(e) => setEditingSession({...editingSession, checkIn: new Date(e.target.value).toISOString()})} 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-zinc-500">Thời gian ra</Label>
+                <Input 
+                  type="datetime-local" 
+                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white" 
+                  value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""} 
+                  onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})} 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-zinc-500">Ghi chú</Label>
+                <Input 
+                  className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white" 
+                  value={editingSession.note || ""} 
+                  onChange={(e) => setEditingSession({...editingSession, note: e.target.value})} 
+                />
+              </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleUpdate} disabled={isProcessing} className="bg-primary rounded-xl h-12 font-black shadow-xl w-full">
-                LƯU THAY ĐỔI
+              <Button 
+                onClick={handleUpdate} 
+                disabled={isProcessing} 
+                className="w-full bg-primary hover:bg-primary/90 text-black font-black h-12 rounded-xl"
+              >
+                {isProcessing ? "ĐANG LƯU..." : "LƯU THAY ĐỔI"}
               </Button>
             </DialogFooter>
           </DialogContent>

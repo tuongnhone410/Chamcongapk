@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
-import { LogIn, Chrome, AlertCircle, Clock, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { Chrome, ShieldCheck, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AuthPage() {
@@ -22,25 +22,43 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: userLoading } = useUser();
 
-  // Chuyển logic điều hướng vào useEffect để tránh lỗi "setState in render"
+  // Chuyển hướng khi đã đăng nhập thành công
   useEffect(() => {
     if (user && !userLoading) {
       router.push('/');
     }
   }, [user, userLoading, router]);
 
-  if (user || userLoading) {
-    return null;
+  // Hiển thị màn hình chờ tải thông tin thay vì màn hình trắng trống
+  if (userLoading || user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 text-white gap-3">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <p className="text-zinc-400 text-sm animate-pulse">
+          {user ? 'Đang chuyển hướng...' : 'Đang tải thông tin...'}
+        </p>
+      </div>
+    );
   }
 
-  const handleEmailAuth = async (mode: 'login' | 'signup') => {
-    if (!auth) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Ngăn trình duyệt reload trang
+    
+    if (!auth) {
+      toast({
+        variant: 'destructive',
+        title: 'Lỗi kết nối',
+        description: 'Hệ thống xác thực Firebase chưa được khởi tạo.',
+      });
+      return;
+    }
 
     let targetEmail = email.trim();
     const targetPassword = password.trim();
@@ -71,12 +89,11 @@ export default function AuthPage() {
 
     setLoading(true);
     try {
-      if (mode === 'login') {
+      if (activeTab === 'login') {
         await signInWithEmailAndPassword(auth, targetEmail, targetPassword);
       } else {
         await createUserWithEmailAndPassword(auth, targetEmail, targetPassword);
       }
-      // Điều hướng sẽ được xử lý bởi useEffect phía trên
     } catch (error: any) {
       let errorMessage = 'Đã có lỗi xảy ra';
       
@@ -135,21 +152,38 @@ export default function AuthPage() {
       <Card className="w-full max-w-md shadow-2xl border-zinc-800 bg-zinc-900 text-white overflow-hidden rounded-2xl">
         <CardHeader className="text-center space-y-2 pb-2">
           <div className="mx-auto w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-2 border border-primary/30">
-            <ShieldCheck className="w-8 h-8 text-primary" />
+            <ShieldCheck className="w-8 h-8 text-primary animate-pulse" />
           </div>
           <CardTitle className="text-3xl font-black tracking-tighter">TimeSnap</CardTitle>
           <CardDescription className="text-zinc-400 font-medium">Hệ thống chấm công bảo mật</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs 
+            value={activeTab} 
+            onValueChange={(val) => setActiveTab(val as 'login' | 'signup')} 
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-2 mb-8 bg-zinc-800 p-1 rounded-xl">
-              <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-zinc-700 data-[state=active]:text-white font-bold">Đăng nhập</TabsTrigger>
-              <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-zinc-700 data-[state=active]:text-white font-bold">Đăng ký</TabsTrigger>
+              <TabsTrigger 
+                value="login" 
+                className="rounded-lg data-[state=active]:bg-zinc-700 data-[state=active]:text-white font-bold transition-all"
+              >
+                Đăng nhập
+              </TabsTrigger>
+              <TabsTrigger 
+                value="signup" 
+                className="rounded-lg data-[state=active]:bg-zinc-700 data-[state=active]:text-white font-bold transition-all"
+              >
+                Đăng ký
+              </TabsTrigger>
             </TabsList>
             
-            <div className="space-y-4">
+            {/* Sử dụng thẻ form chuẩn HTML */}
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-zinc-300 font-bold ml-1 uppercase text-[10px] tracking-wider">Tài khoản / Email</Label>
+                <Label htmlFor="email" className="text-zinc-300 font-bold ml-1 uppercase text-[10px] tracking-wider">
+                  Tài khoản / Email
+                </Label>
                 <Input 
                   id="email" 
                   type="text" 
@@ -158,10 +192,14 @@ export default function AuthPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus-visible:ring-primary h-12 rounded-xl"
                   disabled={loading}
+                  autoComplete="username"
+                  required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-zinc-300 font-bold ml-1 uppercase text-[10px] tracking-wider">Mật khẩu</Label>
+                <Label htmlFor="password" className="text-zinc-300 font-bold ml-1 uppercase text-[10px] tracking-wider">
+                  Mật khẩu
+                </Label>
                 <div className="relative">
                   <Input 
                     id="password" 
@@ -170,11 +208,8 @@ export default function AuthPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="bg-zinc-800 border-zinc-700 text-white focus-visible:ring-primary h-12 rounded-xl pr-12"
                     disabled={loading}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleEmailAuth('login');
-                      }
-                    }}
+                    autoComplete="current-password"
+                    required
                   />
                   <button
                     type="button"
@@ -186,45 +221,60 @@ export default function AuthPage() {
                 </div>
               </div>
 
-              <TabsContent value="login" className="mt-0 pt-2">
+              <TabsContent value="login" className="mt-0 pt-2 focus-visible:outline-none">
                 <Button 
-                  className="w-full h-14 font-black text-lg rounded-xl shadow-lg hover:scale-[1.02] transition-transform active:scale-95" 
-                  onClick={() => handleEmailAuth('login')}
+                  type="submit"
+                  className="w-full h-14 font-black text-lg rounded-xl shadow-lg hover:scale-[1.02] transition-all active:scale-95" 
                   disabled={loading}
                 >
-                  {loading ? 'Đang xác thực...' : 'ĐĂNG NHẬP'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Đang xác thực...
+                    </>
+                  ) : (
+                    'ĐĂNG NHẬP'
+                  )}
                 </Button>
               </TabsContent>
               
-              <TabsContent value="signup" className="mt-0 pt-2">
+              <TabsContent value="signup" className="mt-0 pt-2 focus-visible:outline-none">
                 <Button 
-                  className="w-full h-14 font-black text-lg rounded-xl shadow-lg hover:scale-[1.02] transition-transform active:scale-95 bg-emerald-600 hover:bg-emerald-500" 
-                  onClick={() => handleEmailAuth('signup')}
+                  type="submit"
+                  className="w-full h-14 font-black text-lg rounded-xl shadow-lg hover:scale-[1.02] transition-all active:scale-95 bg-emerald-600 hover:bg-emerald-500 text-white" 
                   disabled={loading}
                 >
-                  {loading ? 'Đang khởi tạo...' : 'TẠO TÀI KHOẢN'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Đang khởi tạo...
+                    </>
+                  ) : (
+                    'TẠO TÀI KHOẢN'
+                  )}
                 </Button>
               </TabsContent>
+            </form>
 
-              <div className="relative my-8">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-zinc-800" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase font-bold tracking-widest">
-                  <span className="bg-zinc-900 px-4 text-zinc-500">Hoặc tiếp tục với</span>
-                </div>
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-zinc-800" />
               </div>
-
-              <Button 
-                variant="outline" 
-                className="w-full h-12 gap-3 font-bold border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-xl text-white transition-all"
-                onClick={handleGoogleLogin}
-                disabled={loading}
-              >
-                <Chrome className="w-5 h-5" />
-                Google Account
-              </Button>
+              <div className="relative flex justify-center text-xs uppercase font-bold tracking-widest">
+                <span className="bg-zinc-900 px-4 text-zinc-500">Hoặc tiếp tục với</span>
+              </div>
             </div>
+
+            <Button 
+              type="button"
+              variant="outline" 
+              className="w-full h-12 gap-3 font-bold border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-xl text-white transition-all"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+            >
+              <Chrome className="w-5 h-5" />
+              Google Account
+            </Button>
           </Tabs>
         </CardContent>
       </Card>

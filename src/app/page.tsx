@@ -3,32 +3,30 @@
 import { DigitalClock } from '@/components/attendance/DigitalClock';
 import { useAttendance } from '@/hooks/useAttendance';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   LogOut, 
-  Calculator, 
   PlayCircle,
-  BarChart3,
   CalendarDays,
-  Timer,
+  Clock,
   Zap,
-  CheckCircle2
+  TrendingUp,
+  DollarSign,
+  Loader2
 } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
   ChartContainer, 
   ChartTooltip, 
   ChartTooltipContent,
   type ChartConfig 
 } from "@/components/ui/chart";
-import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Cell, LabelList, ReferenceLine } from "recharts";
-import { cn } from '@/lib/utils';
+import { Bar, BarChart, XAxis, ResponsiveContainer, CartesianGrid, LabelList } from "recharts";
 import { useState, useEffect, useMemo } from 'react';
 
 const chartConfig = {
   hours: {
-    label: "Giờ công",
-    color: "hsl(var(--primary))",
+    label: "Giờ công làm",
+    color: "rgb(234, 179, 8)",
   },
 } satisfies ChartConfig;
 
@@ -57,13 +55,17 @@ export default function Home() {
       const hours = Math.floor(diffMs / 3600000);
       const minutes = Math.floor((diffMs % 3600000) / 60000);
       const seconds = Math.floor((diffMs % 60000) / 1000);
-      setElapsedTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      
+      setElapsedTime(
+        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+      );
       setSessionMinutes(Math.floor(diffMs / 60000));
     };
+
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  },[activeSession]);
+  }, [activeSession]);
 
   const handleAction = async (action: 'in' | 'out') => {
     setIsProcessing(true);
@@ -82,8 +84,11 @@ export default function Home() {
     const monthSessions = sessions.filter(s => new Date(s.checkIn) >= startOfMonth && s.checkOut);
     const totalMonthMinutes = monthSessions.reduce((acc, s) => acc + (s.totalMinutes || 0), 0);
     const totalMonthHours = (totalMonthMinutes / 60).toFixed(1);
+    
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
-    const standardDaysCount = monthSessions.filter(s => ((s.totalMinutes || 0) - breakMinutes) >= 480).length;
+    const standardDaysCount = monthSessions.filter(
+      s => ((s.totalMinutes || 0) - breakMinutes) >= 480
+    ).length;
     
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
@@ -94,13 +99,24 @@ export default function Home() {
     const dailyMinutes: Record<string, number> = {};
     const weekAgo = new Date();
     weekAgo.setDate(now.getDate() - 7);
-    sessions.filter(s => new Date(s.checkIn) >= weekAgo && s.checkOut).forEach(s => {
-      const dateKey = new Date(s.checkIn).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-      dailyMinutes[dateKey] = (dailyMinutes[dateKey] || 0) + (s.totalMinutes || 0);
-    });
+    
+    sessions
+      .filter(s => new Date(s.checkIn) >= weekAgo && s.checkOut)
+      .forEach(s => {
+        const dateKey = new Date(s.checkIn).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+        dailyMinutes[dateKey] = (dailyMinutes[dateKey] || 0) + (s.totalMinutes || 0);
+      });
 
-    return { totalMonthHours, chartData: last7Days.map(date => ({ date, hours: parseFloat(((dailyMinutes[date] || 0) / 60).toFixed(1)) })), monthSessionsCount: monthSessions.length, standardDaysCount };
-  },[sessions, isLoaded, settings.breakTimeDeduction]);
+    return { 
+      totalMonthHours, 
+      chartData: last7Days.map(date => ({ 
+        date, 
+        hours: parseFloat(((dailyMinutes[date] || 0) / 60).toFixed(1)) 
+      })), 
+      monthSessionsCount: monthSessions.length, 
+      standardDaysCount 
+    };
+  }, [sessions, isLoaded, settings.breakTimeDeduction]);
 
   const salaryInfo = useMemo(() => {
     if (!isLoaded) return null;
@@ -108,20 +124,53 @@ export default function Home() {
     const startDate = new Date(now.getFullYear(), now.getMonth() - (now.getDate() < settings.payday ? 1 : 0), settings.payday);
     const endDate = new Date(now.getFullYear(), now.getMonth() + (now.getDate() < settings.payday ? 0 : 1), settings.payday - 1, 23, 59, 59);
     return calculateFullSalary(sessions.filter(s => new Date(s.checkIn) >= startDate && new Date(s.checkIn) <= endDate));
-  },[sessions, settings, isLoaded, calculateFullSalary]);
-
-  if (!isLoaded || !analyticsData || !salaryInfo) return null;
+  }, [sessions, settings, isLoaded, calculateFullSalary]);
 
   const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
+  
+  const formatHoursDisplay = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = Math.round(mins % 60);
+    return `${h}h ${m}m`;
+  };
+
+  if (!isLoaded || !analyticsData || !salaryInfo) {
+    return (
+      <div className="space-y-6 pb-24 px-1 sm:px-0 animate-pulse text-white">
+        <header className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-6 bg-zinc-900 rounded-xl w-32" />
+            <div className="h-3 bg-zinc-900 rounded-xl w-24" />
+          </div>
+          <div className="h-8 bg-zinc-900 rounded-xl w-28" />
+        </header>
+        <div className="h-28 bg-zinc-900 rounded-[2rem] w-full" />
+        <div className="h-24 bg-zinc-900 rounded-[2rem] w-full" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-20 bg-zinc-900 rounded-[2rem]" />
+          <div className="h-20 bg-zinc-900 rounded-[2rem]" />
+        </div>
+        <div className="h-48 bg-zinc-900 rounded-[2rem] w-full" />
+      </div>
+    );
+  }
+
   const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
   const effectiveSessionMinutes = Math.max(0, sessionMinutes - breakMinutes);
-  const currentOTSalary = activeSession ? (activeSession.multiplier === 1.0 ? (effectiveSessionMinutes > 510 ? ((effectiveSessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier : 0) : (effectiveSessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier) : 0;
+  
+  const currentOTSalary = activeSession 
+    ? (activeSession.multiplier === 1.0 
+        ? (effectiveSessionMinutes > 510 
+            ? ((effectiveSessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier 
+            : 0) 
+        : (effectiveSessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier) 
+    : 0;
 
   return (
-    <div className="space-y-6 pb-24 px-1 sm:px-0">
+    <div className="space-y-6 pb-24 px-1 sm:px-0 text-white">
       <header className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <h1 className="text-xl sm:text-2xl font-black font-headline tracking-tighter">TimeSnap</h1>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tighter">TimeSnap</h1>
           <p className="text-zinc-500 text-[10px] font-medium uppercase tracking-widest">Dashboard Pro</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-2xl flex items-center gap-2">
@@ -135,59 +184,143 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center">
         {!activeSession ? (
           <div className="w-full space-y-4">
-            <div className="text-center space-y-1">
-              <p className="text-sm font-black text-primary uppercase">{isHoliday ? `Ngày Lễ` : new Date().getDay() === 0 ? `Chủ Nhật` : `Ngày Thường`}</p>
+            <div className="text-center">
+              <p className="text-xs font-black text-primary uppercase tracking-widest">
+                {isHoliday ? `Hôm nay: Ngày Lễ 🎉` : new Date().getDay() === 0 ? `Hôm nay: Chủ Nhật ☕` : `Hôm nay: Ngày Thường 💼`}
+              </p>
             </div>
-            <Button onClick={() => handleAction('in')} disabled={isProcessing} className="w-full rounded-[2rem] h-20 sm:h-24 text-xl sm:text-2xl font-black shadow-2xl gap-3 bg-primary hover:bg-primary/90">
-              {isProcessing ? "ĐANG XỬ LÝ..." : <><PlayCircle className="w-8 h-8" /> VÀO CA</>}
+            <Button 
+              onClick={() => handleAction('in')} 
+              disabled={isProcessing} 
+              className="w-full rounded-[2rem] h-20 sm:h-24 text-xl sm:text-2xl font-black shadow-2xl gap-3 bg-primary hover:bg-primary/90 text-black active:scale-95 transition-all"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-6 h-6 animate-spin" /> 
+                  ĐANG KHỞI TẠO...
+                </>
+              ) : (
+                <>
+                  <PlayCircle className="w-8 h-8" /> 
+                  VÀO CA LÀM
+                </>
+              )}
             </Button>
           </div>
         ) : (
-          <Card className="w-full border-zinc-800 shadow-2xl bg-zinc-950 rounded-[2rem] border-2">
+          <Card className="w-full border-zinc-800 shadow-2xl bg-zinc-950 rounded-[2rem] border-2 overflow-hidden">
             <div className="bg-zinc-900/80 p-4 border-b border-zinc-800 flex justify-between items-center">
-              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /><span className="text-[10px] font-black uppercase text-green-500">LIVE</span></div>
-              <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full font-black">x{activeSession.multiplier.toFixed(1)}</span>
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase text-green-500 tracking-wider">ĐANG LÀM VIỆC (LIVE)</span>
+              </div>
+              <span className="text-[10px] bg-primary/20 text-primary px-2.5 py-0.5 rounded-full font-black border border-primary/25">
+                Hệ số: x{activeSession.multiplier.toFixed(1)}
+              </span>
             </div>
+            
             <div className="p-6 text-center space-y-6">
-              <div className="text-5xl sm:text-7xl font-black text-white font-mono tracking-tighter tabular-nums leading-none">{elapsedTime}</div>
-              <Button onClick={() => handleAction('out')} disabled={isProcessing} variant="destructive" className="w-full h-16 rounded-[2rem] text-xl font-black">
-                {isProcessing ? "ĐANG GHI NHẬN..." : <><LogOut className="w-6 h-6 mr-2" /> RA CA</>}
+              <div className="text-5xl sm:text-7xl font-black text-white font-mono tracking-tighter tabular-nums leading-none">
+                {elapsedTime}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-left">
+                <div className="space-y-1">
+                  <span className="text-[9px] uppercase font-black text-zinc-500 flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-zinc-500" />
+                    Thực làm (Đã trừ nghỉ)
+                  </span>
+                  <p className="text-sm font-black text-white">
+                    {formatHoursDisplay(effectiveSessionMinutes)}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[9px] uppercase font-black text-orange-500 flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-orange-500 fill-orange-500/10" />
+                    Lương OT Live
+                  </span>
+                  <p className="text-sm font-black text-orange-500">
+                    {formatCurrency(currentOTSalary)}
+                  </p>
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => handleAction('out')} 
+                disabled={isProcessing} 
+                variant="destructive" 
+                className="w-full h-16 rounded-[2rem] text-xl font-black active:scale-95 transition-all shadow-lg"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    ĐANG KẾT THÚC...
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="w-6 h-6 mr-2" /> 
+                    RA CA (CHỐT CÔNG)
+                  </>
+                )}
               </Button>
             </div>
           </Card>
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card className="bg-zinc-900 rounded-[2rem] border-zinc-800 p-5">
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="bg-zinc-900 border border-zinc-800 rounded-[1.5rem] p-5">
           <p className="text-[9px] uppercase font-black text-zinc-500 tracking-widest">TỔNG GIỜ CÔNG THÁNG</p>
-          <div className="text-3xl font-black text-white">{analyticsData.totalMonthHours}h</div>
+          <div className="text-3xl font-black text-white mt-1">{analyticsData.totalMonthHours}h</div>
         </Card>
-        <Card className="bg-zinc-900 rounded-[2rem] border-zinc-800 p-5">
-          <p className="text-[9px] uppercase font-black text-green-500 tracking-widest">NGÀY CÔNG (≥8h)</p>
-          <div className="text-3xl font-black text-green-500">{analyticsData.standardDaysCount} ngày</div>
+        <Card className="bg-zinc-900 border border-zinc-800 rounded-[1.5rem] p-5">
+          <p className="text-[9px] uppercase font-black text-green-500 tracking-widest">NGÀY CÔNG ĐẠT CHUẨN (≥8h)</p>
+          <div className="text-3xl font-black text-green-500 mt-1">{analyticsData.standardDaysCount} ngày</div>
         </Card>
       </div>
 
-      {/* Chart Section */}
-      <Card className="border-zinc-800 bg-zinc-900 rounded-[2rem] overflow-hidden">
-        <CardContent className="p-4">
-          <div className="h-[200px] w-full">
+      <Card className="border-zinc-800 bg-zinc-900 rounded-[2rem] overflow-hidden p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="w-4 h-4 text-primary" />
+          <p className="text-xs font-black uppercase tracking-widest text-zinc-400">Giờ công 7 ngày qua</p>
+        </div>
+        
+        <div className="h-[200px] w-full">
+          <ChartContainer config={chartConfig} className="h-full w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analyticsData.chartData}>
-                <XAxis dataKey="date" hide />
-                <Bar dataKey="hours" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <BarChart data={analyticsData.chartData} margin={{ top: 15, right: 0, left: 0, bottom: 5 }}>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis 
+                  dataKey="date" 
+                  line={false}
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                  className="text-[10px] fill-zinc-500 font-bold"
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="hours" fill="var(--color-hours)" radius={[6, 6, 0, 0]}>
+                  <LabelList 
+                    dataKey="hours" 
+                    position="top" 
+                    formatter={(val: number) => val > 0 ? `${val}h` : ''}
+                    className="fill-zinc-400 text-[9px] font-black" 
+                  />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </CardContent>
+          </ChartContainer>
+        </div>
       </Card>
 
-      <Card className="bg-primary text-primary-foreground rounded-[2rem] p-6">
-        <div className="flex justify-between items-center">
+      <Card className="bg-primary text-black rounded-[2rem] p-6 shadow-xl relative overflow-hidden">
+        <div className="absolute right-0 bottom-0 translate-y-4 translate-x-4 opacity-10">
+          <DollarSign className="w-36 h-36" />
+        </div>
+        <div className="flex justify-between items-center relative z-10">
           <div>
-            <p className="text-[9px] uppercase font-black opacity-80">THỰC LĨNH DỰ KIẾN</p>
-            <p className="text-3xl font-black">{formatCurrency(salaryInfo.netSalary)}</p>
+            <p className="text-[9px] uppercase font-black opacity-70 tracking-widest">THỰC LĨNH DỰ KIẾN TRONG THÁNG</p>
+            <p className="text-3xl sm:text-4xl font-black mt-1">{formatCurrency(salaryInfo.netSalary)}</p>
           </div>
         </div>
       </Card>
