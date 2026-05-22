@@ -14,29 +14,18 @@ import {
   DialogFooter,
   DialogDescription
 } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { 
   History, 
   Trash2, 
   Edit3, 
-  Clock, 
-  Calendar as CalendarIcon, 
-  Zap, 
-  Layers, 
-  X,
-  RotateCcw,
-  AlertTriangle,
-  ChevronLeft,
+  ChevronLeft, 
   ChevronRight,
-  CheckSquare,
-  DollarSign
+  Loader2
 } from 'lucide-react';
 import { useState, useRef, useMemo } from 'react';
 import { WorkSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -57,19 +46,16 @@ export default function HistoryPage() {
     updateSession, 
     batchAddSessions, 
     multiAddSessions, 
-    importFromCSV,
     clearAllHistory,
     restoreHistory,
     canUndo,
     undoCountdown,
-    settings, 
-    exportToCSV 
+    settings
   } = useAttendance();
 
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
@@ -83,16 +69,6 @@ export default function HistoryPage() {
     return new Date(date.getTime() - offset).toISOString().slice(0, 16);
   };
 
-  const [showBatchDialog, setShowBatchDialog] = useState(false);
-  const [batchData, setBatchData] = useState({
-    startDate: new Date().toISOString().slice(0, 10),
-    endDate: new Date().toISOString().slice(0, 10),
-    startTime: '07:30',
-    endTime: '20:30',
-    multiplier: -1,
-    excludeSundays: true
-  });
-
   const [showMultiDialog, setShowMultiDialog] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
   const [multiData, setMultiData] = useState({
@@ -100,10 +76,6 @@ export default function HistoryPage() {
     endTime: '20:30',
     multiplier: 1.0
   });
-
-  const sessionDatesSet = useMemo(() => {
-    return new Set(sessions.map(s => new Date(s.checkIn).toDateString()));
-  }, [sessions]);
 
   const filteredSessions = useMemo(() => {
     return sessions.filter(s => {
@@ -118,23 +90,18 @@ export default function HistoryPage() {
       .sort((a, b) => new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime());
   }, [filteredSessions]);
 
-  const getSessionOTMetrics = (session: WorkSession) => {
-    const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
-    const effectiveMinutes = session.totalMinutes > breakMinutes 
-      ? session.totalMinutes - breakMinutes 
-      : session.totalMinutes;
-    const otMinutes = session.multiplier === 1.0 
-      ? (effectiveMinutes > 510 ? effectiveMinutes - 480 : 0) 
-      : effectiveMinutes;
-    return { otMinutes: otMinutes > 0 ? otMinutes : 0, salary: session.salary || 0 };
-  };
-
   const monthlySummary = useMemo(() => {
     return completedSessions.reduce((acc, s) => {
-      const metrics = getSessionOTMetrics(s);
-      return { totalMinutesOT: acc.totalMinutesOT + metrics.otMinutes, totalSalary: acc.totalSalary + metrics.salary, totalCount: acc.totalCount + 1 };
+      const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
+      const effectiveMinutes = s.totalMinutes > breakMinutes ? s.totalMinutes - breakMinutes : s.totalMinutes;
+      const otMinutes = s.multiplier === 1.0 ? (effectiveMinutes > 510 ? effectiveMinutes - 480 : 0) : effectiveMinutes;
+      return { 
+        totalMinutesOT: acc.totalMinutesOT + Math.max(0, otMinutes), 
+        totalSalary: acc.totalSalary + (s.salary || 0), 
+        totalCount: acc.totalCount + 1 
+      };
     }, { totalMinutesOT: 0, totalSalary: 0, totalCount: 0 });
-  }, [completedSessions]);
+  }, [completedSessions, settings]);
 
   const formatHours = (mins: number) => `${Math.floor(mins / 60)}h ${Math.round(mins % 60)}m`;
   const formatCurrency = (val: number) => `${Math.round(val).toLocaleString('vi-VN')}đ`;
@@ -154,17 +121,18 @@ export default function HistoryPage() {
     }
   };
 
-  const handleBatchAdd = () => {
-    batchAddSessions(batchData);
-    setShowBatchDialog(false);
-    toast({ title: "Thành công" });
-  };
-
   const handleMultiAdd = () => {
     if (!selectedDates?.length) return;
-    multiAddSessions({ dates: selectedDates, startTime: multiData.startTime, endTime: multiData.endTime, multiplier: multiData.multiplier });
+    setIsProcessing(true);
+    multiAddSessions({ 
+      dates: selectedDates, 
+      startTime: multiData.startTime, 
+      endTime: multiData.endTime, 
+      multiplier: multiData.multiplier 
+    });
     setSelectedDates([]);
     setShowMultiDialog(false);
+    setIsProcessing(false);
     toast({ title: "Thành công" });
   };
 
@@ -226,29 +194,33 @@ export default function HistoryPage() {
       </div>
 
       <div className="space-y-4">
-        {completedSessions.map((session) => (
-          <Card key={session.id} className="bg-zinc-900 border-zinc-800 rounded-[1.5rem] overflow-hidden">
-            <div className="p-4 flex justify-between border-b border-zinc-800 bg-zinc-950/30">
-              <span className="font-black text-sm">{new Date(session.checkIn).toLocaleDateString('vi-VN', { weekday: 'short', day: 'numeric' })}</span>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={() => deleteSession(session.id)}><Trash2 className="w-4 h-4 text-red-500" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => setEditingSession(session)}><Edit3 className="w-4 h-4" /></Button>
+        {completedSessions.length === 0 ? (
+          <div className="py-12 text-center text-zinc-500 font-bold uppercase text-xs">Không có dữ liệu tháng này</div>
+        ) : (
+          completedSessions.map((session) => (
+            <Card key={session.id} className="bg-zinc-900 border-zinc-800 rounded-[1.5rem] overflow-hidden">
+              <div className="p-4 flex justify-between border-b border-zinc-800 bg-zinc-950/30">
+                <span className="font-black text-sm">{new Date(session.checkIn).toLocaleDateString('vi-VN', { weekday: 'short', day: 'numeric' })}</span>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => deleteSession(session.id)}><Trash2 className="w-4 h-4 text-red-500" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => setEditingSession(session)}><Edit3 className="w-4 h-4" /></Button>
+                </div>
               </div>
-            </div>
-            <div className="p-5 flex justify-between items-center">
-              <div>
-                <p className="text-[10px] text-zinc-500 uppercase font-black">Giờ làm</p>
-                <p className="text-xs font-bold">{new Date(session.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - {new Date(session.checkOut!).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
+              <div className="p-5 flex justify-between items-center">
+                <div>
+                  <p className="text-[10px] text-zinc-500 uppercase font-black">Giờ làm</p>
+                  <p className="text-xs font-bold">{new Date(session.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - {new Date(session.checkOut!).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+                <p className="text-lg font-black text-green-500">{formatCurrency(session.salary)}</p>
               </div>
-              <p className="text-lg font-black text-green-500">{formatCurrency(session.salary)}</p>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))
+        )}
       </div>
 
       {editingSession && (
         <Dialog open={!!editingSession} onOpenChange={() => setEditingSession(null)}>
-          <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
+          <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[101]">
             <DialogHeader><DialogTitle className="font-black uppercase">Chỉnh sửa</DialogTitle></DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-1">
@@ -260,17 +232,27 @@ export default function HistoryPage() {
                 <Input type="datetime-local" className="bg-zinc-900 border-zinc-800 rounded-xl" value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""} onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})} />
               </div>
             </div>
-            <DialogFooter><Button onClick={handleUpdate} className="w-full bg-primary text-black font-black h-12 rounded-xl">LƯU THAY ĐỔI</Button></DialogFooter>
+            <DialogFooter><Button onClick={handleUpdate} disabled={isProcessing} className="w-full bg-primary text-black font-black h-12 rounded-xl">{isProcessing ? <Loader2 className="animate-spin" /> : 'LƯU THAY ĐỔI'}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       )}
 
       {showMultiDialog && (
         <Dialog open={showMultiDialog} onOpenChange={setShowMultiDialog}>
-          <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
+          <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[101]">
             <DialogHeader><DialogTitle className="font-black uppercase">Thêm nhanh</DialogTitle></DialogHeader>
-            <Calendar mode="multiple" selected={selectedDates} onSelect={setSelectedDates} className="bg-zinc-900 rounded-2xl p-2" />
-            <Button onClick={handleMultiAdd} className="w-full bg-primary text-black font-black h-12 rounded-xl">LƯU DỮ LIỆU</Button>
+            <Calendar mode="multiple" selected={selectedDates} onSelect={setSelectedDates} className="bg-zinc-900 rounded-2xl p-2 mx-auto" />
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ vào</Label>
+                <Input type="time" value={multiData.startTime} onChange={(e) => setMultiData({...multiData, startTime: e.target.value})} className="bg-zinc-900 border-zinc-800 rounded-xl" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ ra</Label>
+                <Input type="time" value={multiData.endTime} onChange={(e) => setMultiData({...multiData, endTime: e.target.value})} className="bg-zinc-900 border-zinc-800 rounded-xl" />
+              </div>
+            </div>
+            <Button onClick={handleMultiAdd} disabled={isProcessing} className="w-full bg-primary text-black font-black h-12 rounded-xl mt-4">{isProcessing ? <Loader2 className="animate-spin" /> : 'LƯU DỮ LIỆU'}</Button>
           </DialogContent>
         </Dialog>
       )}
