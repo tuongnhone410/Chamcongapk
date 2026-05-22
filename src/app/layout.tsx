@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Inter } from 'next/font/google';
@@ -22,22 +21,30 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Khắc phục lỗi Hydration: Đảm bảo component đã mount trên client trước khi render UI phức tạp
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
-    // Đảm bảo loading đã kết thúc trước khi quyết định
-    if (!authLoading) {
+    if (isMounted && !authLoading) {
       if (!user && pathname !== '/auth') {
         router.push('/auth');
       } else {
         setIsReady(true);
       }
     }
-  }, [user, authLoading, pathname, router]);
+  }, [user, authLoading, pathname, router, isMounted]);
+
+  // Phía Server-side render trả về null để tránh lệch nội dung HTML khi Hydration
+  if (!isMounted) return null;
 
   // Không chặn nếu đang ở trang Auth
   if (pathname === '/auth') return <>{children}</>;
 
-  // Hiển thị spinner mượt mà nếu đang tải hoặc chưa sẵn sàng
+  // Hiển thị màn hình chờ mượt mà nếu đang tải hoặc chưa sẵn sàng
   if (authLoading || !isReady) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950">
