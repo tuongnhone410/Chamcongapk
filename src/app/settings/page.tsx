@@ -175,7 +175,7 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-zinc-500")}>Tỷ lệ bảo hiểm (%)</Label>
+              <Label className={cn(labelClass, "text-zinc-500")}>Bảo hiểm xh (%)</Label>
               <div className="relative">
                 <Input type="number" step="0.1" className={cn(inputClass, "pr-10")} value={localSettings.insuranceRate.toString()} onChange={(e) => handleNumberInput('insuranceRate', e.target.value)} />
                 <span className={suffixClass}>%</span>
