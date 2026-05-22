@@ -116,7 +116,6 @@ export default function Home() {
     }
   };
 
-  // Trình hiển thị khung chờ thay vì trả về null để tránh lỗi màn hình tối
   if (!isLoaded || !analyticsData || !salaryInfo) {
     return (
       <div className="space-y-6 pb-24 px-1 sm:px-0 animate-pulse">
@@ -235,15 +234,15 @@ export default function Home() {
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-zinc-400">Phụ cấp cơm</span>
-                      <span className="font-bold">{formatCurrency(salaryInfo.lunchAllowance)}</span>
+                      <span className="font-bold text-green-500">{formatCurrency(salaryInfo.lunchAllowance)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-zinc-400">Tiền chuyên cần</span>
-                      <span className="font-bold">{formatCurrency(salaryInfo.attendanceBonus)}</span>
+                      <span className="font-bold text-green-500">{formatCurrency(salaryInfo.attendanceBonus)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-zinc-400">Phụ cấp khác</span>
-                      <span className="font-bold">{formatCurrency(otherAllowancesTotal)}</span>
+                      <span className="font-bold text-green-500">{formatCurrency(otherAllowancesTotal)}</span>
                     </div>
                     <Separator className="bg-zinc-800" />
                     <div className="flex justify-between items-center text-sm font-black pt-1">
