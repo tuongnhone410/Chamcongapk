@@ -442,7 +442,7 @@ export default function HistoryPage() {
             <DialogTrigger asChild>
               <Button size="sm" variant="outline" className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold text-white hover:bg-zinc-850">
                 <Layers className="w-3.5 h-3.5" />
-                DẢI NGÀY
+                THÊM HÀNG LOẠT
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto z-[100]">

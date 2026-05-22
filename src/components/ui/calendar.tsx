@@ -35,14 +35,14 @@ function Calendar({
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 border-zinc-800 absolute right-1 z-10"
         ),
-        month_grid: "w-full space-y-1",
-        weekdays: "flex w-full mb-2",
-        weekday: "text-zinc-500 font-black text-[10px] uppercase text-center flex-1",
+        month_grid: "w-full",
+        weekdays: "grid grid-cols-7 w-full mb-2",
+        weekday: "text-zinc-500 font-black text-[10px] uppercase text-center",
         weeks: "space-y-1 w-full",
-        week: "flex w-full",
+        week: "grid grid-cols-7 w-full",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 flex-1 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all hover:bg-zinc-800 text-sm"
+          "h-10 w-full p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all hover:bg-zinc-800 text-sm flex items-center justify-center"
         ),
         day_button: "w-full h-full flex items-center justify-center",
         range_start: "day-range-start",
