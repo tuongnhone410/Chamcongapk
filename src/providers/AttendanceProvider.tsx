@@ -113,16 +113,20 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Tạo khóa lưu trữ cá nhân theo User ID
+  // Tạo khóa lưu trữ cá nhân theo User ID - Đảm bảo tính riêng tư trên cùng 1 thiết bị
   const storageKey = useMemo(() => user ? `timesnap_active_start_${user.uid}` : null, [user?.uid]);
 
-  // Khôi phục trạng thái từ localStorage một cách an toàn và cá nhân hóa
+  // Khôi phục trạng thái từ localStorage theo user hiện tại
   useEffect(() => {
     if (typeof window !== 'undefined' && storageKey) {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         setLocalActiveStart(saved);
+      } else {
+        setLocalActiveStart(null);
       }
+    } else {
+      setLocalActiveStart(null);
     }
   }, [storageKey]);
 
@@ -161,34 +165,31 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     return 1.0;
   }, [settings]);
 
-  // Logic nhận diện phiên hoạt động ổn định nhất cho APK
+  // Logic nhận diện phiên hoạt động cá nhân hóa theo User ID
   const activeSession = useMemo(() => {
-    // 1. Kiểm tra trong dữ liệu Firestore đã tải về có phiên nào chưa đóng không
+    if (!user) return undefined;
+
+    // 1. Kiểm tra trong dữ liệu Firestore của user hiện tại
     const fromDb = sessions.find(s => !s.checkOut);
     if (fromDb) {
-      // Nếu thấy phiên trên DB, cập nhật lại bộ nhớ tạm cho chắc chắn và trả về
       if (typeof window !== 'undefined' && storageKey) {
         localStorage.setItem(storageKey, fromDb.checkIn);
       }
       return fromDb;
     }
 
-    // 2. Nếu DB chưa thấy phiên mở, kiểm tra bộ nhớ tạm của máy
+    // 2. Nếu DB chưa thấy phiên mở, kiểm tra bộ nhớ tạm riêng của user này trên máy
     if (localActiveStart) {
-      // Kiểm tra xem có phiên nào trong DB trùng với giờ vào này mà ĐÃ ĐÓNG chưa
-      // Nếu đã đóng trên DB rồi thì xóa bộ nhớ tạm vì phiên này đã kết thúc
       const alreadyClosedOnServer = sessions.some(s => s.checkIn === localActiveStart && s.checkOut);
       
       if (alreadyClosedOnServer && !sessionsLoading) {
         if (typeof window !== 'undefined' && storageKey) {
           localStorage.removeItem(storageKey);
         }
-        // Trì hoãn việc cập nhật state để tránh vòng lặp render
         setTimeout(() => setLocalActiveStart(null), 0);
         return undefined;
       }
 
-      // Nếu chưa thấy bản ghi đã đóng trên DB, hiển thị như phiên đang chạy (giả lập)
       return {
         id: 'local-temp',
         checkIn: localActiveStart,
@@ -202,20 +203,18 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     }
 
     return undefined;
-  }, [sessions, localActiveStart, storageKey, sessionsLoading, getAutoMultiplier]);
+  }, [sessions, localActiveStart, storageKey, sessionsLoading, getAutoMultiplier, user]);
 
   const punchIn = useCallback(() => {
     if (!db || !user || activeSession) return;
     const now = new Date();
     const isoStr = now.toISOString();
     
-    // Lưu vào máy ngay lập tức để APK ghi nhớ
     if (typeof window !== 'undefined' && storageKey) {
       localStorage.setItem(storageKey, isoStr);
     }
     setLocalActiveStart(isoStr);
 
-    // Đẩy lên Firestore (sẽ chạy ngầm nếu mạng chậm)
     addDoc(collection(db, 'users', user.uid, 'sessions'), {
       checkIn: isoStr,
       checkOut: null,
@@ -230,7 +229,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const punchOut = useCallback(() => {
     if (!db || !user || !activeSession) return;
     
-    // Xóa bộ nhớ tạm ngay khi bấm Ra ca
     if (typeof window !== 'undefined' && storageKey) {
       localStorage.removeItem(storageKey);
     }
@@ -240,7 +238,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const checkIn = new Date(activeSession.checkIn);
     const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
     
-    // Tìm ID thực trên DB nếu phiên hiện tại đang là 'local-temp'
     const targetSessionId = activeSession.id === 'local-temp' 
       ? sessions.find(s => !s.checkOut)?.id 
       : activeSession.id;
