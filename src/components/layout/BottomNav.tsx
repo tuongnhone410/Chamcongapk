@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -18,7 +17,7 @@ export function BottomNav() {
   if (pathname === '/auth') return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-zinc-900/80 backdrop-blur-xl border-t border-zinc-800 h-16 flex items-center justify-around px-4 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-zinc-900/95 border-t border-zinc-800 h-[calc(4rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] flex items-center justify-around px-4 z-[100] shadow-[0_-4px_10px_rgba(0,0,0,0.5)]">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = pathname === item.href;

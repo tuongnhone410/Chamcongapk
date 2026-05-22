@@ -92,16 +92,20 @@ export default function SettingsPage() {
     if (!localSettings) return;
 
     if (localSettings.insuranceRate < 0 || localSettings.insuranceRate > 100) {
-      toast({ variant: "destructive", title: "Lỗi", description: "Tỷ lệ bảo hiểm không hợp lệ." });
+      toast({
+        variant: "destructive",
+        title: "Dữ liệu không hợp lệ",
+        description: "Tỷ lệ đóng bảo hiểm phải nằm trong khoảng từ 0% đến 100%."
+      });
       return;
     }
 
     setIsSaving(true);
     try {
       await updateSettings(localSettings);
-      toast({ title: "Thành công", description: "Đã lưu cài đặt lương." });
+      toast({ title: "Thành công", description: "Các cài đặt lương đã được lưu trữ." });
     } catch (error) {
-      toast({ variant: "destructive", title: "Lỗi", description: "Không thể lưu cài đặt." });
+      toast({ variant: "destructive", title: "Lỗi", description: "Không thể kết nối để lưu cài đặt." });
     } finally {
       setIsSaving(false);
     }
@@ -125,7 +129,7 @@ export default function SettingsPage() {
           <h1 className="text-2xl font-black tracking-tighter uppercase text-white">Cài đặt lương</h1>
           {hasChanges && (
             <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] font-black uppercase animate-pulse">
-              Chưa lưu
+              Có thay đổi chưa lưu
             </Badge>
           )}
         </div>
@@ -134,11 +138,22 @@ export default function SettingsPage() {
           disabled={isSaving || !hasChanges}
           className={cn(
             "rounded-xl px-6 font-black gap-2 shadow-xl h-12 transition-all active:scale-95",
-            hasChanges ? "bg-primary text-black hover:bg-primary/90" : "bg-zinc-800 text-zinc-500 border border-zinc-700"
+            hasChanges 
+              ? "bg-primary text-black hover:bg-primary/90" 
+              : "bg-zinc-800 text-zinc-500 border border-zinc-700"
           )}
         >
-          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-          {isSaving ? "ĐANG LƯU" : "LƯU"}
+          {isSaving ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              ĐANG LƯU
+            </>
+          ) : (
+            <>
+              <Save className="w-5 h-5" />
+              LƯU CẤU HÌNH
+            </>
+          )}
         </Button>
       </header>
 
@@ -157,12 +172,13 @@ export default function SettingsPage() {
                 value={formatMoneyDisplay(localSettings.baseMonthlySalary)}
                 onChange={(e) => handleMoneyInput('baseMonthlySalary', e.target.value)}
                 className={cn(inputClass, "pr-12")}
+                disabled={isSaving}
               />
               <span className={suffixClass}>đ</span>
             </div>
             <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-bold px-1 mt-1">
               <Info className="w-3.5 h-3.5 text-primary" />
-              Lương mỗi giờ: <span className="text-white">{formatMoneyDisplay(localSettings.hourlyRate)}đ/h</span>
+              Lương mỗi giờ chuẩn: <span className="text-white">{formatMoneyDisplay(localSettings.hourlyRate)}đ/h</span>
             </div>
           </div>
           
@@ -170,32 +186,32 @@ export default function SettingsPage() {
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Lương bảo hiểm</Label>
               <div className="relative">
-                <Input type="text" value={formatMoneyDisplay(localSettings.insuranceSalary)} onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} className={cn(inputClass, "pr-10")} />
+                <Input type="text" value={formatMoneyDisplay(localSettings.insuranceSalary)} onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)} className={cn(inputClass, "pr-10")} disabled={isSaving} />
                 <span className={suffixClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Bảo hiểm xh (%)</Label>
               <div className="relative">
-                <Input type="number" step="0.1" className={cn(inputClass, "pr-10")} value={localSettings.insuranceRate.toString()} onChange={(e) => handleNumberInput('insuranceRate', e.target.value)} />
+                <Input type="number" step="0.1" className={cn(inputClass, "pr-10")} value={localSettings.insuranceRate.toString()} onChange={(e) => handleNumberInput('insuranceRate', e.target.value)} disabled={isSaving} />
                 <span className={suffixClass}>%</span>
               </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Đoàn phí</Label>
               <div className="relative">
-                <Input type="text" value={formatMoneyDisplay(localSettings.unionFee)} onChange={(e) => handleMoneyInput('unionFee', e.target.value)} className={cn(inputClass, "pr-10")} />
+                <Input type="text" value={formatMoneyDisplay(localSettings.unionFee)} onChange={(e) => handleMoneyInput('unionFee', e.target.value)} className={cn(inputClass, "pr-10")} disabled={isSaving} />
                 <span className={suffixClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Ngày chốt lương</Label>
-              <Select value={localSettings.payday.toString()} onValueChange={(val) => setLocalSettings({...localSettings, payday: parseInt(val)})}>
+              <Select disabled={isSaving} value={localSettings.payday.toString()} onValueChange={(val) => setLocalSettings({...localSettings, payday: parseInt(val)})}>
                 <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                <SelectContent className="bg-zinc-900 border-zinc-800 text-white max-h-56">
                   {daysInMonth.map(day => <SelectItem key={day} value={day.toString()}>Ngày {day}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -203,8 +219,8 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-1">
-            <Label className={cn(labelClass, "text-zinc-500")}>Khấu trừ giờ nghỉ (giờ)</Label>
-            <Input type="number" step="0.1" className={inputClass} value={localSettings.breakTimeDeduction.toString()} onChange={(e) => handleNumberInput('breakTimeDeduction', e.target.value)} />
+            <Label className={cn(labelClass, "text-zinc-500")}>Khấu trừ giờ nghỉ hàng ngày (giờ)</Label>
+            <Input type="number" step="0.1" className={inputClass} value={localSettings.breakTimeDeduction === 0 ? "" : localSettings.breakTimeDeduction.toString()} onChange={(e) => handleNumberInput('breakTimeDeduction', e.target.value)} disabled={isSaving} />
           </div>
         </CardContent>
       </Card>
@@ -218,17 +234,17 @@ export default function SettingsPage() {
         <CardContent className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
             <Label className={cn(labelClass, "text-zinc-500")}>OT Thường</Label>
-            <Input type="number" step="0.1" className={inputClass} value={localSettings.overtimeMultiplier.toString()} onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)} />
+            <Input type="number" step="0.1" className={inputClass} value={localSettings.overtimeMultiplier.toString()} onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)} disabled={isSaving} />
             <p className="text-[10px] font-black text-orange-500 mt-1">{formatMoneyDisplay(localSettings.hourlyRate * localSettings.overtimeMultiplier)}đ/h</p>
           </div>
           <div className="space-y-1">
             <Label className={cn(labelClass, "text-zinc-500")}>OT CN</Label>
-            <Input type="number" step="0.1" className={inputClass} value={localSettings.sundayMultiplier.toString()} onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)} />
+            <Input type="number" step="0.1" className={inputClass} value={localSettings.sundayMultiplier.toString()} onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)} disabled={isSaving} />
             <p className="text-[10px] font-black text-orange-500 mt-1">{formatMoneyDisplay(localSettings.hourlyRate * localSettings.sundayMultiplier)}đ/h</p>
           </div>
           <div className="space-y-1">
             <Label className={cn(labelClass, "text-zinc-500")}>OT Lễ</Label>
-            <Input type="number" step="0.1" className={inputClass} value={localSettings.holidayMultiplier.toString()} onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)} />
+            <Input type="number" step="0.1" className={inputClass} value={localSettings.holidayMultiplier.toString()} onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)} disabled={isSaving} />
             <p className="text-[10px] font-black text-orange-500 mt-1">{formatMoneyDisplay(localSettings.hourlyRate * localSettings.holidayMultiplier)}đ/h</p>
           </div>
         </CardContent>
@@ -245,13 +261,13 @@ export default function SettingsPage() {
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Chuyên cần gốc</Label>
               <div className="relative">
-                <Input type="text" value={formatMoneyDisplay(localSettings.allowanceAttendanceBase)} onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} className={cn(inputClass, "pr-10")} />
+                <Input type="text" value={formatMoneyDisplay(localSettings.allowanceAttendanceBase)} onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} className={cn(inputClass, "pr-10")} disabled={isSaving} />
                 <span className={suffixClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-green-500")}>Ngày nghỉ không phép</Label>
-              <Input type="number" className={cn(inputClass, "border-green-500/30")} value={localSettings.unexcusedAbsences.toString()} onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} />
+              <Input type="number" className={cn(inputClass, "border-green-500/30")} value={localSettings.unexcusedAbsences === 0 ? "0" : localSettings.unexcusedAbsences.toString()} onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} disabled={isSaving} />
             </div>
           </div>
         </CardContent>
@@ -263,37 +279,55 @@ export default function SettingsPage() {
             <Gift className="w-4 h-4" /> Các khoản phụ cấp
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
-          {[
-            { key: 'allowanceTechnical', label: 'Kỹ thuật' },
-            { key: 'allowanceResponsibility', label: 'Trách nhiệm' },
-            { key: 'allowancePosition', label: 'Chức vụ' },
-            { key: 'allowancePerformance', label: 'Hiệu suất' },
-            { key: 'allowanceProduct', label: 'Tiền sản phẩm' },
-            { key: 'allowanceLunchPerShift', label: 'Cơm / ca' },
-            { key: 'allowanceHousing', label: 'Nhà ở' },
-            { key: 'allowanceFuel', label: 'Xăng xe' }
-          ].map((item) => (
-            <div key={item.key} className="space-y-1">
-              <Label className={cn(labelClass, "text-zinc-500")}>{item.label}</Label>
-              <div className="relative">
-                <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} />
-                <span className={suffixClass}>đ</span>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { key: 'allowanceTechnical', label: 'Kỹ thuật' },
+              { key: 'allowanceResponsibility', label: 'Trách nhiệm' },
+              { key: 'allowancePosition', label: 'Chức vụ' },
+              { key: 'allowancePerformance', label: 'Hiệu suất' }
+            ].map((item) => (
+              <div key={item.key} className="space-y-1">
+                <Label className={cn(labelClass, "text-zinc-500")}>{item.label}</Label>
+                <div className="relative">
+                  <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} disabled={isSaving} />
+                  <span className={suffixClass}>đ</span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+            
+            {[
+              { key: 'allowanceProduct', label: 'Tiền sản phẩm' },
+              { key: 'allowanceLunchPerShift', label: 'Cơm / ca' },
+              { key: 'allowanceLunchOT', label: 'Cơm OT (≥ 2h)' },
+              { key: 'allowanceHousing', label: 'Nhà ở' },
+              { key: 'allowanceToxic', label: 'Độc hại' },
+              { key: 'allowanceBonus', label: 'Thưởng / Doanh thu' },
+              { key: 'allowanceFuel', label: 'Xăng xe' }
+            ].map((item) => (
+              <div key={item.key} className="space-y-1">
+                <Label className={cn(labelClass, "text-zinc-500")}>{item.label}</Label>
+                <div className="relative">
+                  <Input type="text" className={cn(inputClass, "pr-10")} value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} disabled={isSaving} />
+                  <span className={suffixClass}>đ</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
       <div className="bg-zinc-900/50 border border-zinc-800 p-5 rounded-3xl flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <UserCircle className="w-8 h-8 text-zinc-500" />
+          <div className="w-10 h-10 rounded-2xl bg-zinc-800 flex items-center justify-center">
+            <UserCircle className="w-6 h-6 text-zinc-500" />
+          </div>
           <div>
             <p className="text-xs font-black uppercase text-white">Tài khoản</p>
-            <p className="text-[10px] text-zinc-500 font-bold">{auth?.currentUser?.email}</p>
+            <p className="text-[10px] text-zinc-500 font-bold">{auth?.currentUser?.email || "Chưa đăng nhập"}</p>
           </div>
         </div>
-        <Button variant="ghost" onClick={handleLogout} className="text-red-500 font-black gap-2 hover:bg-red-500/10 rounded-xl">
+        <Button variant="ghost" onClick={handleLogout} disabled={isSaving} className="text-red-500 font-black gap-2 hover:bg-red-500/10 h-10 px-4 rounded-xl transition-colors disabled:opacity-50">
           <LogOut className="w-4 h-4" /> THOÁT
         </Button>
       </div>

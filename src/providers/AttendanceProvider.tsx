@@ -178,7 +178,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const checkOut = new Date(data.checkOut);
     const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
     
-    addDoc(collection(db, 'users', user.uid, 'sessions'), {
+    await addDoc(collection(db, 'users', user.uid, 'sessions'), {
       checkIn: checkIn.toISOString(),
       checkOut: checkOut.toISOString(),
       multiplier: data.multiplier,
@@ -209,7 +209,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         createdAt: new Date().toISOString()
       });
     });
-    batch.commit().catch(e => console.error(e));
+    await batch.commit();
   }, [db, user, calculateSessionSalary, getAutoMultiplier]);
 
   const batchAddSessions = useCallback(async (data: { startDate: string, endDate: string, startTime: string, endTime: string, multiplier: number, excludeSundays: boolean }) => {
@@ -240,7 +240,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       }
       current.setDate(current.getDate() + 1);
     }
-    batch.commit().catch(e => console.error(e));
+    await batch.commit();
   }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier]);
 
   const importFromCSV = useCallback(async (csvContent: string) => {
@@ -264,7 +264,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         createdAt: new Date().toISOString()
       });
     }
-    batch.commit().catch(e => console.error(e));
+    await batch.commit();
   }, [db, user]);
 
   const clearAllHistory = useCallback(async () => {
@@ -274,7 +274,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     setUndoCountdown(10);
     const batch = writeBatch(db);
     sessions.forEach(s => batch.delete(doc(db, 'users', user.uid, 'sessions', s.id)));
-    batch.commit().catch(e => console.error(e));
+    await batch.commit();
     countdownIntervalRef.current = setInterval(() => setUndoCountdown(p => p - 1), 1000);
     undoTimerRef.current = setTimeout(() => { setCanUndo(false); setDeletedSessionsCache([]); }, 10000);
   }, [db, user, sessions]);
@@ -286,7 +286,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       const { id, ...data } = s;
       batch.set(doc(db, 'users', user.uid, 'sessions', id), data);
     });
-    batch.commit().catch(e => console.error(e));
+    await batch.commit();
     setCanUndo(false);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
@@ -294,17 +294,17 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const updateSettings = useCallback(async (newSettings: AppSettings) => {
     if (!db || !user) return;
-    setDoc(doc(db, 'users', user.uid, 'settings', 'current'), newSettings, { merge: true });
+    await setDoc(doc(db, 'users', user.uid, 'settings', 'current'), newSettings, { merge: true });
   }, [db, user]);
 
-  const deleteSession = useCallback((id: string) => {
+  const deleteSession = useCallback(async (id: string) => {
     if (!db || !user) return;
-    deleteDoc(doc(db, 'users', user.uid, 'sessions', id));
+    await deleteDoc(doc(db, 'users', user.uid, 'sessions', id));
   }, [db, user]);
 
   const updateSession = useCallback(async (updated: WorkSession) => {
     if (!db || !user) return;
-    updateDoc(doc(db, 'users', user.uid, 'sessions', updated.id), { 
+    await updateDoc(doc(db, 'users', user.uid, 'sessions', updated.id), { 
       ...updated, 
       salary: calculateSessionSalary(updated.totalMinutes, updated.multiplier) 
     });
