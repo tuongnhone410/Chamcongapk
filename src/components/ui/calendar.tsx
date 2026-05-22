@@ -32,13 +32,13 @@ function Calendar({
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse",
-        head_row: "grid grid-cols-7 w-full mb-2",
-        head_cell: "text-zinc-500 rounded-md font-black text-[10px] uppercase text-center w-full",
-        row: "grid grid-cols-7 w-full mt-1",
-        cell: "h-9 w-full text-center text-sm p-0 relative flex items-center justify-center",
+        head_row: "flex w-full mb-2", // Sử dụng flex để khóa cột
+        head_cell: "text-zinc-500 flex-1 font-black text-[10px] uppercase text-center", // Mỗi ô chiếm 1/7 độ rộng
+        row: "flex w-full mt-1", // Sử dụng flex để khóa cột
+        cell: "h-10 flex-1 text-center text-sm p-0 relative flex items-center justify-center", // Mỗi ô chiếm 1/7 độ rộng
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-8 w-8 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all"
+          "h-9 w-9 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all"
         ),
         day_range_end: "day-range-end",
         day_selected:

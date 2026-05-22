@@ -76,6 +76,14 @@ export default function HistoryPage() {
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
+  const formatToLocalDatetime = (isoString: string | Date | null | undefined) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "";
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  };
+
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [batchData, setBatchData] = useState({
     startDate: new Date().toISOString().slice(0, 10),
@@ -93,14 +101,6 @@ export default function HistoryPage() {
     endTime: '20:30',
     multiplier: 1.0
   });
-
-  const formatToLocalDatetime = (isoString: string | Date | null | undefined) => {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return "";
-    const offset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-  };
 
   const sessionDatesSet = useMemo(() => {
     return new Set(sessions.map(s => new Date(s.checkIn).toDateString()));
@@ -339,7 +339,7 @@ export default function HistoryPage() {
                 Xóa hết
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[100]">
+            <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[100] max-h-[90vh] overflow-y-auto">
               <AlertDialogHeader>
                 <AlertDialogTitle className="font-black text-xl text-red-500 flex items-center gap-2">
                   <AlertTriangle className="w-6 h-6" />
@@ -369,7 +369,7 @@ export default function HistoryPage() {
                 <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Lưu ý: Chỉ áp dụng cho những ngày chưa có dữ liệu</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-3 border border-zinc-800">
+                <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-3 border border-zinc-800 overflow-hidden">
                   <Calendar
                     mode="multiple"
                     selected={selectedDates}
