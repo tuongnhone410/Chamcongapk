@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -34,7 +33,7 @@ function Calendar({
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse",
         head_row: "grid grid-cols-7 w-full mb-2",
-        head_cell: "text-zinc-500 rounded-md font-black text-[10px] uppercase text-center",
+        head_cell: "text-zinc-500 rounded-md font-black text-[10px] uppercase text-center w-full",
         row: "grid grid-cols-7 w-full mt-1",
         cell: "h-9 w-full text-center text-sm p-0 relative flex items-center justify-center",
         day: cn(
