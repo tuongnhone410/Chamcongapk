@@ -15,7 +15,6 @@ import {
   Gift,
   Zap,
   LogOut,
-  Loader2,
   Info
 } from 'lucide-react';
 import { AppSettings } from '@/lib/types';
@@ -28,7 +27,6 @@ import { signOut } from 'firebase/auth';
 export default function SettingsPage() {
   const { settings, updateSettings, isLoaded } = useAttendance();
   const [localSettings, setLocalSettings] = useState<AppSettings | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const auth = useAuth();
 
@@ -88,7 +86,7 @@ export default function SettingsPage() {
     setLocalSettings({ ...localSettings, [key]: parsed });
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!localSettings) return;
 
     if (localSettings.insuranceRate < 0 || localSettings.insuranceRate > 100) {
@@ -122,15 +120,10 @@ export default function SettingsPage() {
       return;
     }
 
-    setIsSaving(true);
-    try {
-      await updateSettings(localSettings);
-      toast({ title: "Thành công", description: "Các cài đặt lương đã được lưu trữ." });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Lỗi", description: "Không thể kết nối để lưu cài đặt." });
-    } finally {
-      setIsSaving(false);
-    }
+    // Ghi dữ liệu không sử dụng await để UI phản hồi tức thì
+    updateSettings(localSettings);
+    
+    toast({ title: "Thành công", description: "Các cài đặt lương đã được lưu trữ." });
   };
 
   const handleLogout = async () => {
@@ -157,7 +150,7 @@ export default function SettingsPage() {
         </div>
         <Button 
           onClick={handleSave} 
-          disabled={isSaving || !hasChanges}
+          disabled={!hasChanges}
           className={cn(
             "rounded-xl px-6 font-black gap-2 shadow-xl h-12 transition-all active:scale-95",
             hasChanges 
@@ -165,17 +158,8 @@ export default function SettingsPage() {
               : "bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700"
           )}
         >
-          {isSaving ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              ĐANG LƯU
-            </>
-          ) : (
-            <>
-              <Save className="w-5 h-5" />
-              LƯU CẤU HÌNH
-            </>
-          )}
+          <Save className="w-5 h-5" />
+          LƯU CẤU HÌNH
         </Button>
       </header>
 
@@ -194,7 +178,6 @@ export default function SettingsPage() {
                 value={formatMoneyDisplay(localSettings.baseMonthlySalary)}
                 onChange={(e) => handleMoneyInput('baseMonthlySalary', e.target.value)}
                 className={cn(inputClass, "pr-12")}
-                disabled={isSaving}
               />
               <span className={suffixClass}>đ</span>
             </div>
@@ -213,7 +196,6 @@ export default function SettingsPage() {
                   value={formatMoneyDisplay(localSettings.insuranceSalary)}
                   onChange={(e) => handleMoneyInput('insuranceSalary', e.target.value)}
                   className={cn(inputClass, "pr-10")}
-                  disabled={isSaving}
                 />
                 <span className={suffixClass}>đ</span>
               </div>
@@ -226,7 +208,6 @@ export default function SettingsPage() {
                   className={cn(inputClass, "pr-10")}
                   value={localSettings.insuranceRate.toString()}
                   onChange={(e) => handleNumberInput('insuranceRate', e.target.value)}
-                  disabled={isSaving}
                 />
                 <span className={suffixClass}>%</span>
               </div>
@@ -242,7 +223,6 @@ export default function SettingsPage() {
                   value={formatMoneyDisplay(localSettings.unionFee)}
                   onChange={(e) => handleMoneyInput('unionFee', e.target.value)}
                   className={cn(inputClass, "pr-10")}
-                  disabled={isSaving}
                 />
                 <span className={suffixClass}>đ</span>
               </div>
@@ -259,7 +239,6 @@ export default function SettingsPage() {
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Ngày chốt lương</Label>
               <Select 
-                disabled={isSaving}
                 value={localSettings.payday.toString()} 
                 onValueChange={(val) => setLocalSettings({...localSettings, payday: parseInt(val)})}
               >
@@ -278,7 +257,6 @@ export default function SettingsPage() {
                 className={inputClass}
                 value={localSettings.breakTimeDeduction === 0 ? "" : localSettings.breakTimeDeduction.toString()}
                 onChange={(e) => handleNumberInput('breakTimeDeduction', e.target.value)}
-                disabled={isSaving}
               />
             </div>
           </div>
@@ -294,21 +272,21 @@ export default function SettingsPage() {
         <CardContent className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
             <Label className={cn(labelClass, "text-zinc-500")}>OT Thường</Label>
-            <Input type="number" step="0.1" className={inputClass} value={localSettings.overtimeMultiplier.toString()} onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)} disabled={isSaving} />
+            <Input type="number" step="0.1" className={inputClass} value={localSettings.overtimeMultiplier.toString()} onChange={(e) => handleNumberInput('overtimeMultiplier', e.target.value)} />
             <p className="text-[10px] font-black text-orange-500 mt-1">
               {formatMoneyDisplay(localSettings.hourlyRate * localSettings.overtimeMultiplier)}đ/h
             </p>
           </div>
           <div className="space-y-1">
             <Label className={cn(labelClass, "text-zinc-500")}>OT CN</Label>
-            <Input type="number" step="0.1" className={inputClass} value={localSettings.sundayMultiplier.toString()} onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)} disabled={isSaving} />
+            <Input type="number" step="0.1" className={inputClass} value={localSettings.sundayMultiplier.toString()} onChange={(e) => handleNumberInput('sundayMultiplier', e.target.value)} />
             <p className="text-[10px] font-black text-orange-500 mt-1">
               {formatMoneyDisplay(localSettings.hourlyRate * localSettings.sundayMultiplier)}đ/h
             </p>
           </div>
           <div className="space-y-1">
             <Label className={cn(labelClass, "text-zinc-500")}>OT Lễ</Label>
-            <Input type="number" step="0.1" className={inputClass} value={localSettings.holidayMultiplier.toString()} onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)} disabled={isSaving} />
+            <Input type="number" step="0.1" className={inputClass} value={localSettings.holidayMultiplier.toString()} onChange={(e) => handleNumberInput('holidayMultiplier', e.target.value)} />
             <p className="text-[10px] font-black text-orange-500 mt-1">
               {formatMoneyDisplay(localSettings.hourlyRate * localSettings.holidayMultiplier)}đ/h
             </p>
@@ -327,13 +305,13 @@ export default function SettingsPage() {
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-zinc-500")}>Chuyên cần gốc</Label>
               <div className="relative">
-                <Input type="text" value={formatMoneyDisplay(localSettings.allowanceAttendanceBase)} onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} className={cn(inputClass, "pr-10")} disabled={isSaving} />
+                <Input type="text" value={formatMoneyDisplay(localSettings.allowanceAttendanceBase)} onChange={(e) => handleMoneyInput('allowanceAttendanceBase', e.target.value)} className={cn(inputClass, "pr-10")} />
                 <span className={suffixClass}>đ</span>
               </div>
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-green-500")}>Ngày nghỉ không phép</Label>
-              <Input type="number" className={cn(inputClass, "border-green-500/30")} value={localSettings.unexcusedAbsences === 0 ? "0" : localSettings.unexcusedAbsences.toString()} onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} disabled={isSaving} />
+              <Input type="number" className={cn(inputClass, "border-green-500/30")} value={localSettings.unexcusedAbsences === 0 ? "0" : localSettings.unexcusedAbsences.toString()} onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} />
             </div>
           </div>
         </CardContent>
@@ -361,7 +339,6 @@ export default function SettingsPage() {
                     className={cn(inputClass, "pr-10")} 
                     value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} 
                     onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} 
-                    disabled={isSaving}
                   />
                   <span className={suffixClass}>đ</span>
                 </div>
@@ -385,7 +362,6 @@ export default function SettingsPage() {
                     className={cn(inputClass, "pr-10")} 
                     value={formatMoneyDisplay(localSettings[item.key as keyof AppSettings] as number)} 
                     onChange={(e) => handleMoneyInput(item.key as keyof AppSettings, e.target.value)} 
-                    disabled={isSaving}
                   />
                   <span className={suffixClass}>đ</span>
                 </div>
@@ -408,7 +384,6 @@ export default function SettingsPage() {
         <Button 
           variant="ghost" 
           onClick={handleLogout} 
-          disabled={isSaving}
           className="text-red-500 font-black gap-2 hover:bg-red-500/10 h-10 px-4 rounded-xl transition-colors disabled:opacity-50"
         >
           <LogOut className="w-4 h-4" /> THOÁT
