@@ -230,23 +230,28 @@ export default function SettingsPage() {
                 />
                 <span className={suffixClass}>%</span>
               </div>
-              <p className="text-[10px] font-black text-red-500 mt-1 pl-1">
-                -{formatMoneyDisplay((localSettings.insuranceSalary * localSettings.insuranceRate) / 100)}đ
-              </p>
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label className={cn(labelClass, "text-zinc-500")}>Đoàn phí</Label>
-            <div className="relative">
-              <Input 
-                type="text" 
-                value={formatMoneyDisplay(localSettings.unionFee)}
-                onChange={(e) => handleMoneyInput('unionFee', e.target.value)}
-                className={cn(inputClass, "pr-10")}
-                disabled={isSaving}
-              />
-              <span className={suffixClass}>đ</span>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-zinc-500")}>Đoàn phí</Label>
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  value={formatMoneyDisplay(localSettings.unionFee)}
+                  onChange={(e) => handleMoneyInput('unionFee', e.target.value)}
+                  className={cn(inputClass, "pr-10")}
+                  disabled={isSaving}
+                />
+                <span className={suffixClass}>đ</span>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className={cn(labelClass, "text-red-500")}>Tiền BH khấu trừ</Label>
+              <div className="h-11 flex items-center px-4 bg-zinc-950 border border-red-500/20 rounded-xl font-black text-red-500 text-sm">
+                -{formatMoneyDisplay((localSettings.insuranceSalary * localSettings.insuranceRate) / 100)}đ
+              </div>
             </div>
           </div>
 
