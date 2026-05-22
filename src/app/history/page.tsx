@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -98,7 +97,7 @@ export default function HistoryPage() {
   const [batchData, setBatchData] = useState({
     startTime: '07:30',
     endTime: '20:30',
-    multiplier: -1,
+    multiplier: -1, // Luôn để tự động
     excludeSundays: true
   });
 
@@ -107,7 +106,7 @@ export default function HistoryPage() {
   const [multiData, setMultiData] = useState({
     startTime: '07:30',
     endTime: '20:30',
-    multiplier: 1.0
+    multiplier: -1 // Luôn để tự động
   });
 
   const sessionDatesSet = useMemo(() => {
@@ -127,7 +126,6 @@ export default function HistoryPage() {
       .sort((a, b) => new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime());
   }, [filteredSessions]);
 
-  // Xác định xem có phiên đang hoạt động trong tháng này không
   const currentActiveSession = useMemo(() => {
     if (!activeSession) return null;
     const d = new Date(activeSession.checkIn);
@@ -399,7 +397,7 @@ export default function HistoryPage() {
               <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Thêm nhanh theo ngày</DialogTitle>
-                  <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Chỉ áp dụng cho những ngày chưa có dữ liệu</DialogDescription>
+                  <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Tự động nhận diện hệ số Lễ/CN</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 w-full overflow-hidden">
@@ -435,19 +433,6 @@ export default function HistoryPage() {
                       <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={multiData.endTime} onChange={(e) => setMultiData({...multiData, endTime: e.target.value})} />
                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Loại hình</Label>
-                    <Select value={multiData.multiplier.toString()} onValueChange={(v) => setMultiData({...multiData, multiplier: parseFloat(v)})}>
-                      <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                        <SelectItem value="1.0">Ngày thường (Tự tính OT)</SelectItem>
-                        <SelectItem value={settings.sundayMultiplier.toString()}>OT CN (x{settings.sundayMultiplier})</SelectItem>
-                        <SelectItem value={settings.holidayMultiplier.toString()}>OT Lễ (x{settings.holidayMultiplier})</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
                 <DialogFooter className="gap-2">
                   <Button onClick={handleMultiAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/90 text-black rounded-xl h-12 font-black shadow-xl w-full transition-all">
@@ -467,7 +452,7 @@ export default function HistoryPage() {
               <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Đồng bộ hàng loạt</DialogTitle>
-                  <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Chọn khoảng ngày trên lịch để đồng bộ nhanh</DialogDescription>
+                  <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Hệ số tự động theo lịch</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 w-full overflow-hidden">
@@ -488,18 +473,6 @@ export default function HistoryPage() {
                       <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ ra</Label>
                       <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={batchData.endTime} onChange={(e) => setBatchData({...batchData, endTime: e.target.value})} />
                     </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Hệ số lương</Label>
-                    <Select value={batchData.multiplier.toString()} onValueChange={(v) => setBatchData({...batchData, multiplier: parseFloat(v)})}>
-                      <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                        <SelectItem value="-1">Tự động (CN/Lễ)</SelectItem>
-                        <SelectItem value="1.0">Ngày thường</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                   <div className="flex items-center space-x-2 pt-2 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
                     <Checkbox id="excludeSundays" checked={batchData.excludeSundays} onCheckedChange={(checked) => setBatchData({...batchData, excludeSundays: !!checked})} />
@@ -579,7 +552,6 @@ export default function HistoryPage() {
         </Button>
       </div>
       
-      {/* Hiển thị phiên đang làm việc (nếu có) */}
       {currentActiveSession && (
         <div className="space-y-4">
           <p className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest">Đang làm việc</p>
