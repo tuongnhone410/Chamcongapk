@@ -182,7 +182,9 @@ export default function HistoryPage() {
 
     setIsProcessing(true);
     try {
-      const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+      const diffMs = checkOut.getTime() - checkIn.getTime();
+      const diffMinutes = Math.floor(diffMs / 1000 / 60);
+
       await updateSession({
         ...editingSession,
         totalMinutes: diffMinutes,
@@ -203,7 +205,12 @@ export default function HistoryPage() {
   const handleBatchAdd = () => {
     setIsProcessing(true);
     setShowBatchDialog(false);
-    batchAddSessions(batchData).finally(() => setIsProcessing(false));
+    try {
+      batchAddSessions(batchData);
+      toast({ title: "Thành công", description: "Hệ thống đang đồng bộ dữ liệu dải ngày..." });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleMultiAdd = () => {
@@ -213,15 +220,18 @@ export default function HistoryPage() {
     }
     setIsProcessing(true);
     setShowMultiDialog(false);
-    multiAddSessions({
-      dates: selectedDates,
-      startTime: multiData.startTime,
-      endTime: multiData.endTime,
-      multiplier: multiData.multiplier
-    }).finally(() => {
+    try {
+      multiAddSessions({
+        dates: selectedDates,
+        startTime: multiData.startTime,
+        endTime: multiData.endTime,
+        multiplier: multiData.multiplier
+      });
       setSelectedDates([]);
+      toast({ title: "Thành công", description: `Đã xử lý thêm ${selectedDates.length} phiên làm việc.` });
+    } finally {
       setIsProcessing(false);
-    });
+    }
   };
 
   const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -557,9 +567,9 @@ export default function HistoryPage() {
                     <div className="space-y-1.5">
                       <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Thời gian</p>
                       <p className="text-xs font-bold text-white">
-                        {new Date(session.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(session.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })}
                         <span className="mx-1 text-zinc-600">→</span>
-                        {session.checkOut ? new Date(session.checkOut).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                        {session.checkOut ? new Date(session.checkOut).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false }) : 'N/A'}
                       </p>
                     </div>
                     <div className="space-y-1.5">

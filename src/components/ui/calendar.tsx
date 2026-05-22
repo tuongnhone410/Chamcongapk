@@ -33,7 +33,7 @@ function Calendar({
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse",
-        head_row: "grid grid-cols-7 mb-2",
+        head_row: "grid grid-cols-7 w-full mb-2",
         head_cell: "text-zinc-500 rounded-md font-black text-[10px] uppercase text-center py-2",
         row: "grid grid-cols-7 w-full mt-1",
         cell: "h-9 w-full text-center text-sm p-0 relative flex items-center justify-center",
