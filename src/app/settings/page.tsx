@@ -248,8 +248,8 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-red-500")}>Tiền BH khấu trừ</Label>
-              <div className="h-11 flex items-center px-4 bg-zinc-950 border border-red-500/20 rounded-xl font-black text-red-500 text-sm">
+              <Label className={cn(labelClass, "text-zinc-500")}>Tiền BH khấu trừ</Label>
+              <div className="h-11 flex items-center px-4 bg-zinc-900 border border-zinc-800 rounded-xl font-black text-red-500 text-sm">
                 -{formatMoneyDisplay((localSettings.insuranceSalary * localSettings.insuranceRate) / 100)}đ
               </div>
             </div>
