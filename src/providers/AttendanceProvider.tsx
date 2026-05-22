@@ -102,7 +102,7 @@ const isVietnameseHoliday = (date: Date) => {
 };
 
 export function AttendanceProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const db = useFirestore();
 
   const [canUndo, setCanUndo] = useState(false);
@@ -113,18 +113,13 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Tạo khóa lưu trữ cá nhân theo User ID - Đảm bảo tính riêng tư trên cùng 1 thiết bị
+  // Khóa lưu trữ riêng biệt theo User ID để tránh chồng lấn dữ liệu giữa các tài khoản
   const storageKey = useMemo(() => user ? `timesnap_active_start_${user.uid}` : null, [user?.uid]);
 
-  // Khôi phục trạng thái từ localStorage theo user hiện tại
   useEffect(() => {
     if (typeof window !== 'undefined' && storageKey) {
       const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        setLocalActiveStart(saved);
-      } else {
-        setLocalActiveStart(null);
-      }
+      setLocalActiveStart(saved);
     } else {
       setLocalActiveStart(null);
     }
@@ -146,7 +141,10 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const sessions = useMemo(() => sessionsData || [], [sessionsData]);
   const settings = useMemo(() => ({ ...defaultSettings, ...settingsData }), [settingsData]);
   
-  const isLoaded = useMemo(() => !!user, [user]);
+  // Trạng thái sẵn sàng chỉ khi đã xác thực user và tải xong dữ liệu của chính user đó
+  const isLoaded = useMemo(() => {
+    return !!user && !sessionsLoading && !settingsLoading && !userLoading;
+  }, [user, sessionsLoading, settingsLoading, userLoading]);
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
@@ -165,11 +163,10 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     return 1.0;
   }, [settings]);
 
-  // Logic nhận diện phiên hoạt động cá nhân hóa theo User ID
   const activeSession = useMemo(() => {
     if (!user) return undefined;
 
-    // 1. Kiểm tra trong dữ liệu Firestore của user hiện tại
+    // 1. Kiểm tra phiên mở trên Firestore (Dữ liệu chuẩn nhất)
     const fromDb = sessions.find(s => !s.checkOut);
     if (fromDb) {
       if (typeof window !== 'undefined' && storageKey) {
@@ -178,7 +175,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       return fromDb;
     }
 
-    // 2. Nếu DB chưa thấy phiên mở, kiểm tra bộ nhớ tạm riêng của user này trên máy
+    // 2. Dự phòng bằng localStorage cá nhân (Dùng khi mạng yếu hoặc vừa vào lại app)
     if (localActiveStart) {
       const alreadyClosedOnServer = sessions.some(s => s.checkIn === localActiveStart && s.checkOut);
       
