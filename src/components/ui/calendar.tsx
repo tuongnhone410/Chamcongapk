@@ -20,9 +20,9 @@ function Calendar({
     <DayPicker
       locale={vi}
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-0 w-full", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 w-full",
+        months: "flex flex-col space-y-4 w-full",
         month: "space-y-4 w-full",
         month_caption: "flex justify-center pt-1 relative items-center mb-4",
         caption_label: "text-sm font-black uppercase tracking-widest text-primary",
@@ -42,7 +42,7 @@ function Calendar({
         week: "flex w-full",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 flex-1 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all hover:bg-zinc-800 text-sm"
+          "h-10 flex-1 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all hover:bg-zinc-800 text-sm"
         ),
         day_button: "w-full h-full flex items-center justify-center",
         range_start: "day-range-start",

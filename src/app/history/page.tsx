@@ -383,16 +383,16 @@ export default function HistoryPage() {
                 <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Lưu ý: Chỉ áp dụng cho những ngày chưa có dữ liệu</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-3 border border-zinc-800">
+                <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 w-full">
                   <Calendar
                     mode="multiple"
                     selected={selectedDates}
                     onSelect={setSelectedDates}
-                    className="rounded-md mx-auto"
+                    className="w-full"
                     disabled={(date) => sessionDatesSet.has(date.toDateString())}
                   />
                   {selectedDates && selectedDates.length > 0 && (
-                    <div className="pt-3 border-t border-zinc-800">
+                    <div className="pt-3 mt-3 border-t border-zinc-800">
                       <p className="text-[10px] font-black uppercase text-primary mb-2">Ngày đã chọn ({selectedDates.length}):</p>
                       <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
                         {selectedDates.map((date, idx) => (
@@ -451,12 +451,12 @@ export default function HistoryPage() {
                 <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Chọn khoảng ngày trên lịch để đồng bộ nhanh</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="bg-zinc-900 rounded-2xl p-3 border border-zinc-800">
+                <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 w-full">
                   <Calendar
                     mode="range"
                     selected={batchRange}
                     onSelect={setBatchRange}
-                    className="rounded-md mx-auto"
+                    className="w-full"
                   />
                 </div>
                 
