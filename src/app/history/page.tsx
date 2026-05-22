@@ -325,188 +325,195 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-6 pb-24 text-white">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-black tracking-tighter uppercase">Lịch sử công</h1>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {canUndo && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={handleRestore}
-              disabled={isProcessing}
-              className="gap-2 text-xs rounded-xl h-10 border-green-500/50 bg-green-500/10 text-green-500 font-black animate-pulse transition-all"
-            >
-              <RotateCcw className="w-4 h-4" />
-              KHÔI PHỤC ({undoCountdown}s)
-            </Button>
-          )}
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
+        
+        <div className="flex flex-col gap-3 w-full sm:w-auto sm:items-end">
+          {/* Hàng nút phụ: Xóa & Khôi phục */}
+          <div className="flex flex-wrap gap-2">
+            {canUndo && (
               <Button 
                 size="sm" 
                 variant="outline" 
-                disabled={completedSessions.length === 0 || isProcessing}
-                className="gap-2 text-xs rounded-xl h-10 border-red-500/50 bg-red-500/10 text-red-500 font-black hover:bg-red-500/20 transition-all"
+                onClick={handleRestore}
+                disabled={isProcessing}
+                className="gap-2 text-[10px] rounded-xl h-9 border-green-500/50 bg-green-500/10 text-green-500 font-black animate-pulse transition-all"
               >
-                <Trash2 className="w-4 h-4" />
-                XÓA HẾT
+                <RotateCcw className="w-3.5 h-3.5" />
+                KHÔI PHỤC ({undoCountdown}s)
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[100] max-h-[90vh] overflow-y-auto">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="font-black text-xl text-red-500 flex items-center gap-2">
-                  <AlertTriangle className="w-6 h-6" />
-                  XÁC NHẬN XÓA TOÀN BỘ
-                </AlertDialogTitle>
-                <AlertDialogDescription className="text-zinc-400 font-bold">
-                  Hành động này sẽ xóa tất cả {completedSessions.length} phiên làm việc của tháng hiện tại. Bạn sẽ có 10 giây để nhấn nút KHÔI PHỤC trước khi dữ liệu bị xóa vĩnh viễn.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="rounded-xl font-bold border-zinc-800 text-white hover:bg-zinc-900 transition-all">Hủy</AlertDialogCancel>
-                <AlertDialogAction onClick={handleClearAll} className="bg-red-600 hover:bg-red-500 rounded-xl font-black text-white transition-all">XÓA BỎ</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            )}
 
-          <Dialog open={showMultiDialog} onOpenChange={setShowMultiDialog}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="default" className="gap-2 text-xs rounded-xl h-10 bg-primary hover:bg-primary/90 font-black shadow-lg text-black transition-all">
-                <CheckSquare className="w-4 h-4" />
-                CHỌN NGÀY OT
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto z-[100]">
-              <DialogHeader>
-                <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Thêm nhanh theo ngày</DialogTitle>
-                <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Lưu ý: Chỉ áp dụng cho những ngày chưa có dữ liệu</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 w-full">
-                  <Calendar
-                    mode="multiple"
-                    selected={selectedDates}
-                    onSelect={setSelectedDates}
-                    className="w-full"
-                    disabled={(date) => sessionDatesSet.has(date.toDateString())}
-                  />
-                  {selectedDates && selectedDates.length > 0 && (
-                    <div className="pt-3 mt-3 border-t border-zinc-800">
-                      <p className="text-[10px] font-black uppercase text-primary mb-2">Ngày đã chọn ({selectedDates.length}):</p>
-                      <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
-                        {selectedDates.map((date, idx) => (
-                          <Badge key={idx} variant="secondary" className="bg-primary/20 text-primary border-primary/30 text-[9px] font-bold">
-                            {date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
-                            <X className="w-2.5 h-2.5 ml-1 cursor-pointer hover:text-red-500" onClick={() => setSelectedDates(selectedDates.filter(d => d.getTime() !== date.getTime()))} />
-                          </Badge>
-                        ))}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  disabled={completedSessions.length === 0 || isProcessing}
+                  className="gap-2 text-[10px] rounded-xl h-9 border-red-500/50 bg-red-500/10 text-red-500 font-black hover:bg-red-500/20 transition-all"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  XÓA HẾT
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[100] max-h-[90vh] overflow-y-auto">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-black text-xl text-red-500 flex items-center gap-2">
+                    <AlertTriangle className="w-6 h-6" />
+                    XÁC NHẬN XÓA TOÀN BỘ
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-zinc-400 font-bold">
+                    Hành động này sẽ xóa tất cả dữ liệu của tháng hiện tại. Bạn sẽ có 10 giây để nhấn nút KHÔI PHỤC trước khi dữ liệu bị xóa vĩnh viễn.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="rounded-xl font-bold border-zinc-800 text-white hover:bg-zinc-900 transition-all">Hủy</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearAll} className="bg-red-600 hover:bg-red-500 rounded-xl font-black text-white transition-all">XÓA BỎ</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          {/* Lưới nút chính: Đồng bộ & CSV */}
+          <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:w-auto">
+            <Dialog open={showMultiDialog} onOpenChange={setShowMultiDialog}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="default" className="w-full sm:w-auto gap-2 text-[10px] rounded-xl h-10 bg-primary hover:bg-primary/90 font-black shadow-lg text-black transition-all">
+                  <CheckSquare className="w-4 h-4" />
+                  CHỌN NGÀY OT
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto z-[100]">
+                <DialogHeader>
+                  <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Thêm nhanh theo ngày</DialogTitle>
+                  <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Chỉ áp dụng cho những ngày chưa có dữ liệu</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 w-full overflow-hidden">
+                    <Calendar
+                      mode="multiple"
+                      selected={selectedDates}
+                      onSelect={setSelectedDates}
+                      className="w-full"
+                      disabled={(date) => sessionDatesSet.has(date.toDateString())}
+                    />
+                    {selectedDates && selectedDates.length > 0 && (
+                      <div className="pt-3 mt-3 border-t border-zinc-800">
+                        <p className="text-[10px] font-black uppercase text-primary mb-2">Ngày đã chọn ({selectedDates.length}):</p>
+                        <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                          {selectedDates.map((date, idx) => (
+                            <Badge key={idx} variant="secondary" className="bg-primary/20 text-primary border-primary/30 text-[9px] font-bold">
+                              {date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
+                              <X className="w-2.5 h-2.5 ml-1 cursor-pointer hover:text-red-500" onClick={() => setSelectedDates(selectedDates.filter(d => d.getTime() !== date.getTime()))} />
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ vào</Label>
+                      <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={multiData.startTime} onChange={(e) => setMultiData({...multiData, startTime: e.target.value})} />
                     </div>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ vào</Label>
-                    <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={multiData.startTime} onChange={(e) => setMultiData({...multiData, startTime: e.target.value})} />
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ ra</Label>
+                      <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={multiData.endTime} onChange={(e) => setMultiData({...multiData, endTime: e.target.value})} />
+                    </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ ra</Label>
-                    <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={multiData.endTime} onChange={(e) => setMultiData({...multiData, endTime: e.target.value})} />
+                    <Label className="text-[10px] font-black uppercase text-zinc-500">Loại hình</Label>
+                    <Select value={multiData.multiplier.toString()} onValueChange={(v) => setMultiData({...multiData, multiplier: parseFloat(v)})}>
+                      <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                        <SelectItem value="1.0">Ngày thường (Tự tính OT)</SelectItem>
+                        <SelectItem value={settings.sundayMultiplier.toString()}>OT CN (x{settings.sundayMultiplier})</SelectItem>
+                        <SelectItem value={settings.holidayMultiplier.toString()}>OT Lễ (x{settings.holidayMultiplier})</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Loại hình</Label>
-                  <Select value={multiData.multiplier.toString()} onValueChange={(v) => setMultiData({...multiData, multiplier: parseFloat(v)})}>
-                    <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                      <SelectItem value="1.0">Ngày thường (Tự tính OT)</SelectItem>
-                      <SelectItem value={settings.sundayMultiplier.toString()}>OT CN (x{settings.sundayMultiplier})</SelectItem>
-                      <SelectItem value={settings.holidayMultiplier.toString()}>OT Lễ (x{settings.holidayMultiplier})</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter className="gap-2">
-                <Button onClick={handleMultiAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/90 text-black rounded-xl h-12 font-black shadow-xl w-full transition-all">
-                  LƯU DỮ LIỆU
+                <DialogFooter className="gap-2">
+                  <Button onClick={handleMultiAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/90 text-black rounded-xl h-12 font-black shadow-xl w-full transition-all">
+                    LƯU DỮ LIỆU
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog open={showBatchDialog} onOpenChange={setShowBatchDialog}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="default" className="w-full sm:w-auto gap-2 text-[10px] rounded-xl h-10 bg-indigo-600 hover:bg-indigo-500 font-black text-white shadow-lg transition-all">
+                  <Layers className="w-4 h-4" />
+                  THÊM HÀNG LOẠT
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          
-          <Dialog open={showBatchDialog} onOpenChange={setShowBatchDialog}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="default" className="gap-2 text-xs rounded-xl h-10 bg-indigo-600 hover:bg-indigo-500 font-black text-white shadow-lg transition-all">
-                <Layers className="w-4 h-4" />
-                THÊM HÀNG LOẠT
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto z-[100]">
-              <DialogHeader>
-                <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Đồng bộ hàng loạt</DialogTitle>
-                <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Chọn khoảng ngày trên lịch để đồng bộ nhanh</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 w-full">
-                  <Calendar
-                    mode="range"
-                    selected={batchRange}
-                    onSelect={setBatchRange}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ vào</Label>
-                    <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={batchData.startTime} onChange={(e) => setBatchData({...batchData, startTime: e.target.value})} />
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto z-[100]">
+                <DialogHeader>
+                  <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Đồng bộ hàng loạt</DialogTitle>
+                  <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Chọn khoảng ngày trên lịch để đồng bộ nhanh</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 w-full overflow-hidden">
+                    <Calendar
+                      mode="range"
+                      selected={batchRange}
+                      onSelect={setBatchRange}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ vào</Label>
+                      <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={batchData.startTime} onChange={(e) => setBatchData({...batchData, startTime: e.target.value})} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ ra</Label>
+                      <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={batchData.endTime} onChange={(e) => setBatchData({...batchData, endTime: e.target.value})} />
+                    </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ ra</Label>
-                    <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={batchData.endTime} onChange={(e) => setBatchData({...batchData, endTime: e.target.value})} />
+                    <Label className="text-[10px] font-black uppercase text-zinc-500">Hệ số lương</Label>
+                    <Select value={batchData.multiplier.toString()} onValueChange={(v) => setBatchData({...batchData, multiplier: parseFloat(v)})}>
+                      <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                        <SelectItem value="-1">Tự động (CN/Lễ)</SelectItem>
+                        <SelectItem value="1.0">Ngày thường</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center space-x-2 pt-2 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
+                    <Checkbox id="excludeSundays" checked={batchData.excludeSundays} onCheckedChange={(checked) => setBatchData({...batchData, excludeSundays: !!checked})} />
+                    <Label htmlFor="excludeSundays" className="text-xs font-black uppercase text-zinc-400">Bỏ qua Chủ Nhật</Label>
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Hệ số lương</Label>
-                  <Select value={batchData.multiplier.toString()} onValueChange={(v) => setBatchData({...batchData, multiplier: parseFloat(v)})}>
-                    <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                      <SelectItem value="-1">Tự động (CN/Lễ)</SelectItem>
-                      <SelectItem value="1.0">Ngày thường</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center space-x-2 pt-2 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
-                  <Checkbox id="excludeSundays" checked={batchData.excludeSundays} onCheckedChange={(checked) => setBatchData({...batchData, excludeSundays: !!checked})} />
-                  <Label htmlFor="excludeSundays" className="text-xs font-black uppercase text-zinc-400">Bỏ qua Chủ Nhật</Label>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleBatchAdd} disabled={isProcessing} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl h-12 font-black shadow-xl w-full transition-all">
-                  ĐỒNG BỘ NGAY
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          
-          <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl h-10 border-emerald-500/50 bg-emerald-500/10 text-emerald-500 font-black hover:bg-emerald-500/20 transition-all" onClick={exportToCSV}>
-            <Download className="w-4 h-4" />
-            XUẤT CSV
-          </Button>
-          
-          <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl h-10 border-amber-500/50 bg-amber-500/10 text-amber-500 font-black hover:bg-amber-500/20 transition-all" onClick={() => fileInputRef.current?.click()}>
-            <Upload className="w-4 h-4" />
-            NHẬP CSV
-          </Button>
-          <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleImportCSV} />
+                <DialogFooter>
+                  <Button onClick={handleBatchAdd} disabled={isProcessing} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl h-12 font-black shadow-xl w-full transition-all">
+                    ĐỒNG BỘ NGAY
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            <Button variant="outline" size="sm" className="w-full sm:w-auto gap-2 text-[10px] rounded-xl h-10 border-emerald-500/50 bg-emerald-500/10 text-emerald-500 font-black hover:bg-emerald-500/20 transition-all" onClick={exportToCSV}>
+              <Download className="w-4 h-4" />
+              XUẤT CSV
+            </Button>
+            
+            <Button variant="outline" size="sm" className="w-full sm:w-auto gap-2 text-[10px] rounded-xl h-10 border-amber-500/50 bg-amber-500/10 text-amber-500 font-black hover:bg-amber-500/20 transition-all" onClick={() => fileInputRef.current?.click()}>
+              <Upload className="w-4 h-4" />
+              NHẬP CSV
+            </Button>
+            <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleImportCSV} />
+          </div>
         </div>
       </header>
 
