@@ -44,7 +44,21 @@ export default function SettingsPage() {
     return JSON.stringify(settings) !== JSON.stringify(localSettings);
   }, [settings, localSettings]);
 
-  if (!isLoaded || !localSettings) return <div className="p-8 animate-pulse bg-zinc-900 rounded-2xl h-64" />;
+  if (!isLoaded || !localSettings) {
+    return (
+      <div className="space-y-6 pb-24 animate-pulse text-white">
+        <header className="flex items-center justify-between py-4">
+          <div className="h-8 bg-zinc-900 rounded-xl w-48" />
+          <div className="h-12 bg-zinc-900 rounded-xl w-24" />
+        </header>
+        <div className="space-y-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-64 bg-zinc-900 rounded-[2rem]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const formatMoneyDisplay = (val: number) => Math.round(val || 0).toLocaleString('vi-VN');
 

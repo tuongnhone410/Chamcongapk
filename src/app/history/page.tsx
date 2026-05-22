@@ -172,7 +172,7 @@ export default function HistoryPage() {
     setIsProcessing(true);
     try {
       const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-      updateSession({ ...editingSession, totalMinutes: diffMinutes });
+      await updateSession({ ...editingSession, totalMinutes: diffMinutes });
       setEditingSession(null);
       toast({ title: "Đã lưu" });
     } finally {
@@ -239,7 +239,7 @@ export default function HistoryPage() {
                 <Trash2 className="w-3.5 h-3.5" /> Xóa hết
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem]">
+            <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto">
               <AlertDialogHeader>
                 <AlertDialogTitle className="font-black text-xl text-red-500 flex items-center gap-2">
                   <AlertTriangle className="w-6 h-6" /> XÁC NHẬN XÓA
@@ -261,7 +261,7 @@ export default function HistoryPage() {
                 <CheckSquare className="w-4 h-4" /> CHỌN NGÀY OT
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto w-[95vw] max-w-[400px] p-4">
+            <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[95vh] overflow-y-auto w-[95vw] max-w-[400px] p-4">
               <DialogHeader>
                 <DialogTitle className="font-black text-xl uppercase text-primary text-center">Thêm theo ngày</DialogTitle>
                 <DialogDescription className="text-[10px] text-zinc-500 font-bold text-center">CHỈ ÁP DỤNG CHO NGÀY CHƯA CÓ DỮ LIỆU</DialogDescription>
@@ -342,8 +342,8 @@ export default function HistoryPage() {
           <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] w-[95vw] max-w-md p-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle className="font-black uppercase text-center">Chỉnh sửa</DialogTitle></DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase text-zinc-500">Vào</Label><Input type="datetime-local" className="bg-zinc-900 border-zinc-800 rounded-xl font-bold" value={formatToLocalDatetime(editingSession.checkIn)} onChange={(e) => setEditingSession({...editingSession, checkIn: new Date(e.target.value).toISOString()})} /></div>
-              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase text-zinc-500">Ra</Label><Input type="datetime-local" className="bg-zinc-900 border-zinc-800 rounded-xl font-bold" value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""} onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})} /></div>
+              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase text-zinc-500">Vào</Label><Input type="datetime-local" className="bg-zinc-900 border-zinc-800 rounded-xl font-bold text-white" value={formatToLocalDatetime(editingSession.checkIn)} onChange={(e) => setEditingSession({...editingSession, checkIn: new Date(e.target.value).toISOString()})} /></div>
+              <div className="space-y-1.5"><Label className="text-[10px] font-black uppercase text-zinc-500">Ra</Label><Input type="datetime-local" className="bg-zinc-900 border-zinc-800 rounded-xl font-bold text-white" value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""} onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})} /></div>
               <Select value={editingSession.multiplier.toString()} onValueChange={(v) => setEditingSession({...editingSession, multiplier: parseFloat(v)})}>
                 <SelectTrigger className="bg-zinc-900 border-zinc-800 rounded-xl font-bold text-white"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-zinc-800 text-white"><SelectItem value="1.0">Ngày thường</SelectItem><SelectItem value={settings.sundayMultiplier.toString()}>OT CN (x{settings.sundayMultiplier})</SelectItem></SelectContent>
