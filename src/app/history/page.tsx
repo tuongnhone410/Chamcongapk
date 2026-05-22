@@ -49,6 +49,7 @@ import {
   AlertDialogTitle, 
   AlertDialogTrigger 
 } from '@/components/ui/alert-dialog';
+import { type DateRange } from "react-day-picker";
 
 export default function HistoryPage() {
   const { 
@@ -85,9 +86,11 @@ export default function HistoryPage() {
   };
 
   const [showBatchDialog, setShowBatchDialog] = useState(false);
+  const [batchRange, setBatchRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date()
+  });
   const [batchData, setBatchData] = useState({
-    startDate: new Date().toISOString().slice(0, 10),
-    endDate: new Date().toISOString().slice(0, 10),
     startTime: '07:30',
     endTime: '20:30',
     multiplier: -1,
@@ -202,10 +205,21 @@ export default function HistoryPage() {
   };
 
   const handleBatchAdd = () => {
+    if (!batchRange?.from || !batchRange?.to) {
+      toast({ variant: "destructive", title: "Thiếu ngày", description: "Vui lòng chọn dải ngày trên lịch." });
+      return;
+    }
     setIsProcessing(true);
     setShowBatchDialog(false);
     try {
-      batchAddSessions(batchData);
+      batchAddSessions({
+        startDate: batchRange.from.toISOString().split('T')[0],
+        endDate: batchRange.to.toISOString().split('T')[0],
+        startTime: batchData.startTime,
+        endTime: batchData.endTime,
+        multiplier: batchData.multiplier,
+        excludeSundays: batchData.excludeSundays
+      });
       toast({ title: "Thành công", description: "Hệ thống đang đồng bộ dữ liệu dải ngày..." });
     } finally {
       setIsProcessing(false);
@@ -369,7 +383,7 @@ export default function HistoryPage() {
                 <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Lưu ý: Chỉ áp dụng cho những ngày chưa có dữ liệu</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-3 border border-zinc-800 overflow-hidden">
+                <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-3 border border-zinc-800">
                   <Calendar
                     mode="multiple"
                     selected={selectedDates}
@@ -433,27 +447,41 @@ export default function HistoryPage() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto z-[100]">
               <DialogHeader>
-                <DialogTitle className="font-black text-xl uppercase tracking-tighter">Đồng bộ hàng loạt</DialogTitle>
-                <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Nhập nhanh dải ngày liên tiếp</DialogDescription>
+                <DialogTitle className="font-black text-xl uppercase tracking-tighter text-primary">Đồng bộ hàng loạt</DialogTitle>
+                <DialogDescription className="text-[10px] text-zinc-500 font-bold uppercase">Chọn khoảng ngày trên lịch để đồng bộ nhanh</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Input type="date" className="bg-zinc-900 border-zinc-800 rounded-xl h-11 font-bold text-white" value={batchData.startDate} onChange={(e) => setBatchData({...batchData, startDate: e.target.value})} />
-                  <Input type="date" className="bg-zinc-900 border-zinc-800 rounded-xl h-11 font-bold text-white" value={batchData.endDate} onChange={(e) => setBatchData({...batchData, endDate: e.target.value})} />
+                <div className="bg-zinc-900 rounded-2xl p-3 border border-zinc-800">
+                  <Calendar
+                    mode="range"
+                    selected={batchRange}
+                    onSelect={setBatchRange}
+                    className="rounded-md mx-auto"
+                  />
                 </div>
+                
                 <div className="grid grid-cols-2 gap-4">
-                  <Input type="time" className="bg-zinc-900 border-zinc-800 rounded-xl h-11 font-bold text-white" value={batchData.startTime} onChange={(e) => setBatchData({...batchData, startTime: e.target.value})} />
-                  <Input type="time" className="bg-zinc-900 border-zinc-800 rounded-xl h-11 font-bold text-white" value={batchData.endTime} onChange={(e) => setBatchData({...batchData, endTime: e.target.value})} />
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ vào</Label>
+                    <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={batchData.startTime} onChange={(e) => setBatchData({...batchData, startTime: e.target.value})} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-zinc-500">Giờ ra</Label>
+                    <input type="time" className="bg-zinc-900 border border-zinc-800 h-11 font-bold rounded-xl px-3 text-white w-full focus:outline-none focus:border-zinc-700" value={batchData.endTime} onChange={(e) => setBatchData({...batchData, endTime: e.target.value})} />
+                  </div>
                 </div>
-                <Select value={batchData.multiplier.toString()} onValueChange={(v) => setBatchData({...batchData, multiplier: parseFloat(v)})}>
-                  <SelectTrigger className="bg-zinc-900 border-zinc-800 rounded-xl h-11 font-bold text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                    <SelectItem value="-1">Tự động (CN/Lễ)</SelectItem>
-                    <SelectItem value="1.0">Ngày thường</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Hệ số lương</Label>
+                  <Select value={batchData.multiplier.toString()} onValueChange={(v) => setBatchData({...batchData, multiplier: parseFloat(v)})}>
+                    <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 font-bold rounded-xl text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                      <SelectItem value="-1">Tự động (CN/Lễ)</SelectItem>
+                      <SelectItem value="1.0">Ngày thường</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex items-center space-x-2 pt-2 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
                   <Checkbox id="excludeSundays" checked={batchData.excludeSundays} onCheckedChange={(checked) => setBatchData({...batchData, excludeSundays: !!checked})} />
                   <Label htmlFor="excludeSundays" className="text-xs font-black uppercase text-zinc-400">Bỏ qua Chủ Nhật</Label>

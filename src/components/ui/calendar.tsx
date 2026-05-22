@@ -32,10 +32,10 @@ function Calendar({
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse",
-        head_row: "flex w-full mb-2", // Sử dụng flex để khóa cột
-        head_cell: "text-zinc-500 flex-1 font-black text-[10px] uppercase text-center", // Mỗi ô chiếm 1/7 độ rộng
-        row: "flex w-full mt-1", // Sử dụng flex để khóa cột
-        cell: "h-10 flex-1 text-center text-sm p-0 relative flex items-center justify-center", // Mỗi ô chiếm 1/7 độ rộng
+        head_row: "grid grid-cols-7 w-full mb-2",
+        head_cell: "text-zinc-500 font-black text-[10px] uppercase text-center",
+        row: "grid grid-cols-7 w-full mt-1",
+        cell: "h-10 text-center text-sm p-0 relative flex items-center justify-center",
         day: cn(
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-bold aria-selected:opacity-100 rounded-xl transition-all"
@@ -53,11 +53,11 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ className, ...props }) => (
-          <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
+        IconLeft: ({ ...props }) => (
+          <ChevronLeft className="h-4 w-4" {...props} />
         ),
-        IconRight: ({ className, ...props }) => (
-          <ChevronRight className={cn("h-4 w-4", className)} {...props} />
+        IconRight: ({ ...props }) => (
+          <ChevronRight className="h-4 w-4" {...props} />
         ),
       }}
       {...props}
