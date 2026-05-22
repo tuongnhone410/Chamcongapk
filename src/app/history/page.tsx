@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -77,14 +76,6 @@ export default function HistoryPage() {
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
-  const formatToLocalDatetime = (isoString: string | Date | null | undefined) => {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return "";
-    const offset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-  };
-
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [batchData, setBatchData] = useState({
     startDate: new Date().toISOString().slice(0, 10),
@@ -102,6 +93,14 @@ export default function HistoryPage() {
     endTime: '20:30',
     multiplier: 1.0
   });
+
+  const formatToLocalDatetime = (isoString: string | Date | null | undefined) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "";
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  };
 
   const sessionDatesSet = useMemo(() => {
     return new Set(sessions.map(s => new Date(s.checkIn).toDateString()));
