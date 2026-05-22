@@ -32,7 +32,9 @@ import {
   ChevronRight,
   Loader2,
   CheckSquare,
-  DollarSign
+  DollarSign,
+  Download,
+  Upload
 } from 'lucide-react';
 import { useState, useRef, useMemo } from 'react';
 import { WorkSession } from '@/lib/types';
@@ -334,7 +336,7 @@ export default function HistoryPage() {
               variant="outline" 
               onClick={handleRestore}
               disabled={isProcessing}
-              className="gap-2 text-xs rounded-xl h-10 border-green-500/50 bg-green-500/10 text-green-500 font-black animate-pulse"
+              className="gap-2 text-xs rounded-xl h-10 border-green-500/50 bg-green-500/10 text-green-500 font-black animate-pulse transition-all"
             >
               <RotateCcw className="w-4 h-4" />
               KHÔI PHỤC ({undoCountdown}s)
@@ -347,10 +349,10 @@ export default function HistoryPage() {
                 size="sm" 
                 variant="outline" 
                 disabled={completedSessions.length === 0 || isProcessing}
-                className="gap-2 text-xs rounded-xl h-10 border-red-500/30 bg-zinc-900 text-red-500 font-bold hover:bg-red-950/20"
+                className="gap-2 text-xs rounded-xl h-10 border-red-500/50 bg-red-500/10 text-red-500 font-black hover:bg-red-500/20 transition-all"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                Xóa hết
+                <Trash2 className="w-4 h-4" />
+                XÓA HẾT
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] z-[100] max-h-[90vh] overflow-y-auto">
@@ -364,15 +366,15 @@ export default function HistoryPage() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="rounded-xl font-bold border-zinc-800 text-white hover:bg-zinc-900">Hủy</AlertDialogCancel>
-                <AlertDialogAction onClick={handleClearAll} className="bg-red-600 hover:bg-red-500 rounded-xl font-black text-white">XÓA BỎ</AlertDialogAction>
+                <AlertDialogCancel className="rounded-xl font-bold border-zinc-800 text-white hover:bg-zinc-900 transition-all">Hủy</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClearAll} className="bg-red-600 hover:bg-red-500 rounded-xl font-black text-white transition-all">XÓA BỎ</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
 
           <Dialog open={showMultiDialog} onOpenChange={setShowMultiDialog}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="default" className="gap-2 text-xs rounded-xl h-10 bg-primary hover:bg-primary/95 font-black shadow-lg text-black">
+              <Button size="sm" variant="default" className="gap-2 text-xs rounded-xl h-10 bg-primary hover:bg-primary/90 font-black shadow-lg text-black transition-all">
                 <CheckSquare className="w-4 h-4" />
                 CHỌN NGÀY OT
               </Button>
@@ -431,7 +433,7 @@ export default function HistoryPage() {
                 </div>
               </div>
               <DialogFooter className="gap-2">
-                <Button onClick={handleMultiAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/90 text-black rounded-xl h-12 font-black shadow-xl w-full">
+                <Button onClick={handleMultiAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/90 text-black rounded-xl h-12 font-black shadow-xl w-full transition-all">
                   LƯU DỮ LIỆU
                 </Button>
               </DialogFooter>
@@ -440,8 +442,8 @@ export default function HistoryPage() {
           
           <Dialog open={showBatchDialog} onOpenChange={setShowBatchDialog}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline" className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold text-white hover:bg-zinc-850">
-                <Layers className="w-3.5 h-3.5" />
+              <Button size="sm" variant="default" className="gap-2 text-xs rounded-xl h-10 bg-indigo-600 hover:bg-indigo-500 font-black text-white shadow-lg transition-all">
+                <Layers className="w-4 h-4" />
                 THÊM HÀNG LOẠT
               </Button>
             </DialogTrigger>
@@ -488,18 +490,20 @@ export default function HistoryPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleBatchAdd} disabled={isProcessing} className="bg-primary hover:bg-primary/95 text-black rounded-xl h-12 font-black shadow-xl w-full">
+                <Button onClick={handleBatchAdd} disabled={isProcessing} className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl h-12 font-black shadow-xl w-full transition-all">
                   ĐỒNG BỘ NGAY
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
           
-          <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold text-white hover:bg-zinc-850" onClick={exportToCSV}>
+          <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl h-10 border-emerald-500/50 bg-emerald-500/10 text-emerald-500 font-black hover:bg-emerald-500/20 transition-all" onClick={exportToCSV}>
+            <Download className="w-4 h-4" />
             XUẤT CSV
           </Button>
           
-          <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl h-10 border-zinc-800 bg-zinc-900 font-bold text-white hover:bg-zinc-850" onClick={() => fileInputRef.current?.click()}>
+          <Button variant="outline" size="sm" className="gap-2 text-xs rounded-xl h-10 border-amber-500/50 bg-amber-500/10 text-amber-500 font-black hover:bg-amber-500/20 transition-all" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="w-4 h-4" />
             NHẬP CSV
           </Button>
           <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleImportCSV} />
@@ -543,7 +547,7 @@ export default function HistoryPage() {
       </div>
 
       <div className="flex items-center justify-between bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
-        <Button variant="ghost" size="icon" onClick={() => changeMonth(-1)} className="rounded-xl text-zinc-400 hover:text-white">
+        <Button variant="ghost" size="icon" onClick={() => changeMonth(-1)} className="rounded-xl text-zinc-400 hover:text-white transition-all">
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div className="text-center">
@@ -552,7 +556,7 @@ export default function HistoryPage() {
             Tháng {selectedMonth} <span className="text-zinc-500">/</span> {selectedYear}
           </p>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => changeMonth(1)} className="rounded-xl text-zinc-400 hover:text-white">
+        <Button variant="ghost" size="icon" onClick={() => changeMonth(1)} className="rounded-xl text-zinc-400 hover:text-white transition-all">
           <ChevronRight className="w-5 h-5" />
         </Button>
       </div>
@@ -582,10 +586,10 @@ export default function HistoryPage() {
                       </span>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-500 hover:text-red-500 hover:bg-zinc-800 rounded-xl" onClick={() => deleteSession(session.id)} disabled={isProcessing}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-500 hover:text-red-500 hover:bg-zinc-800 rounded-xl transition-all" onClick={() => deleteSession(session.id)} disabled={isProcessing}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-500 hover:text-primary hover:bg-zinc-800 rounded-xl" onClick={() => setEditingSession(session)} disabled={isProcessing}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-500 hover:text-primary hover:bg-zinc-800 rounded-xl transition-all" onClick={() => setEditingSession(session)} disabled={isProcessing}>
                         <Edit3 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -636,7 +640,7 @@ export default function HistoryPage() {
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-zinc-500">Hệ số lương</Label>
                 <Select value={editingSession.multiplier.toString()} onValueChange={(v) => setEditingSession({...editingSession, multiplier: parseFloat(v)})}>
-                  <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white">
+                  <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white transition-all">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
@@ -648,7 +652,7 @@ export default function HistoryPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleUpdate} disabled={isProcessing} className="bg-primary hover:bg-primary/90 text-black rounded-xl h-12 font-black shadow-xl w-full">
+              <Button onClick={handleUpdate} disabled={isProcessing} className="bg-primary hover:bg-primary/90 text-black rounded-xl h-12 font-black shadow-xl w-full transition-all">
                 {isProcessing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
