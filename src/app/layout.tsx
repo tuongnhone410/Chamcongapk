@@ -14,34 +14,37 @@ import { useEffect, useState } from 'react';
 const inter = Inter({ 
   subsets: ['latin', 'vietnamese'], 
   variable: '--font-inter',
-  display: 'swap', // Tối ưu tốc độ hiển thị font
+  display: 'swap',
 });
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useUser();
+  const { user, loading: authLoading } = useUser();
   const pathname = usePathname();
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (!loading) {
+    // Đảm bảo loading đã kết thúc trước khi quyết định
+    if (!authLoading) {
       if (!user && pathname !== '/auth') {
         router.push('/auth');
       } else {
         setIsReady(true);
       }
     }
-  }, [user, loading, pathname, router]);
+  }, [user, authLoading, pathname, router]);
 
-  // Nếu là trang auth, hiển thị ngay lập tức
+  // Không chặn nếu đang ở trang Auth
   if (pathname === '/auth') return <>{children}</>;
 
-  // Nếu đang load auth hoặc chưa sẵn sàng, hiện spinner nhẹ
-  if (loading || !isReady) {
+  // Hiển thị spinner mượt mà nếu đang tải hoặc chưa sẵn sàng
+  if (authLoading || !isReady) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
-        <p className="mt-4 text-zinc-600 text-[10px] font-black uppercase tracking-widest">Khởi động nhanh...</p>
+        <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+        <p className="mt-4 text-zinc-500 text-[11px] font-black uppercase tracking-[0.2em] animate-pulse">
+          TimeSnap Pro
+        </p>
       </div>
     );
   }

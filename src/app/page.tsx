@@ -11,7 +11,8 @@ import {
   PlayCircle,
   CalendarDays,
   ArrowDownCircle,
-  ArrowUpCircle
+  ArrowUpCircle,
+  Loader2
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -115,7 +116,24 @@ export default function Home() {
     }
   };
 
-  if (!isLoaded || !analyticsData || !salaryInfo) return null;
+  // Trình hiển thị khung chờ thay vì trả về null để tránh lỗi màn hình tối
+  if (!isLoaded || !analyticsData || !salaryInfo) {
+    return (
+      <div className="space-y-6 pb-24 px-1 sm:px-0 animate-pulse">
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-8 bg-zinc-900 rounded-xl w-32" />
+          <div className="h-8 bg-zinc-900 rounded-xl w-24" />
+        </div>
+        <div className="h-24 bg-zinc-900 rounded-[2rem] w-full mb-8" />
+        <div className="h-32 bg-zinc-900 rounded-[2rem] w-full" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-24 bg-zinc-900 rounded-[2rem]" />
+          <div className="h-24 bg-zinc-900 rounded-[2rem]" />
+        </div>
+        <div className="h-48 bg-zinc-900 rounded-[2rem] w-full" />
+      </div>
+    );
+  }
 
   const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
 
@@ -196,7 +214,7 @@ export default function Home() {
                 <Calculator className="w-6 h-6 text-black" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-w-md w-[95vw] p-6 max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-w-md w-[95vw] p-6 max-h-[90vh] overflow-y-auto z-50">
               <DialogHeader>
                 <DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Chi tiết lương dự kiến</DialogTitle>
                 <DialogDescription className="text-zinc-500 text-[10px] font-bold uppercase">Phân tích các khoản thu nhập và khấu trừ</DialogDescription>
