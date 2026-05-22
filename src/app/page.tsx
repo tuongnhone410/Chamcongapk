@@ -3,34 +3,38 @@
 import { DigitalClock } from '@/components/attendance/DigitalClock';
 import { useAttendance } from '@/hooks/useAttendance';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   LogOut, 
   Calculator, 
   PlayCircle,
-  BarChart3,
   CalendarDays,
   Timer,
   Zap,
-  CheckCircle2
+  CheckCircle2,
+  DollarSign,
+  Info,
+  ArrowDownCircle,
+  ArrowUpCircle
 } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogDescription
+} from "@/components/ui/dialog";
 import { 
   ChartContainer, 
   ChartTooltip, 
   ChartTooltipContent,
   type ChartConfig 
 } from "@/components/ui/chart";
-import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Cell, LabelList, ReferenceLine } from "recharts";
+import { Bar, BarChart, XAxis, ResponsiveContainer } from "recharts";
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useMemo } from 'react';
-
-const chartConfig = {
-  hours: {
-    label: "Giờ công",
-    color: "hsl(var(--primary))",
-  },
-} satisfies ChartConfig;
+import { Separator } from '@/components/ui/separator';
 
 export default function Home() {
   const { 
@@ -113,9 +117,13 @@ export default function Home() {
   if (!isLoaded || !analyticsData || !salaryInfo) return null;
 
   const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
-  const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
-  const effectiveSessionMinutes = Math.max(0, sessionMinutes - breakMinutes);
-  const currentOTSalary = activeSession ? (activeSession.multiplier === 1.0 ? (effectiveSessionMinutes > 510 ? ((effectiveSessionMinutes - 480) / 60) * settings.hourlyRate * settings.overtimeMultiplier : 0) : (effectiveSessionMinutes / 60) * settings.hourlyRate * activeSession.multiplier) : 0;
+
+  // Tính toán phụ cấp tổng hợp cho Modal
+  const otherAllowancesTotal = useMemo(() => {
+    const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + (settings.allowanceResponsibility || 0) + (settings.allowancePosition || 0) + (settings.allowancePerformance || 0);
+    const deduction = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
+    return (settings.allowanceHousing || 0) + (settings.allowanceFuel || 0) + (settings.allowancePhone || 0) + (settings.allowanceToxic || 0) + (settings.allowanceBonus || 0) + (settings.allowanceProduct || 0) + baseSubjectToAbsence - deduction;
+  }, [settings]);
 
   return (
     <div className="space-y-6 pb-24 px-1 sm:px-0">
@@ -182,13 +190,98 @@ export default function Home() {
         </CardContent>
       </Card>
 
-      <Card className="bg-primary text-primary-foreground rounded-[2rem] p-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-[9px] uppercase font-black opacity-80">THỰC LĨNH DỰ KIẾN</p>
-            <p className="text-3xl font-black">{formatCurrency(salaryInfo.netSalary)}</p>
+      <Card className="bg-primary text-primary-foreground rounded-[2rem] p-6 shadow-xl relative overflow-hidden">
+        <div className="flex justify-between items-center relative z-10">
+          <div className="space-y-1">
+            <p className="text-[9px] uppercase font-black opacity-80 flex items-center gap-1">
+              THỰC LĨNH DỰ KIẾN (Tạm tính)
+            </p>
+            <p className="text-3xl font-black tracking-tighter">{formatCurrency(salaryInfo.netSalary)}</p>
           </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button size="icon" variant="secondary" className="rounded-2xl h-12 w-12 bg-white/20 hover:bg-white/30 border-none shadow-lg">
+                <Calculator className="w-6 h-6 text-white" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-w-md w-[95vw] p-6 max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Chi tiết lương dự kiến</DialogTitle>
+                <DialogDescription className="text-zinc-500 text-[10px] font-bold uppercase">Phân tích các khoản thu nhập và khấu trừ</DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-6 py-4">
+                {/* Thu nhập */}
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-black uppercase text-green-500 flex items-center gap-2">
+                    <ArrowUpCircle className="w-4 h-4" /> Các khoản thu nhập (+)
+                  </h4>
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-zinc-400">Lương cơ bản (HĐ)</span>
+                      <span className="font-bold">{formatCurrency(settings.baseMonthlySalary)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-zinc-400">Lương OT (Theo phiên)</span>
+                      <span className="font-bold text-green-500">{formatCurrency(salaryInfo.sessionSalary)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-zinc-400">Phụ cấp cơm</span>
+                      <span className="font-bold">{formatCurrency(salaryInfo.lunchAllowance)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-zinc-400">Tiền chuyên cần</span>
+                      <span className="font-bold">{formatCurrency(salaryInfo.attendanceBonus)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-zinc-400">Phụ cấp khác</span>
+                      <span className="font-bold">{formatCurrency(otherAllowancesTotal)}</span>
+                    </div>
+                    <Separator className="bg-zinc-800" />
+                    <div className="flex justify-between items-center text-sm font-black pt-1">
+                      <span>TỔNG THU NHẬP (GROSS)</span>
+                      <span className="text-primary">{formatCurrency(salaryInfo.grossIncome)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Khấu trừ */}
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-black uppercase text-red-500 flex items-center gap-2">
+                    <ArrowDownCircle className="w-4 h-4" /> Các khoản khấu trừ (-)
+                  </h4>
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-zinc-400">Bảo hiểm ({settings.insuranceRate}%)</span>
+                      <span className="font-bold text-red-500">-{formatCurrency(salaryInfo.insuranceAmount)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-zinc-400">Đoàn phí</span>
+                      <span className="font-bold text-red-500">-{formatCurrency(settings.unionFee)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-zinc-400">Thuế TNCN (Tạm tính)</span>
+                      <span className="font-bold text-red-500">-{formatCurrency(salaryInfo.incomeTaxAmount)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Kết quả cuối cùng */}
+                <div className="bg-primary/10 border border-primary/20 p-4 rounded-2xl space-y-2 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black uppercase text-primary">THỰC LĨNH (NET)</span>
+                    <span className="text-2xl font-black text-primary">{formatCurrency(salaryInfo.netSalary)}</span>
+                  </div>
+                  <p className="text-[9px] text-zinc-500 font-bold leading-tight">
+                    * Lưu ý: Con số này được tính toán dựa trên cấu hình cài đặt lương của bạn và các phiên làm việc đã được ghi nhận.
+                  </p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
+        {/* Trang trí nền cho card */}
+        <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
       </Card>
     </div>
   );
