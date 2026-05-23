@@ -43,7 +43,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (authLoading || !isReady) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950">
+      <div className="flex-1 flex flex-col items-center justify-center bg-zinc-950">
         <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
         <p className="mt-4 text-zinc-500 text-[11px] font-black uppercase tracking-[0.2em] animate-pulse">
           TimeSnap Pro
@@ -68,16 +68,16 @@ export default function RootLayout({
         <meta name="theme-color" content="#09090b" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className="antialiased min-h-screen bg-zinc-950 text-foreground overflow-x-hidden selection:bg-primary/30">
+      <body className="antialiased min-h-screen">
         <FirebaseClientProvider>
           <AuthGuard>
             <AttendanceProvider>
-              <div className="relative flex flex-col min-h-screen">
-                <main className="flex-1 max-w-2xl mx-auto w-full px-4 pt-safe pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+              <div id="main-scroll-area" className="pt-safe">
+                <main className="max-w-2xl mx-auto w-full px-4 pt-4 content-wrapper">
                   {children}
                 </main>
-                <BottomNav />
               </div>
+              <BottomNav />
             </AttendanceProvider>
           </AuthGuard>
           <Toaster />
