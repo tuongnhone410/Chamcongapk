@@ -78,6 +78,7 @@ const defaultSettings: AppSettings = {
   allowanceToxic: 287000,
   allowanceBonus: 213000,
   allowanceProduct: 2500000, 
+  allowanceOther: 0,
   allowanceTechnical: 0,
   allowanceResponsibility: 0,
   allowancePosition: 0,
@@ -421,7 +422,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + (settings.allowanceResponsibility || 0) + (settings.allowancePosition || 0) + (settings.allowancePerformance || 0);
     const absenceDeduction = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
     
-    const other = (settings.allowanceHousing || 0) + (settings.allowanceFuel || 0) + (settings.allowancePhone || 0) + (settings.allowanceToxic || 0) + (settings.allowanceBonus || 0) + (settings.allowanceProduct || 0) + baseSubjectToAbsence - absenceDeduction;
+    const other = (settings.allowanceHousing || 0) + (settings.allowanceFuel || 0) + (settings.allowancePhone || 0) + (settings.allowanceToxic || 0) + (settings.allowanceBonus || 0) + (settings.allowanceProduct || 0) + (settings.allowanceOther || 0) + baseSubjectToAbsence - absenceDeduction;
     
     const gross = (settings.baseMonthlySalary || 0) + sessionSalary + other + lunchAllowance + attendanceBonus;
     const insurance = ((settings.insuranceSalary || 0) * (settings.insuranceRate || 0)) / 100;

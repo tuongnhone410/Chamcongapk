@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DigitalClock } from '@/components/attendance/DigitalClock';
@@ -11,7 +12,8 @@ import {
   CalendarDays,
   ArrowDownCircle,
   ArrowUpCircle,
-  Loader2
+  Loader2,
+  Badge
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -107,7 +109,7 @@ export default function Home() {
   const otherAllowancesTotal = useMemo(() => {
     const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + (settings.allowanceResponsibility || 0) + (settings.allowancePosition || 0) + (settings.allowancePerformance || 0);
     const deduction = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
-    return (settings.allowanceHousing || 0) + (settings.allowanceFuel || 0) + (settings.allowancePhone || 0) + (settings.allowanceToxic || 0) + (settings.allowanceBonus || 0) + (settings.allowanceProduct || 0) + baseSubjectToAbsence - deduction;
+    return (settings.allowanceHousing || 0) + (settings.allowanceFuel || 0) + (settings.allowancePhone || 0) + (settings.allowanceToxic || 0) + (settings.allowanceBonus || 0) + (settings.allowanceProduct || 0) + (settings.allowanceOther || 0) + baseSubjectToAbsence - deduction;
   }, [settings]);
 
   const salaryInfo = useMemo(() => {

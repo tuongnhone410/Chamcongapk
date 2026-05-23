@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -329,7 +330,8 @@ export default function SettingsPage() {
               { key: 'allowanceHousing', label: 'Nhà ở', color: 'text-indigo-400' },
               { key: 'allowanceToxic', label: 'Độc hại', color: 'text-rose-400' },
               { key: 'allowanceBonus', label: 'Thưởng / Doanh thu', color: 'text-sky-400' },
-              { key: 'allowanceFuel', label: 'Xăng xe', color: 'text-violet-400' }
+              { key: 'allowanceFuel', label: 'Xăng xe', color: 'text-violet-400' },
+              { key: 'allowanceOther', label: 'Phụ cấp khác', color: 'text-zinc-400' }
             ].map((item) => (
               <div key={item.key} className="space-y-1">
                 <Label className={cn(labelClass, item.color)}>{item.label}</Label>

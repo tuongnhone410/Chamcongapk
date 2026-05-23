@@ -1,3 +1,4 @@
+
 export interface WorkSession {
   id: string;
   checkIn: string; // ISO string
@@ -29,6 +30,7 @@ export interface AppSettings {
   allowanceToxic: number;      // Phụ cấp độc hại
   allowanceBonus: number;      // Thưởng doanh thu/năng suất
   allowanceProduct: number;    // Tiền sản phẩm (tự nhập 2.3 - 3.0tr)
+  allowanceOther: number;      // Phụ cấp khác
   
   // Các phụ cấp mới có khấu trừ theo ngày nghỉ
   allowanceTechnical: number;    // Tiền kỹ thuật

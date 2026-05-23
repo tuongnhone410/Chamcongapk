@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "WorkSession": {
@@ -37,6 +38,7 @@
         "allowanceResponsibility": { "type": "number" },
         "allowancePosition": { "type": "number" },
         "allowancePerformance": { "type": "number" },
+        "allowanceOther": { "type": "number" },
         "insuranceRate": { "type": "number" },
         "unionFee": { "type": "number" },
         "incomeTaxRate": { "type": "number" },
