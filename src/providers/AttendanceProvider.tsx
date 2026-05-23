@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useMemo, useCallback, useState, useRef, useEffect } from 'react';
@@ -205,8 +206,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       note: '',
       createdAt: isoStr
     };
-    setDoc(docRef, data).catch(async () => {
+    setDoc(docRef, data).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: data }));
+      throw error;
     });
   }, [db, user, activeSession, storageKey, getAutoMultiplier]);
 
@@ -227,8 +229,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         totalMinutes: diffMinutes,
         salary: calculateSessionSalary(diffMinutes, activeSession.multiplier)
       };
-      updateDoc(docRef, updateData).catch(async () => {
+      updateDoc(docRef, updateData).catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'update', requestResourceData: updateData }));
+        throw error;
       });
     }
   }, [db, user, activeSession, sessions, storageKey, calculateSessionSalary]);
@@ -248,8 +251,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       createdAt: new Date().toISOString()
     };
     const docRef = doc(collection(db, 'users', user.uid, 'sessions'));
-    setDoc(docRef, sessionData).catch(async () => {
+    await setDoc(docRef, sessionData).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: sessionData }));
+      throw error;
     });
   }, [db, user, calculateSessionSalary]);
 
@@ -273,8 +277,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         createdAt: new Date().toISOString()
       });
     });
-    await batch.commit().catch(async () => {
+    await batch.commit().catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
+      throw error;
     });
   }, [db, user, calculateSessionSalary, getAutoMultiplier]);
 
@@ -306,8 +311,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       }
       current.setDate(current.getDate() + 1);
     }
-    await batch.commit().catch(async () => {
+    await batch.commit().catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
+      throw error;
     });
   }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier]);
 
@@ -341,15 +347,17 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const updateSettings = useCallback(async (newSettings: AppSettings) => {
     if (!db || !user) return;
     const settingsRef = doc(db, 'users', user.uid, 'settings', 'current');
-    await setDoc(settingsRef, newSettings, { merge: true }).catch(async () => {
+    await setDoc(settingsRef, newSettings, { merge: true }).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: settingsRef.path, operation: 'write', requestResourceData: newSettings }));
+      throw error;
     });
   }, [db, user]);
 
   const deleteSession = useCallback(async (id: string) => {
     if (!db || !user) return;
-    deleteDoc(doc(db, 'users', user.uid, 'sessions', id)).catch(async () => {
+    await deleteDoc(doc(db, 'users', user.uid, 'sessions', id)).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions/${id}`, operation: 'delete' }));
+      throw error;
     });
   }, [db, user]);
 
@@ -360,8 +368,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       ...updated, 
       salary: calculateSessionSalary(updated.totalMinutes, updated.multiplier) 
     };
-    updateDoc(docRef, updateData).catch(async () => {
+    await updateDoc(docRef, updateData).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'update', requestResourceData: updateData }));
+      throw error;
     });
   }, [db, user, calculateSessionSalary]);
 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -63,6 +64,9 @@ export default function HistoryPage() {
 
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isBatchLoading, setIsBatchLoading] = useState(false);
+  const [isMultiLoading, setIsMultiLoading] = useState(false);
+  
   const { toast } = useToast();
 
   const now = new Date();
@@ -164,6 +168,8 @@ export default function HistoryPage() {
       });
       setEditingSession(null);
       toast({ title: "Đã lưu", description: "Cập nhật thành công." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Lỗi", description: "Không thể lưu thay đổi." });
     } finally {
       setIsProcessing(false);
     }
@@ -174,7 +180,7 @@ export default function HistoryPage() {
       toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn dải ngày." });
       return;
     }
-    setIsProcessing(true);
+    setIsBatchLoading(true);
     try {
       await batchAddSessions({
         startDate: batchRange.from.toISOString().split('T')[0],
@@ -189,7 +195,7 @@ export default function HistoryPage() {
     } catch (error) {
       toast({ variant: "destructive", title: "Lỗi", description: "Không thể đồng bộ." });
     } finally {
-      setIsProcessing(false);
+      setIsBatchLoading(false);
     }
   };
 
@@ -198,7 +204,7 @@ export default function HistoryPage() {
       toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn ít nhất 1 ngày." });
       return;
     }
-    setIsProcessing(true);
+    setIsMultiLoading(true);
     try {
       await multiAddSessions({
         dates: selectedDates,
@@ -212,7 +218,7 @@ export default function HistoryPage() {
     } catch (error) {
       toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm dữ liệu." });
     } finally {
-      setIsProcessing(false);
+      setIsMultiLoading(false);
     }
   };
 
@@ -354,8 +360,8 @@ export default function HistoryPage() {
               </div>
             </div>
             <DialogFooter className="sm:justify-start">
-              <Button onClick={handleMultiAdd} disabled={isProcessing} className="bg-primary text-black rounded-xl h-12 font-black w-full active:scale-95 transition-all">
-                {isProcessing ? <Loader2 className="animate-spin" /> : 'XÁC NHẬN'}
+              <Button onClick={handleMultiAdd} disabled={isMultiLoading} className="bg-primary text-black rounded-xl h-12 font-black w-full active:scale-95 transition-all">
+                {isMultiLoading ? <Loader2 className="animate-spin" /> : 'XÁC NHẬN'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -397,8 +403,8 @@ export default function HistoryPage() {
               </div>
             </div>
             <DialogFooter className="sm:justify-start">
-              <Button onClick={handleBatchAdd} disabled={isProcessing} className="bg-indigo-600 text-white rounded-xl h-12 font-black w-full active:scale-95 transition-all">
-                {isProcessing ? <Loader2 className="animate-spin" /> : 'ĐỒNG BỘ NGAY'}
+              <Button onClick={handleBatchAdd} disabled={isBatchLoading} className="bg-indigo-600 text-white rounded-xl h-12 font-black w-full active:scale-95 transition-all">
+                {isBatchLoading ? <Loader2 className="animate-spin" /> : 'ĐỒNG BỘ NGAY'}
               </Button>
             </DialogFooter>
           </DialogContent>
