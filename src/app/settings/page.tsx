@@ -227,7 +227,7 @@ export default function SettingsPage() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-zinc-500")}>Khấu trừ giờ nghỉ (giờ)</Label>
+              <Label className={cn(labelClass, "text-zinc-500 text-[9px] tracking-tighter whitespace-nowrap")}>Khấu trừ giờ nghỉ (giờ)</Label>
               <Input 
                 type="number" step="0.1"
                 className={inputClass}
@@ -273,7 +273,7 @@ export default function SettingsPage() {
       <Card className="border-zinc-800 bg-zinc-900 overflow-hidden rounded-[2rem]">
         <CardHeader className="pb-2">
           <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-green-500">
-            <AlertTriangle className="w-4 h-4" /> Chuyên Cần & Nghỉ K Phép
+            <AlertTriangle className="w-4 h-4" /> Chuyên Cần & Ngày nghỉ k phép
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -286,7 +286,7 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-green-500")}>Ngày nghỉ k phép</Label>
+              <Label className={cn(labelClass, "text-green-500")}>Ngày nghỉ K phép</Label>
               <div className="relative">
                 <Input type="number" className={cn(inputClass, "border-green-500/30")} value={localSettings.unexcusedAbsences === 0 ? "0" : localSettings.unexcusedAbsences.toString()} onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} />
               </div>
