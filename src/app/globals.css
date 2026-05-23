@@ -37,9 +37,12 @@
     -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeSpeed;
     overflow-x: hidden;
-    /* Ẩn thanh cuộn cho toàn bộ ứng dụng chuyên nghiệp */
+    /* Ẩn thanh cuộn cho toàn bộ ứng dụng */
     scrollbar-width: none;
     -ms-overflow-style: none;
+    height: 100%;
+    width: 100%;
+    position: fixed; /* Ngăn chặn pull-to-refresh ngoài ý muốn trên mobile */
   }
 
   body::-webkit-scrollbar {
@@ -48,10 +51,10 @@
 
   /* Xử lý vùng an toàn cho APK */
   .pt-safe {
-    padding-top: env(safe-area-inset-top);
+    padding-top: max(1rem, env(safe-area-inset-top));
   }
   .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 }
 
@@ -68,4 +71,10 @@
 html, body {
   overscroll-behavior-y: contain;
   height: 100%;
+}
+
+main {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
