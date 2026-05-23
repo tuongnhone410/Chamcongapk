@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useMemo, useCallback, useState, useRef, useEffect } from 'react';
@@ -13,7 +12,6 @@ import {
   collection, 
   doc, 
   setDoc, 
-  addDoc, 
   deleteDoc, 
   updateDoc,
   query,

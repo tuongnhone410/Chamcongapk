@@ -1,10 +1,8 @@
-
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
@@ -63,7 +61,6 @@ export default function HistoryPage() {
   } = useAttendance();
 
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [isBatchLoading, setIsBatchLoading] = useState(false);
   const [isMultiLoading, setIsMultiLoading] = useState(false);
   
@@ -155,19 +152,8 @@ export default function HistoryPage() {
 
   const handleUpdate = () => {
     if (!editingSession) return;
-    setIsProcessing(true);
-    
-    const checkIn = new Date(editingSession.checkIn);
-    const checkOut = editingSession.checkOut ? new Date(editingSession.checkOut) : null;
-    const diffMs = checkOut ? (checkOut.getTime() - checkIn.getTime()) : 0;
-    const diffMinutes = Math.floor(diffMs / 60000);
-
-    updateSession({
-      ...editingSession,
-      totalMinutes: diffMinutes,
-    });
+    updateSession(editingSession);
     setEditingSession(null);
-    setIsProcessing(false);
     toast({ title: "Đã lưu", description: "Cập nhật thành công." });
   };
 
@@ -185,9 +171,10 @@ export default function HistoryPage() {
       multiplier: -1,
       excludeSundays: batchData.excludeSundays
     });
+    // Đóng ngay lập tức để không bị treo
     setShowBatchDialog(false);
     setIsBatchLoading(false);
-    toast({ title: "Thành công", description: "Yêu cầu đồng bộ đã được gửi." });
+    toast({ title: "Thành công", description: "Dữ liệu đang được đồng bộ lên server." });
   };
 
   const handleMultiAdd = () => {
@@ -202,10 +189,11 @@ export default function HistoryPage() {
       endTime: multiData.endTime,
       multiplier: -1
     });
+    // Đóng ngay lập tức để không bị treo
     setSelectedDates([]);
     setShowMultiDialog(false);
     setIsMultiLoading(false);
-    toast({ title: "Thành công", description: "Dữ liệu OT đã được thêm." });
+    toast({ title: "Thành công", description: "Dữ liệu OT đang được đẩy lên server." });
   };
 
   const changeMonth = (dir: number) => {
@@ -443,11 +431,11 @@ export default function HistoryPage() {
             <div className="space-y-4 py-4">
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-black text-zinc-500">Giờ vào</Label>
-                <Input type="datetime-local" className="bg-zinc-900 border-zinc-800 rounded-xl h-11 font-bold text-sm" value={formatToLocalDatetime(editingSession.checkIn)} onChange={(e) => setEditingSession({...editingSession, checkIn: new Date(e.target.value).toISOString()})} />
+                <input type="datetime-local" className="bg-zinc-900 border border-zinc-800 rounded-xl h-11 font-bold text-sm px-4 text-white w-full outline-none" value={formatToLocalDatetime(editingSession.checkIn)} onChange={(e) => setEditingSession({...editingSession, checkIn: new Date(e.target.value).toISOString()})} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-black text-zinc-500">Giờ ra</Label>
-                <Input type="datetime-local" className="bg-zinc-900 border-zinc-800 rounded-xl h-11 font-bold text-sm" value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""} onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})} />
+                <input type="datetime-local" className="bg-zinc-900 border border-zinc-800 rounded-xl h-11 font-bold text-sm px-4 text-white w-full outline-none" value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""} onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})} />
               </div>
             </div>
             <DialogFooter>

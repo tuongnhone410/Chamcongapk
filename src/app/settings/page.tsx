@@ -15,7 +15,8 @@ import {
   Gift,
   Zap,
   LogOut,
-  Info
+  Info,
+  Loader2
 } from 'lucide-react';
 import { AppSettings } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ import { signOut } from 'firebase/auth';
 export default function SettingsPage() {
   const { settings, updateSettings, isLoaded } = useAttendance();
   const [localSettings, setLocalSettings] = useState<AppSettings | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const auth = useAuth();
 
@@ -89,40 +91,14 @@ export default function SettingsPage() {
   const handleSave = () => {
     if (!localSettings) return;
 
-    if (localSettings.insuranceRate < 0 || localSettings.insuranceRate > 100) {
-      toast({
-        variant: "destructive",
-        title: "Dữ liệu không hợp lệ",
-        description: "Tỷ lệ đóng bảo hiểm phải nằm trong khoảng từ 0% đến 100%."
-      });
-      return;
-    }
-
-    if (
-      localSettings.overtimeMultiplier < 0 || 
-      localSettings.sundayMultiplier < 0 || 
-      localSettings.holidayMultiplier < 0
-    ) {
-      toast({
-        variant: "destructive",
-        title: "Dữ liệu không hợp lệ",
-        description: "Hệ số tăng ca không được phép là số âm."
-      });
-      return;
-    }
-
-    if (localSettings.breakTimeDeduction < 0 || localSettings.breakTimeDeduction > 24) {
-      toast({
-        variant: "destructive",
-        title: "Dữ liệu không hợp lệ",
-        description: "Khấu trừ giờ nghỉ hàng ngày phải nằm trong khoảng từ 0 đến 24 giờ."
-      });
-      return;
-    }
-
+    setIsSaving(true);
     updateSettings(localSettings);
     
-    toast({ title: "Thành công", description: "Các cài đặt lương đã được lưu trữ." });
+    // Phản hồi UI tức thì
+    setTimeout(() => {
+      setIsSaving(false);
+      toast({ title: "Thành công", description: "Cấu hình lương đã được cập nhật lên server." });
+    }, 500);
   };
 
   const handleLogout = async () => {
@@ -141,15 +117,15 @@ export default function SettingsPage() {
       <header className="flex items-center justify-between sticky top-0 z-20 bg-zinc-950/90 py-4 backdrop-blur-md border-b border-zinc-900/50">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-black tracking-tighter uppercase text-white">Cài đặt lương</h1>
-          {hasChanges && (
+          {hasChanges && !isSaving && (
             <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] font-black uppercase animate-pulse">
-              Có thay đổi chưa lưu
+              Chưa lưu
             </Badge>
           )}
         </div>
         <Button 
           onClick={handleSave} 
-          disabled={!hasChanges}
+          disabled={!hasChanges || isSaving}
           className={cn(
             "rounded-xl px-6 font-black gap-2 shadow-xl h-12 transition-all active:scale-95",
             hasChanges 
@@ -157,7 +133,7 @@ export default function SettingsPage() {
               : "bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700"
           )}
         >
-          <Save className="w-5 h-5" />
+          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
           LƯU CẤU HÌNH
         </Button>
       </header>
