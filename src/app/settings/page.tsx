@@ -120,7 +120,6 @@ export default function SettingsPage() {
       return;
     }
 
-    // Ghi dữ liệu không sử dụng await để UI phản hồi tức thì
     updateSettings(localSettings);
     
     toast({ title: "Thành công", description: "Các cài đặt lương đã được lưu trữ." });
@@ -311,7 +310,9 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-1">
               <Label className={cn(labelClass, "text-green-500")}>Ngày nghỉ không phép</Label>
-              <Input type="number" className={cn(inputClass, "border-green-500/30")} value={localSettings.unexcusedAbsences === 0 ? "0" : localSettings.unexcusedAbsences.toString()} onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} />
+              <div className="relative">
+                <Input type="number" className={cn(inputClass, "border-green-500/30")} value={localSettings.unexcusedAbsences === 0 ? "0" : localSettings.unexcusedAbsences.toString()} onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} />
+              </div>
             </div>
           </div>
         </CardContent>
