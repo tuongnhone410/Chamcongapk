@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Dialog, 
   DialogContent, 
@@ -30,7 +31,7 @@ import {
   CheckSquare,
   DollarSign
 } from 'lucide-react';
-import { useState, useRef, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { WorkSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -49,7 +50,6 @@ import { type DateRange } from "react-day-picker";
 export default function HistoryPage() {
   const { 
     sessions, 
-    activeSession,
     isLoaded, 
     deleteSession, 
     updateSession, 
@@ -59,8 +59,7 @@ export default function HistoryPage() {
     restoreHistory,
     canUndo,
     undoCountdown,
-    settings,
-    getAutoMultiplier
+    settings
   } = useAttendance();
 
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
@@ -188,6 +187,8 @@ export default function HistoryPage() {
       });
       setShowBatchDialog(false);
       toast({ title: "Thành công", description: "Đã đồng bộ hàng loạt." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Lỗi", description: "Không thể đồng bộ." });
     } finally {
       setIsProcessing(false);
     }
@@ -209,6 +210,8 @@ export default function HistoryPage() {
       setSelectedDates([]);
       setShowMultiDialog(false);
       toast({ title: "Thành công", description: "Đã thêm dữ liệu." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm dữ liệu." });
     } finally {
       setIsProcessing(false);
     }
@@ -382,6 +385,16 @@ export default function HistoryPage() {
                   <Label className="text-[9px] font-black uppercase text-zinc-500">Giờ ra</Label>
                   <input type="time" className="bg-zinc-900 border border-zinc-800 h-10 font-bold rounded-xl px-3 text-white w-full text-sm outline-none" value={batchData.endTime} onChange={(e) => setBatchData({...batchData, endTime: e.target.value})} />
                 </div>
+              </div>
+              <div className="flex items-center space-x-2 bg-zinc-900 p-3 rounded-xl border border-zinc-800">
+                <Checkbox 
+                  id="excludeSundays" 
+                  checked={batchData.excludeSundays} 
+                  onCheckedChange={(checked) => setBatchData({...batchData, excludeSundays: !!checked})} 
+                />
+                <label htmlFor="excludeSundays" className="text-xs font-bold text-zinc-400 cursor-pointer select-none">
+                  Bỏ qua ngày Chủ Nhật
+                </label>
               </div>
             </div>
             <DialogFooter>
