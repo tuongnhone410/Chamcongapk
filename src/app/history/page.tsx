@@ -97,7 +97,7 @@ export default function HistoryPage() {
   const [batchData, setBatchData] = useState({
     startTime: '07:30',
     endTime: '20:30',
-    multiplier: -1, // Luôn để tự động
+    multiplier: -1, 
     excludeSundays: true
   });
 
@@ -106,7 +106,7 @@ export default function HistoryPage() {
   const [multiData, setMultiData] = useState({
     startTime: '07:30',
     endTime: '20:30',
-    multiplier: -1 // Luôn để tự động
+    multiplier: -1
   });
 
   const sessionDatesSet = useMemo(() => {
@@ -335,7 +335,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="space-y-6 pb-24 text-white">
+    <div className="space-y-6 pb-10 text-white animate-in fade-in duration-500">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-black tracking-tighter uppercase">Lịch sử công</h1>
@@ -501,37 +501,37 @@ export default function HistoryPage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card className="border-none shadow-xl bg-zinc-900 border border-zinc-800 rounded-[1.5rem]">
-          <CardContent className="p-5 flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center">
-              <CalendarIcon className="w-6 h-6 text-primary" />
+          <CardContent className="p-4 flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center">
+              <CalendarIcon className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Số ngày công</p>
-              <h4 className="text-2xl font-black text-white">{monthlySummary.totalCount} ngày</h4>
+              <p className="text-[9px] uppercase font-black tracking-widest text-zinc-500">Số ngày công</p>
+              <h4 className="text-xl font-black text-white">{monthlySummary.totalCount} ngày</h4>
             </div>
           </CardContent>
         </Card>
         <Card className="border-none shadow-xl bg-zinc-900 border border-zinc-800 rounded-[1.5rem]">
-          <CardContent className="p-5 flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-orange-500" />
+          <CardContent className="p-4 flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Tổng giờ làm OT</p>
-              <h4 className="text-2xl font-black text-orange-500">{formatHours(monthlySummary.totalMinutesOT)}</h4>
+              <p className="text-[9px] uppercase font-black tracking-widest text-zinc-500">Tổng giờ làm OT</p>
+              <h4 className="text-xl font-black text-orange-500">{formatHours(monthlySummary.totalMinutesOT)}</h4>
             </div>
           </CardContent>
         </Card>
         <Card className="border-none shadow-xl bg-zinc-900 border border-zinc-800 rounded-[1.5rem]">
-          <CardContent className="p-5 flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-500" />
+          <CardContent className="p-4 flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-green-500" />
             </div>
             <div>
-              <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Lương OT dự tính</p>
-              <h4 className="text-2xl font-black text-green-500">{formatCurrency(monthlySummary.totalSalary)}</h4>
+              <p className="text-[9px] uppercase font-black tracking-widest text-zinc-500">Lương OT dự tính</p>
+              <h4 className="text-xl font-black text-green-500">{formatCurrency(monthlySummary.totalSalary)}</h4>
             </div>
           </CardContent>
         </Card>
@@ -542,8 +542,8 @@ export default function HistoryPage() {
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div className="text-center">
-          <p className="text-[10px] font-black uppercase text-primary tracking-widest">THÁNG ĐANG XEM</p>
-          <p className="text-xl font-black text-white uppercase tracking-tighter">
+          <p className="text-[9px] font-black uppercase text-primary tracking-widest">THÁNG ĐANG XEM</p>
+          <p className="text-lg font-black text-white uppercase tracking-tighter">
             Tháng {selectedMonth} <span className="text-zinc-500">/</span> {selectedYear}
           </p>
         </div>
@@ -553,31 +553,31 @@ export default function HistoryPage() {
       </div>
       
       {currentActiveSession && (
-        <div className="space-y-4">
-          <p className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest">Đang làm việc</p>
+        <div className="space-y-3">
+          <p className="text-[9px] font-black uppercase text-primary ml-1 tracking-widest">Đang làm việc</p>
           <Card className="border-none shadow-xl overflow-hidden bg-primary/5 rounded-[1.5rem] border border-primary/20 animate-pulse">
             <CardContent className="p-0">
-              <div className="p-4 flex items-center justify-between border-b border-primary/10 bg-primary/10">
+              <div className="p-3 flex items-center justify-between border-b border-primary/10 bg-primary/10">
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-xl bg-primary/20 flex items-center justify-center">
                     <PlayCircle className="w-4 h-4 text-primary" />
                   </div>
-                  <span className="font-black text-sm uppercase tracking-tighter text-white">
+                  <span className="font-black text-xs uppercase tracking-tighter text-white">
                     {new Date(currentActiveSession.checkIn).toLocaleDateString('vi-VN', { weekday: 'short', month: 'short', day: 'numeric' })}
                   </span>
                 </div>
-                <Badge className="bg-primary text-black font-black text-[9px] uppercase">LIVE</Badge>
+                <Badge className="bg-primary text-black font-black text-[8px] uppercase px-1.5 h-4">LIVE</Badge>
               </div>
-              <div className="p-5 grid grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Giờ vào</p>
-                  <p className="text-sm font-bold text-white">
+              <div className="p-4 grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">Giờ vào</p>
+                  <p className="text-xs font-bold text-white">
                     {new Date(currentActiveSession.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })}
                   </p>
                 </div>
-                <div className="space-y-1.5 text-right">
-                  <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Trạng thái</p>
-                  <p className="text-sm font-black text-primary uppercase">Chưa kết thúc</p>
+                <div className="space-y-1 text-right">
+                  <p className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">Trạng thái</p>
+                  <p className="text-xs font-black text-primary uppercase">Đang ghi nhận...</p>
                 </div>
               </div>
             </CardContent>
@@ -588,58 +588,58 @@ export default function HistoryPage() {
       {completedSessions.length === 0 && !currentActiveSession ? (
         <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
           <div className="p-8 rounded-[2rem] bg-zinc-900 border border-zinc-800">
-            <History className="w-16 h-16 text-zinc-800" />
+            <History className="w-12 h-12 text-zinc-800" />
           </div>
-          <h3 className="text-xl font-black uppercase tracking-tighter text-zinc-500">Chưa có dữ liệu</h3>
+          <h3 className="text-lg font-black uppercase tracking-tighter text-zinc-500">Chưa có dữ liệu</h3>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {completedSessions.length > 0 && (
-             <p className="text-[10px] font-black uppercase text-zinc-500 ml-1 tracking-widest">Đã hoàn thành</p>
+             <p className="text-[9px] font-black uppercase text-zinc-500 ml-1 tracking-widest">Đã hoàn thành</p>
           )}
           {completedSessions.map((session) => {
             const metrics = getSessionOTMetrics(session);
             
             return (
-              <Card key={session.id} className="border-none shadow-xl overflow-hidden bg-zinc-900 rounded-[1.5rem] border border-zinc-800">
+              <Card key={session.id} className="border-none shadow-xl overflow-hidden bg-zinc-900 rounded-[1.5rem] border border-zinc-800 active:scale-[0.98] transition-transform">
                 <CardContent className="p-0">
-                  <div className="p-4 flex items-center justify-between border-b border-zinc-800 bg-zinc-950/30">
+                  <div className="p-3 flex items-center justify-between border-b border-zinc-800 bg-zinc-950/30">
                     <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <CalendarIcon className="w-4 h-4 text-primary" />
+                      <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <CalendarIcon className="w-3.5 h-3.5 text-primary" />
                       </div>
-                      <span className="font-black text-sm uppercase tracking-tighter text-white">
+                      <span className="font-black text-xs uppercase tracking-tighter text-white">
                         {new Date(session.checkIn).toLocaleDateString('vi-VN', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </span>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-500 hover:text-red-500 hover:bg-zinc-800 rounded-xl transition-all" onClick={() => deleteSession(session.id)} disabled={isProcessing}>
-                        <Trash2 className="w-4 h-4" />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-red-500 hover:bg-zinc-800 rounded-xl transition-all" onClick={() => deleteSession(session.id)} disabled={isProcessing}>
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-500 hover:text-primary hover:bg-zinc-800 rounded-xl transition-all" onClick={() => setEditingSession(session)} disabled={isProcessing}>
-                        <Edit3 className="w-4 h-4" />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-primary hover:bg-zinc-800 rounded-xl transition-all" onClick={() => setEditingSession(session)} disabled={isProcessing}>
+                        <Edit3 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   </div>
-                  <div className="p-5 grid grid-cols-3 gap-6">
-                    <div className="space-y-1.5">
-                      <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Thời gian</p>
-                      <p className="text-xs font-bold text-white">
+                  <div className="p-4 grid grid-cols-3 gap-3 items-center">
+                    <div className="space-y-1">
+                      <p className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">Thời gian</p>
+                      <p className="text-[11px] font-bold text-white whitespace-nowrap">
                         {new Date(session.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })}
                         <span className="mx-1 text-zinc-600">→</span>
                         {session.checkOut ? new Date(session.checkOut).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false }) : 'N/A'}
                       </p>
                     </div>
-                    <div className="space-y-1.5">
-                      <p className="text-[10px] text-orange-500 uppercase font-black tracking-widest">Tổng OT</p>
-                      <div className="flex items-center space-x-1 text-xs font-black text-orange-500">
-                        <Zap className="w-3.5 h-3.5 fill-orange-500/20" />
+                    <div className="space-y-1">
+                      <p className="text-[9px] text-orange-500 uppercase font-black tracking-widest">Tổng OT</p>
+                      <div className="flex items-center space-x-1 text-[11px] font-black text-orange-500">
+                        <Zap className="w-3 h-3 fill-orange-500/20" />
                         <span>{formatHours(metrics.otMinutes)}</span>
                       </div>
                     </div>
-                    <div className="space-y-1.5 text-right">
-                      <p className="text-[10px] text-green-500 uppercase font-black tracking-widest">Lương OT</p>
-                      <p className="text-lg font-black text-green-500 tracking-tighter">{formatCurrency(metrics.salary)}</p>
+                    <div className="space-y-1 text-right">
+                      <p className="text-[9px] text-green-500 uppercase font-black tracking-widest">Lương OT</p>
+                      <p className="text-base font-black text-green-500 tracking-tighter">{formatCurrency(metrics.salary)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -651,7 +651,7 @@ export default function HistoryPage() {
       
       {editingSession && (
         <Dialog open={!!editingSession} onOpenChange={(open) => !open && setEditingSession(null)}>
-          <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-[2rem] max-w-md w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-black uppercase text-xl text-center">Chỉnh sửa phiên</DialogTitle>
             </DialogHeader>
@@ -663,19 +663,6 @@ export default function HistoryPage() {
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-zinc-500">Thời gian ra</Label>
                 <Input type="datetime-local" className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white" value={editingSession.checkOut ? formatToLocalDatetime(editingSession.checkOut) : ""} onChange={(e) => setEditingSession({...editingSession, checkOut: e.target.value ? new Date(e.target.value).toISOString() : null})} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-zinc-500">Hệ số lương</Label>
-                <Select value={editingSession.multiplier.toString()} onValueChange={(v) => setEditingSession({...editingSession, multiplier: parseFloat(v)})}>
-                  <SelectTrigger className="bg-zinc-900 border-zinc-800 h-11 rounded-xl font-bold text-white transition-all">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                    <SelectItem value="1.0">Ngày thường</SelectItem>
-                    <SelectItem value={settings.sundayMultiplier.toString()}>Chủ Nhật (x{settings.sundayMultiplier})</SelectItem>
-                    <SelectItem value={settings.holidayMultiplier.toString()}>Ngày Lễ (x{settings.holidayMultiplier})</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
             <DialogFooter>

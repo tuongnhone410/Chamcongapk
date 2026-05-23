@@ -23,7 +23,6 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Khắc phục lỗi Hydration: Đảm bảo component đã mount trên client trước khi render UI phức tạp
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -38,13 +37,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [user, authLoading, pathname, router, isMounted]);
 
-  // Phía Server-side render trả về null để tránh lệch nội dung HTML khi Hydration
   if (!isMounted) return null;
 
-  // Không chặn nếu đang ở trang Auth
   if (pathname === '/auth') return <>{children}</>;
 
-  // Hiển thị màn hình chờ mượt mà nếu đang tải hoặc chưa sẵn sàng
   if (authLoading || !isReady) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950">
@@ -72,12 +68,12 @@ export default function RootLayout({
         <meta name="theme-color" content="#09090b" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className="font-body antialiased min-h-screen bg-background text-foreground pb-20 overflow-x-hidden">
+      <body className="antialiased min-h-screen bg-zinc-950 text-foreground overflow-x-hidden selection:bg-primary/30">
         <FirebaseClientProvider>
           <AuthGuard>
             <AttendanceProvider>
-              <div className="min-h-screen bg-zinc-950">
-                <main className="max-w-2xl mx-auto px-4 py-6">
+              <div className="relative flex flex-col min-h-screen">
+                <main className="flex-1 max-w-2xl mx-auto w-full px-4 pt-safe pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
                   {children}
                 </main>
                 <BottomNav />
