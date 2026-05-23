@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DigitalClock } from '@/components/attendance/DigitalClock';
@@ -130,7 +129,7 @@ export default function Home() {
 
   if (!isLoaded || !analyticsData || !salaryInfo) {
     return (
-      <div className="space-y-6 pb-24 px-1 animate-pulse">
+      <div className="space-y-6 px-1 animate-pulse">
         <div className="flex justify-between items-center mb-6">
           <div className="h-8 bg-zinc-900 rounded-xl w-1/3" />
           <div className="h-8 bg-zinc-900 rounded-xl w-1/4" />
@@ -147,7 +146,7 @@ export default function Home() {
   const formatCurrency = (val: number) => `${Math.round(val || 0).toLocaleString('vi-VN')}₫`;
 
   return (
-    <div className="flex flex-col min-h-0 space-y-6 pb-24 w-full max-w-full overflow-hidden">
+    <div className="flex flex-col min-h-0 space-y-6 w-full max-w-full overflow-hidden">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h1 className="text-xl sm:text-2xl font-black font-headline tracking-tighter text-white truncate">TimeSnap</h1>
@@ -270,11 +269,11 @@ export default function Home() {
                   </h4>
                   <div className="space-y-2.5">
                     <div className="flex justify-between items-center text-sm gap-2">
-                      <span className="text-zinc-500 truncate">Lương cơ bản</span>
+                      <span className="text-zinc-500 truncate">Lương cơ bản (HĐ)</span>
                       <span className="font-bold shrink-0">{formatCurrency(settings.baseMonthlySalary)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm gap-2">
-                      <span className="text-zinc-500 truncate">Lương OT</span>
+                      <span className="text-zinc-500 truncate">Lương OT (Theo phiên)</span>
                       <span className="font-bold text-green-500 shrink-0">{formatCurrency(salaryInfo.sessionSalary)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm gap-2">
@@ -282,7 +281,7 @@ export default function Home() {
                       <span className="font-bold text-green-500 shrink-0">{formatCurrency(salaryInfo.lunchAllowance)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm gap-2">
-                      <span className="text-zinc-500 truncate">Chuyên cần</span>
+                      <span className="text-zinc-500 truncate">Tiền chuyên cần</span>
                       <span className="font-bold text-green-500 shrink-0">{formatCurrency(salaryInfo.attendanceBonus)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm gap-2">
@@ -291,7 +290,7 @@ export default function Home() {
                     </div>
                     <Separator className="bg-zinc-800/50" />
                     <div className="flex justify-between items-center text-xs font-black pt-1">
-                      <span className="uppercase">TỔNG THU NHẬP</span>
+                      <span className="uppercase">TỔNG THU NHẬP (GROSS)</span>
                       <span className="text-primary">{formatCurrency(salaryInfo.grossIncome)}</span>
                     </div>
                   </div>

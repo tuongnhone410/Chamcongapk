@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -233,7 +232,7 @@ export default function HistoryPage() {
 
   if (!isLoaded) {
     return (
-      <div className="space-y-6 pb-24 animate-pulse">
+      <div className="space-y-6 animate-pulse">
         <header className="h-10 bg-zinc-900 rounded-xl w-1/3" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[1, 2, 3].map(i => <div key={i} className="h-20 bg-zinc-900 rounded-[1.5rem]" />)}
@@ -243,7 +242,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="flex flex-col space-y-5 pb-24 w-full overflow-hidden">
+    <div className="flex flex-col space-y-5 w-full overflow-hidden">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tighter truncate">Lịch sử công</h1>
         

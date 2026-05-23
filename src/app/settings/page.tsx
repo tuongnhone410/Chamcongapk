@@ -43,7 +43,7 @@ export default function SettingsPage() {
 
   if (!isLoaded || !localSettings) {
     return (
-      <div className="space-y-6 pb-24 animate-pulse text-white">
+      <div className="space-y-6 animate-pulse text-white">
         <header className="flex items-center justify-between py-4">
           <div className="h-8 bg-zinc-900 rounded-xl w-48" />
           <div className="h-12 bg-zinc-900 rounded-xl w-24" />
@@ -137,7 +137,7 @@ export default function SettingsPage() {
   const suffixClass = "absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-sm pointer-events-none";
 
   return (
-    <div className="space-y-6 pb-24 text-white">
+    <div className="space-y-6 text-white">
       <header className="flex items-center justify-between sticky top-0 z-20 bg-zinc-950/90 py-4 backdrop-blur-md border-b border-zinc-900/50">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-black tracking-tighter uppercase text-white">Cài đặt lương</h1>

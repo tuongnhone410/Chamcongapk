@@ -37,7 +37,7 @@
     width: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden; /* Ngăn chặn cuộn toàn trang để cố định Nav */
+    overflow: hidden;
     background-color: hsl(var(--background));
   }
 
@@ -49,7 +49,6 @@
     flex-direction: column;
   }
 
-  /* Ẩn thanh cuộn cho toàn bộ ứng dụng */
   * {
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -59,7 +58,6 @@
     display: none;
   }
 
-  /* Lớp hỗ trợ vùng an toàn */
   .pt-safe {
     padding-top: env(safe-area-inset-top);
   }
@@ -72,14 +70,12 @@
   letter-spacing: -0.04em;
 }
 
-/* Hiệu ứng mờ cho kính (backdrop blur) */
 .backdrop-blur-md, .backdrop-blur-xl {
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
   background-color: rgba(9, 9, 11, 0.8) !important;
 }
 
-/* Vùng cuộn chính của ứng dụng */
 #main-scroll-area {
   flex: 1;
   overflow-y: auto;
@@ -90,7 +86,6 @@
   overscroll-behavior-y: contain;
 }
 
-/* Padding cho nội dung để không bị Nav che */
 .content-wrapper {
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom) + 2rem);
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
 }
