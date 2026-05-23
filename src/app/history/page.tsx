@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAttendance } from '@/hooks/useAttendance';
@@ -27,7 +28,8 @@ import {
   ChevronRight,
   Loader2,
   CheckSquare,
-  DollarSign
+  DollarSign,
+  Info
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { WorkSession } from '@/lib/types';
@@ -61,8 +63,6 @@ export default function HistoryPage() {
   } = useAttendance();
 
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
-  const [isBatchLoading, setIsBatchLoading] = useState(false);
-  const [isMultiLoading, setIsMultiLoading] = useState(false);
   
   const { toast } = useToast();
 
@@ -107,20 +107,19 @@ export default function HistoryPage() {
     });
   }, [sessions, selectedMonth, selectedYear]);
 
-  const completedSessions = useMemo(() => {
-    return filteredSessions
-      .filter(s => s.checkOut)
-      .sort((a, b) => new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime());
+  const displaySessions = useMemo(() => {
+    return [...filteredSessions].sort((a, b) => new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime());
   }, [filteredSessions]);
 
   const getSessionOTMetrics = (session: WorkSession) => {
+    if (!session.checkOut) return { otMinutes: 0, salary: 0 };
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
     const effectiveMinutes = session.totalMinutes > breakMinutes 
       ? session.totalMinutes - breakMinutes 
       : session.totalMinutes;
 
     const otMinutes = session.multiplier === 1.0 
-      ? (effectiveMinutes > 510 ? effectiveMinutes - 480 : 0) 
+      ? (effectiveMinutes > 480 ? effectiveMinutes - 480 : 0) 
       : effectiveMinutes;
 
     return {
@@ -130,15 +129,15 @@ export default function HistoryPage() {
   };
 
   const monthlySummary = useMemo(() => {
-    return completedSessions.reduce((acc, s) => {
+    return displaySessions.reduce((acc, s) => {
       const metrics = getSessionOTMetrics(s);
       return {
         totalMinutesOT: acc.totalMinutesOT + metrics.otMinutes,
         totalSalary: acc.totalSalary + metrics.salary,
-        totalCount: acc.totalCount + 1
+        totalCount: acc.totalCount + (s.checkOut ? 1 : 0)
       };
     }, { totalMinutesOT: 0, totalSalary: 0, totalCount: 0 });
-  }, [completedSessions]);
+  }, [displaySessions]);
 
   const formatHours = (mins: number) => {
     const h = Math.floor(mins / 60);
@@ -162,7 +161,6 @@ export default function HistoryPage() {
       toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn dải ngày." });
       return;
     }
-    setIsBatchLoading(true);
     batchAddSessions({
       startDate: batchRange.from.toISOString().split('T')[0],
       endDate: batchRange.to.toISOString().split('T')[0],
@@ -171,10 +169,8 @@ export default function HistoryPage() {
       multiplier: -1,
       excludeSundays: batchData.excludeSundays
     });
-    // Đóng ngay lập tức để không bị treo
     setShowBatchDialog(false);
-    setIsBatchLoading(false);
-    toast({ title: "Thành công", description: "Dữ liệu đang được đồng bộ lên server." });
+    toast({ title: "Thành công", description: "Đã đồng bộ lên máy chủ." });
   };
 
   const handleMultiAdd = () => {
@@ -182,18 +178,15 @@ export default function HistoryPage() {
       toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn ít nhất 1 ngày." });
       return;
     }
-    setIsMultiLoading(true);
     multiAddSessions({
       dates: selectedDates,
       startTime: multiData.startTime,
       endTime: multiData.endTime,
       multiplier: -1
     });
-    // Đóng ngay lập tức để không bị treo
-    setSelectedDates([]);
     setShowMultiDialog(false);
-    setIsMultiLoading(false);
-    toast({ title: "Thành công", description: "Dữ liệu OT đang được đẩy lên server." });
+    setSelectedDates([]);
+    toast({ title: "Thành công", description: "Đã thêm phiên làm việc." });
   };
 
   const changeMonth = (dir: number) => {
@@ -244,7 +237,7 @@ export default function HistoryPage() {
               <Button 
                 size="sm" 
                 variant="outline" 
-                disabled={completedSessions.length === 0}
+                disabled={displaySessions.length === 0}
                 className="gap-2 text-[10px] rounded-xl h-9 border-red-500/50 bg-red-500/10 text-red-500 font-black shrink-0"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -331,10 +324,16 @@ export default function HistoryPage() {
                   <input type="time" className="bg-zinc-900 border border-zinc-800 h-10 font-bold rounded-xl px-3 text-white w-full text-sm outline-none" value={multiData.endTime} onChange={(e) => setMultiData({...multiData, endTime: e.target.value})} />
                 </div>
               </div>
+              <div className="flex items-start gap-2 bg-primary/10 p-3 rounded-xl border border-primary/20">
+                <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <p className="text-[10px] font-bold text-zinc-400">
+                  Để trống <span className="text-primary">Giờ ra</span> nếu bạn muốn ghi nhận là đang làm việc (để đồng bộ với Trang chủ).
+                </p>
+              </div>
             </div>
             <DialogFooter className="sm:justify-start">
-              <Button onClick={handleMultiAdd} disabled={isMultiLoading} className="bg-primary text-black rounded-xl h-12 font-black w-full active:scale-95 transition-all">
-                {isMultiLoading ? <Loader2 className="animate-spin" /> : 'XÁC NHẬN'}
+              <Button onClick={handleMultiAdd} className="bg-primary text-black rounded-xl h-12 font-black w-full active:scale-95 transition-all">
+                XÁC NHẬN
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -376,8 +375,8 @@ export default function HistoryPage() {
               </div>
             </div>
             <DialogFooter className="sm:justify-start">
-              <Button onClick={handleBatchAdd} disabled={isBatchLoading} className="bg-indigo-600 text-white rounded-xl h-12 font-black w-full active:scale-95 transition-all">
-                {isBatchLoading ? <Loader2 className="animate-spin" /> : 'ĐỒNG BỘ NGAY'}
+              <Button onClick={handleBatchAdd} className="bg-indigo-600 text-white rounded-xl h-12 font-black w-full active:scale-95 transition-all">
+                ĐỒNG BỘ NGAY
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -392,26 +391,30 @@ export default function HistoryPage() {
         <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => changeMonth(1)}><ChevronRight /></Button>
       </div>
 
-      <div className="space-y-3 min-h-0 overflow-visible">
-        {completedSessions.length === 0 ? (
+      <div className="space-y-3 min-h-0 overflow-visible pb-4">
+        {displaySessions.length === 0 ? (
           <div className="py-12 text-center text-zinc-600 font-bold uppercase text-[10px] tracking-widest animate-pulse">
             Chưa có dữ liệu tháng này
           </div>
         ) : (
-          completedSessions.map((session) => {
+          displaySessions.map((session) => {
             const metrics = getSessionOTMetrics(session);
+            const isActive = !session.checkOut;
             return (
-              <Card key={session.id} className="bg-zinc-900 rounded-[1.25rem] border border-zinc-800 overflow-hidden group">
+              <Card key={session.id} className={`bg-zinc-900 rounded-[1.25rem] border ${isActive ? 'border-primary/50' : 'border-zinc-800'} overflow-hidden group`}>
                 <CardContent className="p-4 flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1 space-y-1">
-                    <p className="text-[10px] font-black text-white">{new Date(session.checkIn).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[10px] font-black text-white">{new Date(session.checkIn).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</p>
+                      {isActive && <Badge className="h-4 text-[7px] font-black bg-primary text-black">ĐANG LÀM</Badge>}
+                    </div>
                     <p className="text-[11px] font-bold text-zinc-500 truncate">
-                      {new Date(session.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })} → {session.checkOut ? new Date(session.checkOut).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+                      {new Date(session.checkIn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })} → {session.checkOut ? new Date(session.checkOut).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false }) : '??:??'}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-black text-green-500">{formatCurrency(metrics.salary)}</p>
-                    <p className="text-[9px] font-black text-orange-500 uppercase tracking-tighter">{formatHours(metrics.otMinutes)} OT</p>
+                    <p className={`text-sm font-black ${isActive ? 'text-primary' : 'text-green-500'}`}>{isActive ? '...' : formatCurrency(metrics.salary)}</p>
+                    {!isActive && <p className="text-[9px] font-black text-orange-500 uppercase tracking-tighter">{formatHours(metrics.otMinutes)} OT</p>}
                   </div>
                   <div className="flex gap-1 shrink-0">
                     <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-600 hover:text-red-500" onClick={() => deleteSession(session.id)}><Trash2 className="w-4 h-4" /></Button>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useMemo, useCallback, useState, useRef, useEffect } from 'react';
@@ -29,7 +30,7 @@ export interface AttendanceContextType {
   isLoaded: boolean;
   punchIn: () => void;
   punchOut: () => void;
-  addManualSession: (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => void;
+  addManualSession: (data: { checkIn: string, checkOut: string | null, multiplier: number, note: string }) => void;
   batchAddSessions: (data: { 
     startDate: string, 
     endDate: string, 
@@ -143,10 +144,11 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   }, [user, sessionsLoading, settingsLoading, userLoading]);
 
   const calculateSessionSalary = useCallback((totalMinutes: number, multiplier: number) => {
+    if (!totalMinutes) return 0;
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
     const effectiveMinutes = totalMinutes > breakMinutes ? totalMinutes - breakMinutes : totalMinutes;
     if (multiplier === 1.0) {
-      const otMinutes = effectiveMinutes > 510 ? effectiveMinutes - 480 : 0;
+      const otMinutes = effectiveMinutes > 480 ? effectiveMinutes - 480 : 0;
       return (otMinutes / 60) * settings.hourlyRate * settings.overtimeMultiplier;
     } else {
       return (effectiveMinutes / 60) * settings.hourlyRate * multiplier;
@@ -232,17 +234,26 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     }
   }, [db, user, activeSession, sessions, storageKey, calculateSessionSalary]);
 
-  const addManualSession = useCallback((data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => {
+  const addManualSession = useCallback((data: { checkIn: string, checkOut: string | null, multiplier: number, note: string }) => {
     if (!db || !user) return;
     const checkIn = new Date(data.checkIn);
-    const checkOut = new Date(data.checkOut);
-    const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+    let checkOutStr: string | null = null;
+    let diffMinutes = 0;
+    let salary = 0;
+
+    if (data.checkOut) {
+      const checkOut = new Date(data.checkOut);
+      checkOutStr = checkOut.toISOString();
+      diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+      salary = calculateSessionSalary(diffMinutes, data.multiplier);
+    }
+
     const sessionData = {
       checkIn: checkIn.toISOString(),
-      checkOut: checkOut.toISOString(),
+      checkOut: checkOutStr,
       multiplier: data.multiplier,
       totalMinutes: diffMinutes,
-      salary: calculateSessionSalary(diffMinutes, data.multiplier),
+      salary: salary,
       note: data.note || '',
       createdAt: new Date().toISOString()
     };
@@ -258,16 +269,26 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     data.dates.forEach(date => {
       const dateStr = format(date, 'yyyy-MM-dd');
       const checkIn = new Date(`${dateStr}T${data.startTime}`);
-      const checkOut = new Date(`${dateStr}T${data.endTime}`);
-      const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+      
+      let checkOutStr: string | null = null;
+      let diffMinutes = 0;
+      let salary = 0;
       const mult = data.multiplier === -1 ? getAutoMultiplier(date) : data.multiplier;
+
+      if (data.endTime) {
+        const checkOut = new Date(`${dateStr}T${data.endTime}`);
+        checkOutStr = checkOut.toISOString();
+        diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+        salary = calculateSessionSalary(diffMinutes, mult);
+      }
+
       const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
       batch.set(newDocRef, {
         checkIn: checkIn.toISOString(),
-        checkOut: checkOut.toISOString(),
+        checkOut: checkOutStr,
         multiplier: mult,
         totalMinutes: diffMinutes,
-        salary: calculateSessionSalary(diffMinutes, mult),
+        salary: salary,
         note: '',
         createdAt: new Date().toISOString()
       });
@@ -288,16 +309,25 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         const hasSession = sessions.some(s => s.checkIn.startsWith(dateStr));
         if (!hasSession) {
           const checkIn = new Date(`${dateStr}T${data.startTime}`);
-          const checkOut = new Date(`${dateStr}T${data.endTime}`);
-          const diff = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+          let checkOutStr: string | null = null;
+          let diff = 0;
+          let salary = 0;
           const mult = data.multiplier === -1 ? getAutoMultiplier(current) : data.multiplier;
+
+          if (data.endTime) {
+            const checkOut = new Date(`${dateStr}T${data.endTime}`);
+            checkOutStr = checkOut.toISOString();
+            diff = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+            salary = calculateSessionSalary(diff, mult);
+          }
+
           const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
           batch.set(newDocRef, {
             checkIn: checkIn.toISOString(),
-            checkOut: checkOut.toISOString(),
+            checkOut: checkOutStr,
             multiplier: mult,
             totalMinutes: diff,
-            salary: calculateSessionSalary(diff, mult),
+            salary: salary,
             note: '',
             createdAt: new Date().toISOString()
           });
@@ -369,24 +399,27 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   }, [db, user, calculateSessionSalary]);
 
   const calculateFullSalary = useCallback((periodSessions: WorkSession[]) => {
-    const sessionSalary = periodSessions.reduce((acc, s) => acc + s.salary, 0);
+    const completed = periodSessions.filter(s => !!s.checkOut);
+    const sessionSalary = completed.reduce((acc, s) => acc + s.salary, 0);
     const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
-    const totalOTMinutes = periodSessions.reduce((acc, s) => {
-      const effective = s.totalMinutes > breakMinutes ? s.totalMinutes - breakMinutes : s.totalMinutes;
-      return acc + (s.multiplier === 1.0 ? (effective > 510 ? effective - 480 : 0) : effective);
-    }, 0);
-    const lunchAllowance = periodSessions.reduce((acc, s) => acc + (settings.allowanceLunchPerShift || 0) + (s.totalMinutes >= 600 ? (settings.allowanceLunchOT || 0) : 0), 0);
+    
+    const lunchAllowance = completed.reduce((acc, s) => acc + (settings.allowanceLunchPerShift || 0) + (s.totalMinutes >= 600 ? (settings.allowanceLunchOT || 0) : 0), 0);
+    
     let attendanceBonus = settings.allowanceAttendanceBase || 0;
     if (settings.unexcusedAbsences === 1) attendanceBonus -= 200000;
     else if (settings.unexcusedAbsences >= 2) attendanceBonus = 0;
+    
     const baseSubjectToAbsence = (settings.allowanceTechnical || 0) + (settings.allowanceResponsibility || 0) + (settings.allowancePosition || 0) + (settings.allowancePerformance || 0);
-    const deduction = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
-    const other = (settings.allowanceHousing || 0) + (settings.allowanceFuel || 0) + (settings.allowancePhone || 0) + (settings.allowanceToxic || 0) + (settings.allowanceBonus || 0) + (settings.allowanceProduct || 0) + baseSubjectToAbsence - deduction;
+    const absenceDeduction = (baseSubjectToAbsence / 30) * (settings.unexcusedAbsences || 0);
+    
+    const other = (settings.allowanceHousing || 0) + (settings.allowanceFuel || 0) + (settings.allowancePhone || 0) + (settings.allowanceToxic || 0) + (settings.allowanceBonus || 0) + (settings.allowanceProduct || 0) + baseSubjectToAbsence - absenceDeduction;
+    
     const gross = (settings.baseMonthlySalary || 0) + sessionSalary + other + lunchAllowance + attendanceBonus;
     const insurance = ((settings.insuranceSalary || 0) * (settings.insuranceRate || 0)) / 100;
     const tax = (gross * (settings.incomeTaxRate || 0)) / 100;
     const net = gross - insurance - (settings.unionFee || 0) - tax;
-    return { sessionSalary, totalOTMinutes, lunchAllowance, attendanceBonus, grossIncome: gross, insuranceAmount: insurance, incomeTaxAmount: tax, netSalary: net };
+    
+    return { sessionSalary, lunchAllowance, attendanceBonus, grossIncome: gross, insuranceAmount: insurance, incomeTaxAmount: tax, netSalary: net };
   }, [settings]);
 
   const contextValue = useMemo(() => ({
@@ -395,3 +428,4 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   return <AttendanceContext.Provider value={contextValue}>{children}</AttendanceContext.Provider>;
 }
+
