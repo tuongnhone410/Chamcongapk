@@ -301,12 +301,20 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const batchAddSessions = useCallback((data: { startDate: string, endDate: string, startTime: string, endTime: string, multiplier: number, excludeSundays: boolean }) => {
     if (!db || !user) return;
     const batch = writeBatch(db);
-    let current = new Date(data.startDate);
-    const end = new Date(data.endDate);
+    
+    // Parse ngày bắt đầu và kết thúc an toàn theo Local Date
+    const [sYear, sMonth, sDay] = data.startDate.split('-').map(Number);
+    let current = new Date(sYear, sMonth - 1, sDay);
+    
+    const [eYear, eMonth, eDay] = data.endDate.split('-').map(Number);
+    const end = new Date(eYear, eMonth - 1, eDay);
+
     while (current <= end) {
       if (!(data.excludeSundays && current.getDay() === 0)) {
         const dateStr = format(current, 'yyyy-MM-dd');
+        // Kiểm tra xem ngày này đã có trong danh sách sessions chưa để tránh trùng lặp
         const hasSession = sessions.some(s => s.checkIn.startsWith(dateStr));
+        
         if (!hasSession) {
           const checkIn = new Date(`${dateStr}T${data.startTime}`);
           let checkOutStr: string | null = null;
@@ -335,6 +343,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       }
       current.setDate(current.getDate() + 1);
     }
+    
     batch.commit().catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
     });
@@ -428,4 +437,3 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   return <AttendanceContext.Provider value={contextValue}>{children}</AttendanceContext.Provider>;
 }
-

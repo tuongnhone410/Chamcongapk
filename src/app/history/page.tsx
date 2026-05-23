@@ -46,6 +46,7 @@ import {
   AlertDialogTrigger 
 } from '@/components/ui/alert-dialog';
 import { type DateRange } from "react-day-picker";
+import { format } from 'date-fns';
 
 export default function HistoryPage() {
   const { 
@@ -63,7 +64,6 @@ export default function HistoryPage() {
   } = useAttendance();
 
   const [editingSession, setEditingSession] = useState<WorkSession | null>(null);
-  
   const { toast } = useToast();
 
   const now = new Date();
@@ -161,16 +161,19 @@ export default function HistoryPage() {
       toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn dải ngày." });
       return;
     }
+    
+    // Sử dụng format của date-fns để lấy ngày địa phương, tránh lỗi lệch ngày do múi giờ UTC
     batchAddSessions({
-      startDate: batchRange.from.toISOString().split('T')[0],
-      endDate: batchRange.to.toISOString().split('T')[0],
+      startDate: format(batchRange.from, 'yyyy-MM-dd'),
+      endDate: format(batchRange.to, 'yyyy-MM-dd'),
       startTime: batchData.startTime,
       endTime: batchData.endTime,
       multiplier: -1,
       excludeSundays: batchData.excludeSundays
     });
+    
     setShowBatchDialog(false);
-    toast({ title: "Thành công", description: "Đã đồng bộ lên máy chủ." });
+    toast({ title: "Đã gửi yêu cầu", description: "Đang đẩy dữ liệu lên server..." });
   };
 
   const handleMultiAdd = () => {
@@ -178,15 +181,17 @@ export default function HistoryPage() {
       toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn ít nhất 1 ngày." });
       return;
     }
+    
     multiAddSessions({
       dates: selectedDates,
       startTime: multiData.startTime,
       endTime: multiData.endTime,
       multiplier: -1
     });
+    
     setShowMultiDialog(false);
     setSelectedDates([]);
-    toast({ title: "Thành công", description: "Đã thêm phiên làm việc." });
+    toast({ title: "Đã gửi yêu cầu", description: "Phiên làm việc đang được khởi tạo." });
   };
 
   const changeMonth = (dir: number) => {
