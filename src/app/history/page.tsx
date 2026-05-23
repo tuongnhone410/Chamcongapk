@@ -153,73 +153,59 @@ export default function HistoryPage() {
     return `${Math.round(val).toLocaleString('vi-VN')}đ`;
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = () => {
     if (!editingSession) return;
     setIsProcessing(true);
-    try {
-      const checkIn = new Date(editingSession.checkIn);
-      const checkOut = editingSession.checkOut ? new Date(editingSession.checkOut) : null;
-      const diffMs = checkOut ? (checkOut.getTime() - checkIn.getTime()) : 0;
-      const diffMinutes = Math.floor(diffMs / 60000);
+    
+    const checkIn = new Date(editingSession.checkIn);
+    const checkOut = editingSession.checkOut ? new Date(editingSession.checkOut) : null;
+    const diffMs = checkOut ? (checkOut.getTime() - checkIn.getTime()) : 0;
+    const diffMinutes = Math.floor(diffMs / 60000);
 
-      await updateSession({
-        ...editingSession,
-        totalMinutes: diffMinutes,
-      });
-      setEditingSession(null);
-      toast({ title: "Đã lưu", description: "Cập nhật thành công." });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Lỗi", description: "Không thể lưu thay đổi." });
-    } finally {
-      setIsProcessing(false);
-    }
+    updateSession({
+      ...editingSession,
+      totalMinutes: diffMinutes,
+    });
+    setEditingSession(null);
+    setIsProcessing(false);
+    toast({ title: "Đã lưu", description: "Cập nhật thành công." });
   };
 
-  const handleBatchAdd = async () => {
+  const handleBatchAdd = () => {
     if (!batchRange?.from || !batchRange?.to) {
       toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn dải ngày." });
       return;
     }
     setIsBatchLoading(true);
-    try {
-      await batchAddSessions({
-        startDate: batchRange.from.toISOString().split('T')[0],
-        endDate: batchRange.to.toISOString().split('T')[0],
-        startTime: batchData.startTime,
-        endTime: batchData.endTime,
-        multiplier: -1,
-        excludeSundays: batchData.excludeSundays
-      });
-      setShowBatchDialog(false);
-      toast({ title: "Thành công", description: "Đã đồng bộ hàng loạt." });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Lỗi", description: "Không thể đồng bộ." });
-    } finally {
-      setIsBatchLoading(false);
-    }
+    batchAddSessions({
+      startDate: batchRange.from.toISOString().split('T')[0],
+      endDate: batchRange.to.toISOString().split('T')[0],
+      startTime: batchData.startTime,
+      endTime: batchData.endTime,
+      multiplier: -1,
+      excludeSundays: batchData.excludeSundays
+    });
+    setShowBatchDialog(false);
+    setIsBatchLoading(false);
+    toast({ title: "Thành công", description: "Yêu cầu đồng bộ đã được gửi." });
   };
 
-  const handleMultiAdd = async () => {
+  const handleMultiAdd = () => {
     if (!selectedDates || selectedDates.length === 0) {
       toast({ variant: "destructive", title: "Lỗi", description: "Vui lòng chọn ít nhất 1 ngày." });
       return;
     }
     setIsMultiLoading(true);
-    try {
-      await multiAddSessions({
-        dates: selectedDates,
-        startTime: multiData.startTime,
-        endTime: multiData.endTime,
-        multiplier: -1
-      });
-      setSelectedDates([]);
-      setShowMultiDialog(false);
-      toast({ title: "Thành công", description: "Đã thêm dữ liệu." });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm dữ liệu." });
-    } finally {
-      setIsMultiLoading(false);
-    }
+    multiAddSessions({
+      dates: selectedDates,
+      startTime: multiData.startTime,
+      endTime: multiData.endTime,
+      multiplier: -1
+    });
+    setSelectedDates([]);
+    setShowMultiDialog(false);
+    setIsMultiLoading(false);
+    toast({ title: "Thành công", description: "Dữ liệu OT đã được thêm." });
   };
 
   const changeMonth = (dir: number) => {
@@ -258,7 +244,6 @@ export default function HistoryPage() {
               size="sm" 
               variant="outline" 
               onClick={restoreHistory}
-              disabled={isProcessing}
               className="gap-2 text-[10px] rounded-xl h-9 border-green-500/50 bg-green-500/10 text-green-500 font-black shrink-0"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -271,7 +256,7 @@ export default function HistoryPage() {
               <Button 
                 size="sm" 
                 variant="outline" 
-                disabled={completedSessions.length === 0 || isProcessing}
+                disabled={completedSessions.length === 0}
                 className="gap-2 text-[10px] rounded-xl h-9 border-red-500/50 bg-red-500/10 text-red-500 font-black shrink-0"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -466,7 +451,7 @@ export default function HistoryPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleUpdate} disabled={isProcessing} className="bg-primary text-black rounded-xl h-12 font-black w-full active:scale-95 transition-all">LƯU THAY ĐỔI</Button>
+              <Button onClick={handleUpdate} className="bg-primary text-black rounded-xl h-12 font-black w-full active:scale-95 transition-all">LƯU THAY ĐỔI</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

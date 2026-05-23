@@ -22,7 +22,7 @@ import {
 } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export interface AttendanceContextType {
   sessions: WorkSession[];
@@ -31,7 +31,7 @@ export interface AttendanceContextType {
   isLoaded: boolean;
   punchIn: () => void;
   punchOut: () => void;
-  addManualSession: (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => Promise<void>;
+  addManualSession: (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => void;
   batchAddSessions: (data: { 
     startDate: string, 
     endDate: string, 
@@ -39,18 +39,18 @@ export interface AttendanceContextType {
     endTime: string, 
     multiplier: number, 
     excludeSundays: boolean 
-  }) => Promise<void>;
+  }) => void;
   multiAddSessions: (data: {
     dates: Date[],
     startTime: string,
     endTime: string,
     multiplier: number
-  }) => Promise<void>;
-  updateSettings: (newSettings: AppSettings) => Promise<void>;
+  }) => void;
+  updateSettings: (newSettings: AppSettings) => void;
   deleteSession: (id: string) => void;
   updateSession: (updated: WorkSession) => void;
-  clearAllHistory: () => Promise<void>;
-  restoreHistory: () => Promise<void>;
+  clearAllHistory: () => void;
+  restoreHistory: () => void;
   canUndo: boolean;
   undoCountdown: number;
   calculateFullSalary: (periodSessions: WorkSession[]) => any;
@@ -208,7 +208,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     };
     setDoc(docRef, data).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: data }));
-      throw error;
     });
   }, [db, user, activeSession, storageKey, getAutoMultiplier]);
 
@@ -231,12 +230,11 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       };
       updateDoc(docRef, updateData).catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'update', requestResourceData: updateData }));
-        throw error;
       });
     }
   }, [db, user, activeSession, sessions, storageKey, calculateSessionSalary]);
 
-  const addManualSession = useCallback(async (data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => {
+  const addManualSession = useCallback((data: { checkIn: string, checkOut: string, multiplier: number, note: string }) => {
     if (!db || !user) return;
     const checkIn = new Date(data.checkIn);
     const checkOut = new Date(data.checkOut);
@@ -251,13 +249,12 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       createdAt: new Date().toISOString()
     };
     const docRef = doc(collection(db, 'users', user.uid, 'sessions'));
-    await setDoc(docRef, sessionData).catch(async (error) => {
+    setDoc(docRef, sessionData).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: sessionData }));
-      throw error;
     });
   }, [db, user, calculateSessionSalary]);
 
-  const multiAddSessions = useCallback(async (data: { dates: Date[], startTime: string, endTime: string, multiplier: number }) => {
+  const multiAddSessions = useCallback((data: { dates: Date[], startTime: string, endTime: string, multiplier: number }) => {
     if (!db || !user) return;
     const batch = writeBatch(db);
     data.dates.forEach(date => {
@@ -277,13 +274,12 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         createdAt: new Date().toISOString()
       });
     });
-    await batch.commit().catch(async (error) => {
+    batch.commit().catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
-      throw error;
     });
   }, [db, user, calculateSessionSalary, getAutoMultiplier]);
 
-  const batchAddSessions = useCallback(async (data: { startDate: string, endDate: string, startTime: string, endTime: string, multiplier: number, excludeSundays: boolean }) => {
+  const batchAddSessions = useCallback((data: { startDate: string, endDate: string, startTime: string, endTime: string, multiplier: number, excludeSundays: boolean }) => {
     if (!db || !user) return;
     const batch = writeBatch(db);
     let current = new Date(data.startDate);
@@ -311,66 +307,66 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       }
       current.setDate(current.getDate() + 1);
     }
-    await batch.commit().catch(async (error) => {
+    batch.commit().catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
-      throw error;
     });
   }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier]);
 
-  const clearAllHistory = useCallback(async () => {
+  const clearAllHistory = useCallback(() => {
     if (!db || !user || sessions.length === 0) return;
     setDeletedSessionsCache([...sessions]);
     setCanUndo(true);
     setUndoCountdown(10);
     const batch = writeBatch(db);
     sessions.forEach(s => batch.delete(doc(db, 'users', user.uid, 'sessions', s.id)));
-    await batch.commit();
+    batch.commit().catch(async (error) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
+    });
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     countdownIntervalRef.current = setInterval(() => setUndoCountdown(p => p - 1), 1000);
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     undoTimerRef.current = setTimeout(() => { setCanUndo(false); setDeletedSessionsCache([]); if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); }, 10000);
   }, [db, user, sessions]);
 
-  const restoreHistory = useCallback(async () => {
+  const restoreHistory = useCallback(() => {
     if (!db || !user || !canUndo) return;
     const batch = writeBatch(db);
     deletedSessionsCache.forEach(s => {
       const { id, ...data } = s;
       batch.set(doc(db, 'users', user.uid, 'sessions', id), data);
     });
-    await batch.commit();
+    batch.commit().catch(async (error) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
+    });
     setCanUndo(false);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
   }, [db, user, canUndo, deletedSessionsCache]);
 
-  const updateSettings = useCallback(async (newSettings: AppSettings) => {
+  const updateSettings = useCallback((newSettings: AppSettings) => {
     if (!db || !user) return;
     const settingsRef = doc(db, 'users', user.uid, 'settings', 'current');
-    await setDoc(settingsRef, newSettings, { merge: true }).catch(async (error) => {
+    setDoc(settingsRef, newSettings, { merge: true }).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: settingsRef.path, operation: 'write', requestResourceData: newSettings }));
-      throw error;
     });
   }, [db, user]);
 
-  const deleteSession = useCallback(async (id: string) => {
+  const deleteSession = useCallback((id: string) => {
     if (!db || !user) return;
-    await deleteDoc(doc(db, 'users', user.uid, 'sessions', id)).catch(async (error) => {
+    deleteDoc(doc(db, 'users', user.uid, 'sessions', id)).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions/${id}`, operation: 'delete' }));
-      throw error;
     });
   }, [db, user]);
 
-  const updateSession = useCallback(async (updated: WorkSession) => {
+  const updateSession = useCallback((updated: WorkSession) => {
     if (!db || !user) return;
     const docRef = doc(db, 'users', user.uid, 'sessions', updated.id);
     const updateData = { 
       ...updated, 
       salary: calculateSessionSalary(updated.totalMinutes, updated.multiplier) 
     };
-    await updateDoc(docRef, updateData).catch(async (error) => {
+    updateDoc(docRef, updateData).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'update', requestResourceData: updateData }));
-      throw error;
     });
   }, [db, user, calculateSessionSalary]);
 
