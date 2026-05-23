@@ -164,11 +164,14 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const activeSession = useMemo(() => {
     if (!user) return undefined;
+    // Tìm session chưa có checkOut (phiên đang hoạt động)
     const fromDb = sessions.find(s => !s.checkOut);
+    
     if (fromDb) {
       if (typeof window !== 'undefined' && storageKey) localStorage.setItem(storageKey, fromDb.checkIn);
       return fromDb;
     }
+
     if (localActiveStart) {
       const alreadyClosedOnServer = sessions.some(s => s.checkIn === localActiveStart && s.checkOut);
       if (alreadyClosedOnServer) {
@@ -303,7 +306,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     if (!db || !user) return;
     const batch = writeBatch(db);
     
-    // Parse ngày bắt đầu và kết thúc an toàn theo Local Date
     const [sYear, sMonth, sDay] = data.startDate.split('-').map(Number);
     let current = new Date(sYear, sMonth - 1, sDay);
     
@@ -313,7 +315,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     while (current <= end) {
       if (!(data.excludeSundays && current.getDay() === 0)) {
         const dateStr = format(current, 'yyyy-MM-dd');
-        // Kiểm tra xem ngày này đã có trong danh sách sessions chưa để tránh trùng lặp
         const hasSession = sessions.some(s => s.checkIn.startsWith(dateStr));
         
         if (!hasSession) {

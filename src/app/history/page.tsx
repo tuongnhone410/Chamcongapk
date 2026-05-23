@@ -47,6 +47,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { type DateRange } from "react-day-picker";
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 export default function HistoryPage() {
   const { 
@@ -85,7 +86,7 @@ export default function HistoryPage() {
   });
   const [batchData, setBatchData] = useState({
     startTime: '07:30',
-    endTime: '20:30',
+    endTime: '',
     excludeSundays: true
   });
 
@@ -93,7 +94,7 @@ export default function HistoryPage() {
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
   const [multiData, setMultiData] = useState({
     startTime: '07:30',
-    endTime: '20:30'
+    endTime: ''
   });
 
   const sessionDatesSet = useMemo(() => {
@@ -162,7 +163,6 @@ export default function HistoryPage() {
       return;
     }
     
-    // Sử dụng format của date-fns để lấy ngày địa phương, tránh lỗi lệch ngày do múi giờ UTC
     batchAddSessions({
       startDate: format(batchRange.from, 'yyyy-MM-dd'),
       endDate: format(batchRange.to, 'yyyy-MM-dd'),
@@ -326,7 +326,7 @@ export default function HistoryPage() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[9px] font-black uppercase text-zinc-500">Giờ ra</Label>
-                  <input type="time" className="bg-zinc-900 border border-zinc-800 h-10 font-bold rounded-xl px-3 text-white w-full text-sm outline-none" value={multiData.endTime} onChange={(e) => setMultiData({...multiData, endTime: e.target.value})} />
+                  <input type="time" placeholder="Để trống nếu đang làm" className="bg-zinc-900 border border-zinc-800 h-10 font-bold rounded-xl px-3 text-white w-full text-sm outline-none" value={multiData.endTime} onChange={(e) => setMultiData({...multiData, endTime: e.target.value})} />
                 </div>
               </div>
               <div className="flex items-start gap-2 bg-primary/10 p-3 rounded-xl border border-primary/20">
@@ -365,7 +365,7 @@ export default function HistoryPage() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[9px] font-black uppercase text-zinc-500">Giờ ra</Label>
-                  <input type="time" className="bg-zinc-900 border border-zinc-800 h-10 font-bold rounded-xl px-3 text-white w-full text-sm outline-none" value={batchData.endTime} onChange={(e) => setBatchData({...batchData, endTime: e.target.value})} />
+                  <input type="time" placeholder="Để trống nếu đang làm" className="bg-zinc-900 border border-zinc-800 h-10 font-bold rounded-xl px-3 text-white w-full text-sm outline-none" value={batchData.endTime} onChange={(e) => setBatchData({...batchData, endTime: e.target.value})} />
                 </div>
               </div>
               <div className="flex items-center space-x-2 bg-zinc-900 p-3 rounded-xl border border-zinc-800">
