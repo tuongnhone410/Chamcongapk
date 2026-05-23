@@ -19,7 +19,7 @@ import {
   orderBy,
   writeBatch,
 } from 'firebase/firestore';
-import { format } from 'date-fns';
+import { format, parseISO, startOfDay, addDays, isSameDay } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
@@ -108,21 +108,14 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const [canUndo, setCanUndo] = useState(false);
   const [undoCountdown, setUndoCountdown] = useState(0);
   const [deletedSessionsCache, setDeletedSessionsCache] = useState<WorkSession[]>([]);
-  const [localActiveStart, setLocalActiveStart] = useState<string | null>(null);
   const [isHoliday, setIsHoliday] = useState(false);
   
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const storageKey = useMemo(() => user ? `timesnap_active_start_${user.uid}` : null, [user?.uid]);
-
   useEffect(() => {
     setIsHoliday(isVietnameseHoliday(new Date()));
-    if (typeof window !== 'undefined' && storageKey) {
-      const saved = localStorage.getItem(storageKey);
-      setLocalActiveStart(saved);
-    }
-  }, [storageKey]);
+  }, []);
 
   const sessionsQuery = useMemo(() => {
     if (!db || !user) return null;
@@ -163,10 +156,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   }, [settings]);
 
   const activeSession = useMemo(() => {
-    if (!user) return undefined;
-    const fromDb = sessions.find(s => !s.checkOut);
-    if (fromDb) return fromDb;
-    return undefined;
+    if (!user || sessions.length === 0) return undefined;
+    // Ưu tiên phiên chưa có checkOut
+    return sessions.find(s => !s.checkOut);
   }, [sessions, user]);
 
   const punchIn = useCallback(() => {
@@ -184,6 +176,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       note: '',
       createdAt: isoStr
     };
+    
     setDoc(docRef, data).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: data }));
     });
@@ -201,6 +194,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       totalMinutes: diffMinutes,
       salary: calculateSessionSalary(diffMinutes, activeSession.multiplier)
     };
+    
     updateDoc(docRef, updateData).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'update', requestResourceData: updateData }));
     });
@@ -208,20 +202,20 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const addManualSession = useCallback((data: { checkIn: string, checkOut: string | null, multiplier: number, note: string }) => {
     if (!db || !user) return;
-    const checkIn = new Date(data.checkIn);
+    const checkInDate = new Date(data.checkIn);
     let checkOutStr: string | null = null;
     let diffMinutes = 0;
     let salary = 0;
 
     if (data.checkOut) {
-      const checkOut = new Date(data.checkOut);
-      checkOutStr = checkOut.toISOString();
-      diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
+      const checkOutDate = new Date(data.checkOut);
+      checkOutStr = checkOutDate.toISOString();
+      diffMinutes = Math.floor((checkOutDate.getTime() - checkInDate.getTime()) / 60000);
       salary = calculateSessionSalary(diffMinutes, data.multiplier);
     }
 
     const sessionData = {
-      checkIn: checkIn.toISOString(),
+      checkIn: checkInDate.toISOString(),
       checkOut: checkOutStr,
       multiplier: data.multiplier,
       totalMinutes: diffMinutes,
@@ -229,6 +223,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       note: data.note || '',
       createdAt: new Date().toISOString()
     };
+    
     const docRef = doc(collection(db, 'users', user.uid, 'sessions'));
     setDoc(docRef, sessionData).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: sessionData }));
@@ -238,6 +233,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const multiAddSessions = useCallback((data: { dates: Date[], startTime: string, endTime: string, multiplier: number }) => {
     if (!db || !user) return;
     const batch = writeBatch(db);
+    
     data.dates.forEach(date => {
       const dateStr = format(date, 'yyyy-MM-dd');
       const checkIn = new Date(`${dateStr}T${data.startTime}`);
@@ -265,6 +261,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         createdAt: new Date().toISOString()
       });
     });
+    
     batch.commit().catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
     });
@@ -274,18 +271,22 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     if (!db || !user) return;
     const batch = writeBatch(db);
     
-    const [sYear, sMonth, sDay] = data.startDate.split('-').map(Number);
-    let current = new Date(sYear, sMonth - 1, sDay);
+    const start = startOfDay(parseISO(data.startDate));
+    const end = startOfDay(parseISO(data.endDate));
     
-    const [eYear, eMonth, eDay] = data.endDate.split('-').map(Number);
-    const end = new Date(eYear, eMonth - 1, eDay);
+    let current = start;
 
     while (current <= end) {
-      if (!(data.excludeSundays && current.getDay() === 0)) {
+      const isSunday = current.getDay() === 0;
+      if (!(data.excludeSundays && isSunday)) {
         const dateStr = format(current, 'yyyy-MM-dd');
-        const hasSession = sessions.some(s => s.checkIn.startsWith(dateStr));
+        // Kiểm tra xem ngày này đã có phiên nào chưa để tránh trùng
+        const alreadyHasSession = sessions.some(s => {
+          const sDate = startOfDay(new Date(s.checkIn));
+          return isSameDay(sDate, current);
+        });
         
-        if (!hasSession) {
+        if (!alreadyHasSession) {
           const checkIn = new Date(`${dateStr}T${data.startTime}`);
           let checkOutStr: string | null = null;
           let diff = 0;
@@ -311,7 +312,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
           });
         }
       }
-      current.setDate(current.getDate() + 1);
+      current = addDays(current, 1);
     }
     
     batch.commit().catch(async (error) => {
@@ -324,15 +325,22 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     setDeletedSessionsCache([...sessions]);
     setCanUndo(true);
     setUndoCountdown(10);
+    
     const batch = writeBatch(db);
     sessions.forEach(s => batch.delete(doc(db, 'users', user.uid, 'sessions', s.id)));
     batch.commit().catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
     });
+    
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     countdownIntervalRef.current = setInterval(() => setUndoCountdown(p => p - 1), 1000);
+    
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
-    undoTimerRef.current = setTimeout(() => { setCanUndo(false); setDeletedSessionsCache([]); if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); }, 10000);
+    undoTimerRef.current = setTimeout(() => { 
+      setCanUndo(false); 
+      setDeletedSessionsCache([]); 
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); 
+    }, 10000);
   }, [db, user, sessions]);
 
   const restoreHistory = useCallback(() => {
@@ -342,9 +350,11 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       const { id, ...data } = s;
       batch.set(doc(db, 'users', user.uid, 'sessions', id), data);
     });
+    
     batch.commit().catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
     });
+    
     setCanUndo(false);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
