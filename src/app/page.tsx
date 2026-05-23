@@ -22,9 +22,17 @@ import {
   DialogTrigger,
   DialogDescription
 } from "@/components/ui/dialog";
-import { ResponsiveContainer, BarChart, XAxis, Bar } from "recharts";
+import { ResponsiveContainer, BarChart, XAxis, Bar, YAxis, CartesianGrid } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { useState, useEffect, useMemo } from 'react';
 import { Separator } from '@/components/ui/separator';
+
+const chartConfig = {
+  hours: {
+    label: "Giờ làm",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig;
 
 export default function Home() {
   const { 
@@ -47,7 +55,8 @@ export default function Home() {
   // Tránh lỗi Hydration cho nhãn ngày tháng
   useEffect(() => {
     const now = new Date();
-    setDayLabel(isHoliday ? "Ngày Lễ" : now.getDay() === 0 ? "Chủ Nhật" : "Ngày Thường");
+    const label = isHoliday ? "Ngày Lễ" : now.getDay() === 0 ? "Chủ Nhật" : "Ngày Thường";
+    setDayLabel(label);
   }, [isHoliday]);
 
   useEffect(() => {
@@ -196,15 +205,34 @@ export default function Home() {
       </div>
 
       <Card className="border-zinc-800 bg-zinc-900 rounded-[2rem] overflow-hidden">
-        <CardContent className="p-4">
-          <div className="h-[200px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analyticsData.chartData}>
-                <XAxis dataKey="date" hide />
-                <Bar dataKey="hours" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        <CardContent className="p-4 pt-6">
+          <div className="mb-4">
+             <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest text-center">Biểu đồ giờ làm 7 ngày gần nhất</p>
           </div>
+          <ChartContainer config={chartConfig} className="h-[200px] w-full">
+            <BarChart data={analyticsData.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis 
+                dataKey="date" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: '#71717a', fontSize: 10, fontWeight: 700 }}
+                dy={10}
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: '#71717a', fontSize: 10, fontWeight: 700 }}
+              />
+              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+              <Bar 
+                dataKey="hours" 
+                fill="var(--color-hours)" 
+                radius={[6, 6, 0, 0]} 
+                barSize={30}
+              />
+            </BarChart>
+          </ChartContainer>
         </CardContent>
       </Card>
 
