@@ -353,7 +353,7 @@ export default function HistoryPage() {
                 </div>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="sm:justify-start">
               <Button onClick={handleMultiAdd} disabled={isProcessing} className="bg-primary text-black rounded-xl h-12 font-black w-full active:scale-95 transition-all">
                 {isProcessing ? <Loader2 className="animate-spin" /> : 'XÁC NHẬN'}
               </Button>
@@ -396,7 +396,7 @@ export default function HistoryPage() {
                 </label>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="sm:justify-start">
               <Button onClick={handleBatchAdd} disabled={isProcessing} className="bg-indigo-600 text-white rounded-xl h-12 font-black w-full active:scale-95 transition-all">
                 {isProcessing ? <Loader2 className="animate-spin" /> : 'ĐỒNG BỘ NGAY'}
               </Button>

@@ -9,6 +9,7 @@ import { AttendanceProvider } from '@/providers/AttendanceProvider';
 import { useUser } from '@/firebase';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 const inter = Inter({ 
   subsets: ['latin', 'vietnamese'], 
@@ -78,6 +79,7 @@ export default function RootLayout({
                 </main>
               </div>
               <BottomNav />
+              <FirebaseErrorListener />
             </AttendanceProvider>
           </AuthGuard>
           <Toaster />

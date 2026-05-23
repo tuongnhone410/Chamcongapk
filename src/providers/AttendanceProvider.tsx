@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useMemo, useCallback, useState, useRef, useEffect } from 'react';
@@ -20,6 +19,9 @@ import {
   orderBy,
   writeBatch,
 } from 'firebase/firestore';
+import { format } from 'date-fns';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export interface AttendanceContextType {
   sessions: WorkSession[];
@@ -43,7 +45,6 @@ export interface AttendanceContextType {
     endTime: string,
     multiplier: number
   }) => Promise<void>;
-  importFromCSV: (csvContent: string) => Promise<void>;
   updateSettings: (newSettings: AppSettings) => Promise<void>;
   deleteSession: (id: string) => void;
   updateSession: (updated: WorkSession) => void;
@@ -51,7 +52,6 @@ export interface AttendanceContextType {
   restoreHistory: () => Promise<void>;
   canUndo: boolean;
   undoCountdown: number;
-  exportToCSV: () => void;
   calculateFullSalary: (periodSessions: WorkSession[]) => any;
   getAutoMultiplier: (date?: Date) => number;
   isHoliday: boolean;
@@ -93,12 +93,11 @@ const defaultSettings: AppSettings = {
   breakTimeDeduction: 1.5,
 };
 
-const VIETNAMESE_HOLIDAYS = ['1-1', '30-4', '1-5', '2-9', '3-9'];
+const VIETNAMESE_HOLIDAYS = ['01-01', '30-04', '01-05', '02-09', '03-09'];
 
 const isVietnameseHoliday = (date: Date) => {
-  const d = date.getDate();
-  const m = date.getMonth() + 1;
-  return VIETNAMESE_HOLIDAYS.includes(`${d}-${m}`);
+  const dayMonth = format(date, 'dd-MM');
+  return VIETNAMESE_HOLIDAYS.includes(dayMonth);
 };
 
 export function AttendanceProvider({ children }: { children: React.ReactNode }) {
@@ -121,8 +120,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     if (typeof window !== 'undefined' && storageKey) {
       const saved = localStorage.getItem(storageKey);
       setLocalActiveStart(saved);
-    } else {
-      setLocalActiveStart(null);
     }
   }, [storageKey]);
 
@@ -165,26 +162,18 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const activeSession = useMemo(() => {
     if (!user) return undefined;
-
     const fromDb = sessions.find(s => !s.checkOut);
     if (fromDb) {
-      if (typeof window !== 'undefined' && storageKey) {
-        localStorage.setItem(storageKey, fromDb.checkIn);
-      }
+      if (typeof window !== 'undefined' && storageKey) localStorage.setItem(storageKey, fromDb.checkIn);
       return fromDb;
     }
-
     if (localActiveStart) {
       const alreadyClosedOnServer = sessions.some(s => s.checkIn === localActiveStart && s.checkOut);
-      
-      if (alreadyClosedOnServer && !sessionsLoading) {
-        if (typeof window !== 'undefined' && storageKey) {
-          localStorage.removeItem(storageKey);
-        }
+      if (alreadyClosedOnServer) {
+        if (typeof window !== 'undefined' && storageKey) localStorage.removeItem(storageKey);
         setTimeout(() => setLocalActiveStart(null), 0);
         return undefined;
       }
-
       return {
         id: 'local-temp',
         checkIn: localActiveStart,
@@ -196,21 +185,18 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         createdAt: localActiveStart
       } as WorkSession;
     }
-
     return undefined;
-  }, [sessions, localActiveStart, storageKey, sessionsLoading, getAutoMultiplier, user]);
+  }, [sessions, localActiveStart, storageKey, getAutoMultiplier, user]);
 
   const punchIn = useCallback(() => {
     if (!db || !user || activeSession) return;
     const now = new Date();
     const isoStr = now.toISOString();
-    
-    if (typeof window !== 'undefined' && storageKey) {
-      localStorage.setItem(storageKey, isoStr);
-    }
+    if (typeof window !== 'undefined' && storageKey) localStorage.setItem(storageKey, isoStr);
     setLocalActiveStart(isoStr);
 
-    addDoc(collection(db, 'users', user.uid, 'sessions'), {
+    const docRef = doc(collection(db, 'users', user.uid, 'sessions'));
+    const data = {
       checkIn: isoStr,
       checkOut: null,
       totalMinutes: 0,
@@ -218,30 +204,31 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       multiplier: getAutoMultiplier(now),
       note: '',
       createdAt: isoStr
+    };
+    setDoc(docRef, data).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: data }));
     });
   }, [db, user, activeSession, storageKey, getAutoMultiplier]);
 
   const punchOut = useCallback(() => {
     if (!db || !user || !activeSession) return;
-    
-    if (typeof window !== 'undefined' && storageKey) {
-      localStorage.removeItem(storageKey);
-    }
+    if (typeof window !== 'undefined' && storageKey) localStorage.removeItem(storageKey);
     setLocalActiveStart(null);
 
     const checkOut = new Date();
     const checkIn = new Date(activeSession.checkIn);
     const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-    
-    const targetSessionId = activeSession.id === 'local-temp' 
-      ? sessions.find(s => !s.checkOut)?.id 
-      : activeSession.id;
+    const targetSessionId = activeSession.id === 'local-temp' ? sessions.find(s => !s.checkOut)?.id : activeSession.id;
 
     if (targetSessionId) {
-      updateDoc(doc(db, 'users', user.uid, 'sessions', targetSessionId), {
+      const docRef = doc(db, 'users', user.uid, 'sessions', targetSessionId);
+      const updateData = {
         checkOut: checkOut.toISOString(),
         totalMinutes: diffMinutes,
         salary: calculateSessionSalary(diffMinutes, activeSession.multiplier)
+      };
+      updateDoc(docRef, updateData).catch(async () => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'update', requestResourceData: updateData }));
       });
     }
   }, [db, user, activeSession, sessions, storageKey, calculateSessionSalary]);
@@ -251,8 +238,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const checkIn = new Date(data.checkIn);
     const checkOut = new Date(data.checkOut);
     const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-    
-    await addDoc(collection(db, 'users', user.uid, 'sessions'), {
+    const sessionData = {
       checkIn: checkIn.toISOString(),
       checkOut: checkOut.toISOString(),
       multiplier: data.multiplier,
@@ -260,6 +246,10 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       salary: calculateSessionSalary(diffMinutes, data.multiplier),
       note: data.note || '',
       createdAt: new Date().toISOString()
+    };
+    const docRef = doc(collection(db, 'users', user.uid, 'sessions'));
+    setDoc(docRef, sessionData).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: sessionData }));
     });
   }, [db, user, calculateSessionSalary]);
 
@@ -267,7 +257,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     if (!db || !user) return;
     const batch = writeBatch(db);
     data.dates.forEach(date => {
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = format(date, 'yyyy-MM-dd');
       const checkIn = new Date(`${dateStr}T${data.startTime}`);
       const checkOut = new Date(`${dateStr}T${data.endTime}`);
       const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
@@ -283,7 +273,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
         createdAt: new Date().toISOString()
       });
     });
-    await batch.commit();
+    await batch.commit().catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
+    });
   }, [db, user, calculateSessionSalary, getAutoMultiplier]);
 
   const batchAddSessions = useCallback(async (data: { startDate: string, endDate: string, startTime: string, endTime: string, multiplier: number, excludeSundays: boolean }) => {
@@ -293,7 +285,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const end = new Date(data.endDate);
     while (current <= end) {
       if (!(data.excludeSundays && current.getDay() === 0)) {
-        const dateStr = current.toISOString().split('T')[0];
+        const dateStr = format(current, 'yyyy-MM-dd');
         const hasSession = sessions.some(s => s.checkIn.startsWith(dateStr));
         if (!hasSession) {
           const checkIn = new Date(`${dateStr}T${data.startTime}`);
@@ -314,32 +306,10 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       }
       current.setDate(current.getDate() + 1);
     }
-    await batch.commit();
+    await batch.commit().catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions`, operation: 'write' }));
+    });
   }, [db, user, sessions, calculateSessionSalary, getAutoMultiplier]);
-
-  const importFromCSV = useCallback(async (csvContent: string) => {
-    if (!db || !user) return;
-    const lines = csvContent.split('\n').filter(l => l.trim());
-    if (lines.length <= 1) return;
-    
-    const batch = writeBatch(db);
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(',');
-      if (parts.length < 6) continue;
-      
-      const newDocRef = doc(collection(db, 'users', user.uid, 'sessions'));
-      batch.set(newDocRef, {
-        checkIn: parts[1],
-        checkOut: parts[2] || null,
-        multiplier: parseFloat(parts[3]),
-        totalMinutes: parseInt(parts[4]),
-        salary: parseFloat(parts[5]),
-        note: parts[6] || '',
-        createdAt: new Date().toISOString()
-      });
-    }
-    await batch.commit();
-  }, [db, user]);
 
   const clearAllHistory = useCallback(async () => {
     if (!db || !user || sessions.length === 0) return;
@@ -370,19 +340,28 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const updateSettings = useCallback(async (newSettings: AppSettings) => {
     if (!db || !user) return;
-    await setDoc(doc(db, 'users', user.uid, 'settings', 'current'), newSettings, { merge: true });
+    const settingsRef = doc(db, 'users', user.uid, 'settings', 'current');
+    await setDoc(settingsRef, newSettings, { merge: true }).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: settingsRef.path, operation: 'write', requestResourceData: newSettings }));
+    });
   }, [db, user]);
 
   const deleteSession = useCallback(async (id: string) => {
     if (!db || !user) return;
-    await deleteDoc(doc(db, 'users', user.uid, 'sessions', id));
+    deleteDoc(doc(db, 'users', user.uid, 'sessions', id)).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/sessions/${id}`, operation: 'delete' }));
+    });
   }, [db, user]);
 
   const updateSession = useCallback(async (updated: WorkSession) => {
     if (!db || !user) return;
-    await updateDoc(doc(db, 'users', user.uid, 'sessions', updated.id), { 
+    const docRef = doc(db, 'users', user.uid, 'sessions', updated.id);
+    const updateData = { 
       ...updated, 
       salary: calculateSessionSalary(updated.totalMinutes, updated.multiplier) 
+    };
+    updateDoc(docRef, updateData).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'update', requestResourceData: updateData }));
     });
   }, [db, user, calculateSessionSalary]);
 
@@ -407,21 +386,9 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     return { sessionSalary, totalOTMinutes, lunchAllowance, attendanceBonus, grossIncome: gross, insuranceAmount: insurance, incomeTaxAmount: tax, netSalary: net };
   }, [settings]);
 
-  const exportToCSV = useCallback(() => {
-    const headers = ["ID", "Vao lam", "Ra lam", "He so", "Phut", "Luong", "Ghi chu"];
-    const rows = sessions.map(s => [s.id, s.checkIn, s.checkOut || '', s.multiplier, s.totalMinutes, s.salary, s.note || '']);
-    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "timesnap_report.csv";
-    link.click();
-  }, [sessions]);
-
   const contextValue = useMemo(() => ({
-    sessions, activeSession, settings, isLoaded, punchIn, punchOut, addManualSession, batchAddSessions, multiAddSessions, importFromCSV, updateSettings, deleteSession, updateSession, clearAllHistory, restoreHistory, canUndo, undoCountdown, exportToCSV, calculateFullSalary, getAutoMultiplier, isHoliday
-  }), [sessions, activeSession, settings, isLoaded, punchIn, punchOut, addManualSession, batchAddSessions, multiAddSessions, importFromCSV, updateSettings, deleteSession, updateSession, clearAllHistory, restoreHistory, canUndo, undoCountdown, exportToCSV, calculateFullSalary, getAutoMultiplier, isHoliday]);
+    sessions, activeSession, settings, isLoaded, punchIn, punchOut, addManualSession, batchAddSessions, multiAddSessions, updateSettings, deleteSession, updateSession, clearAllHistory, restoreHistory, canUndo, undoCountdown, calculateFullSalary, getAutoMultiplier, isHoliday
+  }), [sessions, activeSession, settings, isLoaded, punchIn, punchOut, addManualSession, batchAddSessions, multiAddSessions, updateSettings, deleteSession, updateSession, clearAllHistory, restoreHistory, canUndo, undoCountdown, calculateFullSalary, getAutoMultiplier, isHoliday]);
 
   return <AttendanceContext.Provider value={contextValue}>{children}</AttendanceContext.Provider>;
 }
