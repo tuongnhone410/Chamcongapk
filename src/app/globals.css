@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -24,15 +25,6 @@
     --input: 240 3.7% 15.9%;
     --ring: 217 91% 60%;
     --radius: 1.25rem;
-    
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -45,43 +37,35 @@
     -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeSpeed;
     overflow-x: hidden;
-    /* Ẩn thanh cuộn cho toàn bộ ứng dụng */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    /* Ẩn thanh cuộn cho toàn bộ ứng dụng chuyên nghiệp */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
-  /* Ẩn thanh cuộn cho Chrome, Safari và Opera */
   body::-webkit-scrollbar {
     display: none;
   }
-}
 
-/* Hỗ trợ cuộn mượt mà trên thiết bị di động */
-.smooth-scroll {
-  -webkit-overflow-scrolling: touch;
+  /* Xử lý vùng an toàn cho APK */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 .font-headline {
   letter-spacing: -0.04em;
 }
 
-/* Loại bỏ hoàn toàn blur để tối ưu FPS trên APK */
 .backdrop-blur-md, .backdrop-blur-xl {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   background-color: rgba(9, 9, 11, 0.98) !important;
 }
 
-.card-shadow {
-  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.5);
-}
-
-/* Giảm hiệu ứng chuyển động để mượt hơn trên máy cấu hình thấp */
-.transition-all {
-  transition-duration: 150ms !important;
-}
-
-/* Ngăn chặn việc kéo màn hình quá đà (Overscroll) */
 html, body {
   overscroll-behavior-y: contain;
+  height: 100%;
 }
