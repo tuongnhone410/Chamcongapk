@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -87,5 +88,5 @@
 }
 
 .content-wrapper {
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
 }

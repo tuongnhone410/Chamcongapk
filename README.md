@@ -1,3 +1,4 @@
+
 # TimeSnap Pro - Hệ thống Chấm công & Quản lý Lương Cá nhân
 
 TimeSnap Pro là ứng dụng web hiện đại giúp người lao động theo dõi giờ làm việc và tính toán lương tăng ca (OT) chính xác, được tối ưu hóa cho trải nghiệm di động (PWA & APK).
@@ -10,7 +11,7 @@ TimeSnap Pro là ứng dụng web hiện đại giúp người lao động theo 
 - **Bảo mật đa người dùng**: Dữ liệu được lưu trữ riêng biệt theo tài khoản (`user.uid`), an toàn khi dùng chung thiết bị.
 - **Giao diện Pro**: Đã ẩn thanh cuộn, tối ưu vùng an toàn (Safe Area) cho điện thoại, không chồng chữ hay tràn khung.
 
-## 📤 Cách cập nhật Code lên GitHub
+## 📤 Cách cập nhật Code lên GitHub (Push)
 Để lưu các thay đổi mới nhất và kích hoạt quy trình tự động build APK, hãy chạy các lệnh sau trong **Terminal**:
 
 ```bash
@@ -18,7 +19,7 @@ TimeSnap Pro là ứng dụng web hiện đại giúp người lao động theo 
 git add .
 
 # 2. Tạo ghi chú cho phiên bản này
-git commit -m "Update: Hoàn thiện giao diện Pro và sửa lỗi cuộn trên APK"
+git commit -m "Update: Fix logic đồng bộ OT và tối ưu giao diện Cài đặt"
 
 # 3. Đẩy code lên GitHub
 git push origin main

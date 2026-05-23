@@ -164,41 +164,15 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
 
   const activeSession = useMemo(() => {
     if (!user) return undefined;
-    // Tìm session chưa có checkOut (phiên đang hoạt động)
     const fromDb = sessions.find(s => !s.checkOut);
-    
-    if (fromDb) {
-      if (typeof window !== 'undefined' && storageKey) localStorage.setItem(storageKey, fromDb.checkIn);
-      return fromDb;
-    }
-
-    if (localActiveStart) {
-      const alreadyClosedOnServer = sessions.some(s => s.checkIn === localActiveStart && s.checkOut);
-      if (alreadyClosedOnServer) {
-        if (typeof window !== 'undefined' && storageKey) localStorage.removeItem(storageKey);
-        setTimeout(() => setLocalActiveStart(null), 0);
-        return undefined;
-      }
-      return {
-        id: 'local-temp',
-        checkIn: localActiveStart,
-        checkOut: null,
-        totalMinutes: 0,
-        salary: 0,
-        multiplier: getAutoMultiplier(new Date(localActiveStart)),
-        note: '',
-        createdAt: localActiveStart
-      } as WorkSession;
-    }
+    if (fromDb) return fromDb;
     return undefined;
-  }, [sessions, localActiveStart, storageKey, getAutoMultiplier, user]);
+  }, [sessions, user]);
 
   const punchIn = useCallback(() => {
     if (!db || !user || activeSession) return;
     const now = new Date();
     const isoStr = now.toISOString();
-    if (typeof window !== 'undefined' && storageKey) localStorage.setItem(storageKey, isoStr);
-    setLocalActiveStart(isoStr);
 
     const docRef = doc(collection(db, 'users', user.uid, 'sessions'));
     const data = {
@@ -213,30 +187,24 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     setDoc(docRef, data).catch(async (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: data }));
     });
-  }, [db, user, activeSession, storageKey, getAutoMultiplier]);
+  }, [db, user, activeSession, getAutoMultiplier]);
 
   const punchOut = useCallback(() => {
     if (!db || !user || !activeSession) return;
-    if (typeof window !== 'undefined' && storageKey) localStorage.removeItem(storageKey);
-    setLocalActiveStart(null);
-
     const checkOut = new Date();
     const checkIn = new Date(activeSession.checkIn);
     const diffMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000);
-    const targetSessionId = activeSession.id === 'local-temp' ? sessions.find(s => !s.checkOut)?.id : activeSession.id;
-
-    if (targetSessionId) {
-      const docRef = doc(db, 'users', user.uid, 'sessions', targetSessionId);
-      const updateData = {
-        checkOut: checkOut.toISOString(),
-        totalMinutes: diffMinutes,
-        salary: calculateSessionSalary(diffMinutes, activeSession.multiplier)
-      };
-      updateDoc(docRef, updateData).catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'update', requestResourceData: updateData }));
-      });
-    }
-  }, [db, user, activeSession, sessions, storageKey, calculateSessionSalary]);
+    
+    const docRef = doc(db, 'users', user.uid, 'sessions', activeSession.id);
+    const updateData = {
+      checkOut: checkOut.toISOString(),
+      totalMinutes: diffMinutes,
+      salary: calculateSessionSalary(diffMinutes, activeSession.multiplier)
+    };
+    updateDoc(docRef, updateData).catch(async (error) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'update', requestResourceData: updateData }));
+    });
+  }, [db, user, activeSession, calculateSessionSalary]);
 
   const addManualSession = useCallback((data: { checkIn: string, checkOut: string | null, multiplier: number, note: string }) => {
     if (!db || !user) return;
@@ -412,7 +380,6 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
   const calculateFullSalary = useCallback((periodSessions: WorkSession[]) => {
     const completed = periodSessions.filter(s => !!s.checkOut);
     const sessionSalary = completed.reduce((acc, s) => acc + s.salary, 0);
-    const breakMinutes = (settings.breakTimeDeduction || 0) * 60;
     
     const lunchAllowance = completed.reduce((acc, s) => acc + (settings.allowanceLunchPerShift || 0) + (s.totalMinutes >= 600 ? (settings.allowanceLunchOT || 0) : 0), 0);
     

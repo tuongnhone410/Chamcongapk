@@ -173,7 +173,7 @@ export default function HistoryPage() {
     });
     
     setShowBatchDialog(false);
-    toast({ title: "Đã gửi yêu cầu", description: "Đang đẩy dữ liệu lên server..." });
+    toast({ title: "Đang đẩy dữ liệu", description: "Yêu cầu đã được gửi lên server." });
   };
 
   const handleMultiAdd = () => {
@@ -191,7 +191,7 @@ export default function HistoryPage() {
     
     setShowMultiDialog(false);
     setSelectedDates([]);
-    toast({ title: "Đã gửi yêu cầu", description: "Phiên làm việc đang được khởi tạo." });
+    toast({ title: "Đang đẩy dữ liệu", description: "Phiên làm việc đang được khởi tạo." });
   };
 
   const changeMonth = (dir: number) => {
@@ -332,7 +332,7 @@ export default function HistoryPage() {
               <div className="flex items-start gap-2 bg-primary/10 p-3 rounded-xl border border-primary/20">
                 <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                 <p className="text-[10px] font-bold text-zinc-400">
-                  Để trống <span className="text-primary">Giờ ra</span> nếu bạn muốn ghi nhận là đang làm việc (để đồng bộ với Trang chủ).
+                  Để trống <span className="text-primary">Giờ ra</span> nếu bạn muốn ghi nhận là đang làm việc (đồng bộ với Trang chủ).
                 </p>
               </div>
             </div>

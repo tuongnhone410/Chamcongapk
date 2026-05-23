@@ -95,7 +95,6 @@ export default function SettingsPage() {
     setIsSaving(true);
     updateSettings(localSettings);
     
-    // Phản hồi UI tức thì
     setTimeout(() => {
       setIsSaving(false);
       toast({ title: "Thành công", description: "Cấu hình lương đã được cập nhật lên server." });
