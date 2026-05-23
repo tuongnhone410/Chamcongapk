@@ -132,7 +132,7 @@ export default function SettingsPage() {
     }
   };
 
-  const labelClass = "text-[10px] font-black uppercase tracking-widest mb-1.5 block";
+  const labelClass = "text-[10px] font-black uppercase tracking-widest mb-1.5 block min-h-[15px]";
   const inputClass = "h-11 font-bold bg-zinc-900 border-zinc-800 rounded-xl text-white text-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 focus-visible:border-zinc-700 focus:outline-none transition-colors";
   const suffixClass = "absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-sm pointer-events-none";
 
@@ -296,7 +296,7 @@ export default function SettingsPage() {
       <Card className="border-zinc-800 bg-zinc-900 overflow-hidden rounded-[2rem]">
         <CardHeader className="pb-2">
           <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-green-500">
-            <AlertTriangle className="w-4 h-4" /> Chuyên Cần & Nghỉ Không Phép
+            <AlertTriangle className="w-4 h-4" /> Chuyên Cần & Nghỉ K Phép
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -309,7 +309,7 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label className={cn(labelClass, "text-green-500")}>Ngày nghỉ không phép</Label>
+              <Label className={cn(labelClass, "text-green-500")}>Ngày nghỉ k phép</Label>
               <div className="relative">
                 <Input type="number" className={cn(inputClass, "border-green-500/30")} value={localSettings.unexcusedAbsences === 0 ? "0" : localSettings.unexcusedAbsences.toString()} onChange={(e) => handleNumberInput('unexcusedAbsences', e.target.value)} />
               </div>
